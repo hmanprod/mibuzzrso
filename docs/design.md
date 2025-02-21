@@ -10,8 +10,8 @@ Une application web avec la même disposition que BandLab, comprenant :
 ## 📝 Typographie
 
 ### Police Principale
-- Famille : `Roboto`, `Helvetica Neue`, ou `Arial` (sans-serif)
-- Choix : Style sans-serif moderne, clair et lisible
+- Famille : `system-ui`, `-apple-system`, `BlinkMacSystemFont`, `Segoe UI` (sans-serif)
+- Choix : Utilisation des polices système natives pour une meilleure performance et cohérence
 
 ### Hiérarchie des Tailles
 | Élément | Taille | Poids |
@@ -20,9 +20,8 @@ Une application web avec la même disposition que BandLab, comprenant :
 | H2 (Sous-titre) | 20px | 600 (Semi-Bold) |
 | H3 (Titre de section) | 18px | 500 (Medium) |
 | Corps du texte | 16px | 400 (Regular) |
+| Menu de navigation | 14px | 400 (Regular) |
 | Texte secondaire | 14px | 400 (Regular) |
-
-- Hauteur de ligne : 1.4 - 1.6
 
 ## 🎨 Palette de Couleurs
 
@@ -47,12 +46,17 @@ Une application web avec la même disposition que BandLab, comprenant :
 ## 📱 Composants UI
 
 ### Barre de Navigation (Header)
-- Hauteur : 60-70px
-- Fond : `#FFFFFF` ou `#F9F9F9`
+- Hauteur : 60px
+- Fond : `#FFFFFF`
 - Structure :
-  - Logo à gauche
-  - Menu principal centré/gauche
+  - Logo à gauche (20px)
+  - Menu principal avec boutons arrondis (18px border-radius)
   - Icônes utilisateur à droite
+- Menu principal :
+  - Taille de police : 14px
+  - Border-radius : 18px
+  - Padding : 8px 16px
+  - Hover : Changement de couleur du texte
 - Bouton "Create" :
   - Fond : `#FA4D4D`
   - Border-radius : 4px
@@ -70,8 +74,8 @@ Une application web avec la même disposition que BandLab, comprenant :
 - Largeur max : 700-800px
 - Cartes (posts) :
   - Fond : `#FFFFFF`
-  - Shadow : `0 1px 3px rgba(0,0,0,0.1)`
-  - Border-radius : 4-6px
+  - Shadow : `shadow-sm`
+  - Border-radius : 18px
   - Padding : 16px
   - Espacement : 16px entre cartes
 

@@ -17,7 +17,7 @@ export default function RightSidebar({ className }: RightSidebarProps) {
   return (
     <aside className={twMerge("bg-[#F9F9F9] p-6", className)}>
       <div className="space-y-6">
-        <div className="bg-white rounded-[4px] p-4">
+        <div className="bg-white rounded-[18px] p-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium text-lg text-[#2D2D2D]">Suggestions à suivre</h3>
             <button className="text-sm text-[#666666] hover:text-[#2D2D2D]">Actualiser</button>
@@ -32,7 +32,7 @@ export default function RightSidebar({ className }: RightSidebarProps) {
                     <p className="text-sm text-[#666666]">{user.followers} Abonnés</p>
                   </div>
                 </div>
-                <button className="bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-3 py-1 rounded-[4px] text-sm font-medium transition-colors">
+                <button className="bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-3 py-1 rounded-[18px] text-sm font-medium transition-colors">
                   Suivre
                 </button>
               </div>

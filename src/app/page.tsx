@@ -17,8 +17,8 @@ export default function Home() {
           <Feed />
         </main>
         
-        {/* Sidebar droite: 20-25% (280-320px) */}
-        <RightSidebar className="w-[300px] fixed right-6 top-[70px] bottom-0" />
+        {/* Sidebar droite: 20-25% (280-350px) */}
+        <RightSidebar className="w-[400px] fixed right-6 top-[47px] bottom-0" />
       </div>
     </div>
   );

@@ -15,13 +15,13 @@ export default function Navbar({ className }: NavbarProps) {
         <div className="flex items-center gap-8">
           <div className="text-[#2D2D2D] font-bold text-[20px]">BandLab</div>
           <div className="hidden md:flex items-center gap-8">
-            <button className="text-[#2D2D2D] font-medium text-base hover:text-[#000000] transition-colors">
+            <button className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2">
               Fil d&apos;actualité
             </button>
-            <button className="text-[#666666] text-base hover:text-[#2D2D2D] transition-colors">
+            <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
               Services
             </button>
-            <button className="text-[#666666] text-base hover:text-[#2D2D2D] transition-colors">
+            <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
               Bibliothèque
             </button>
           </div>
@@ -50,7 +50,7 @@ export default function Navbar({ className }: NavbarProps) {
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageCircle className="h-5 w-5" />
           </button>
-          <button className="hidden md:flex items-center gap-2 bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-4 py-1.5 rounded-[4px] text-[14px] font-semibold transition-colors">
+          <button className="hidden md:flex items-center gap-2 bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
             <Plus className="h-4 w-4" />
             <span>Créer</span>
           </button>

@@ -38,7 +38,7 @@ export default function Feed({ className }: FeedProps) {
   return (
     <div className={twMerge("space-y-4", className)}>
       {posts.map(post => (
-        <article key={post.id} className="bg-white rounded-[4px] shadow-sm">
+        <article key={post.id} className="bg-white rounded-[18px] shadow-sm">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -59,13 +59,13 @@ export default function Feed({ className }: FeedProps) {
                   <h4 className="font-medium text-base text-[#2D2D2D]">{post.title}</h4>
                   <p className="text-sm text-[#666666]">{post.genre} • {post.duration}</p>
                 </div>
-                <button className="bg-[#F2F2F2] text-[#666666] px-3 py-1 rounded-full text-sm font-medium hover:bg-[#FAFAFA] transition-colors">
+                <button className="bg-[#F2F2F2] text-[#666666] px-3 py-1 rounded-[18px] text-sm font-medium hover:bg-[#FAFAFA] transition-colors">
                   Dupliquer
                 </button>
               </div>
               <div className="relative h-12 bg-[#F2F2F2] rounded">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-[#F2F2F2] transition-colors">
+                  <div className="w-8 h-8 bg-white rounded-[18px] flex items-center justify-center cursor-pointer hover:bg-[#F2F2F2] transition-colors">
                     <div className="w-0 h-0 border-l-8 border-l-[#2D2D2D] border-y-[6px] border-y-transparent ml-1" />
                   </div>
                 </div>
