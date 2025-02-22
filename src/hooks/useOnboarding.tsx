@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from 'react';
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Database } from '@/lib/supabase/database.types';
@@ -12,7 +14,10 @@ export const useOnboarding = () => {
   const user = useUser();
 
   const checkProfileCompleteness = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
       const { data: profile, error } = await supabase
@@ -21,7 +26,10 @@ export const useOnboarding = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking profile:', error);
+        return;
+      }
 
       const isComplete = Boolean(
         profile?.stage_name &&
@@ -43,12 +51,29 @@ export const useOnboarding = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      // Vérifie si le profil existe déjà
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .update(profileData)
-        .eq('id', user.id);
+        .select('user_id')
+        .eq('id', user.id)
+        .single();
 
-      if (error) throw error;
+      if (existingProfile) {
+        // Mise à jour du profil existant
+        const { error } = await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Création d'un nouveau profil
+        const { error } = await supabase
+          .from('profiles')
+          .insert([{ ...profileData, id: user.id }]);
+
+        if (error) throw error;
+      }
 
       await checkProfileCompleteness();
     } catch (error) {

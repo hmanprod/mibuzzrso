@@ -1,12 +1,23 @@
+"use client";
+
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRouter } from 'next/navigation';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { Database } from '@/lib/supabase/database.types';
-import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -33,8 +44,6 @@ const GENRES = [
 
 export function OnboardingModal() {
   const { isModalOpen, closeModal, updateProfile } = useOnboarding();
-  const router = useRouter();
-  const { toast } = useToast();
   
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: '',
@@ -47,23 +56,10 @@ export function OnboardingModal() {
     e.preventDefault();
     try {
       await updateProfile(formData);
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated!',
-      });
       closeModal();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile. Please try again.',
-        variant: 'destructive',
-      });
+      console.error('Failed to update profile:', error);
     }
-  };
-
-  const handleEditProfile = () => {
-    closeModal();
-    router.push('/profile/edit');
   };
 
   return (
@@ -143,11 +139,11 @@ export function OnboardingModal() {
           </div>
 
           <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={handleEditProfile}>
-              Edit Full Profile
+            <Button type="button" variant="outline" onClick={closeModal}>
+              Skip for now
             </Button>
             <Button type="submit">
-              Continue
+              Complete Profile
             </Button>
           </div>
         </form>

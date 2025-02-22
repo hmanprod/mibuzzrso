@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+"use client";
+
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingModal } from './OnboardingModal';
 
