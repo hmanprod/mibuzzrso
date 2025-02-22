@@ -11,6 +11,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
+  confirmEmail: (confirmationCode: string, email: string) => Promise<{ error: AuthError | null }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: userData,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
 
     if (!error && user) {
@@ -101,6 +106,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const confirmEmail = async (confirmationCode: string, email: string) => {
+    const { error } = await supabase.auth.verifyOTP({
+      confirmationCode,
+      email,
+    });
+
+    return { error };
+  };
+
   const value = {
     user,
     profile,
@@ -109,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signOut,
     updateProfile,
+    confirmEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

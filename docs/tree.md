@@ -9,6 +9,8 @@ src/app/
 │   │   └── page.tsx           # Page de connexion
 │   ├── register/
 │   │   └── page.tsx           # Page d'inscription
+│   ├── verify-email/
+│   │   └── page.tsx           # Page de vérification d'email
 │   └── reset-password/
 │       ├── [token]/
 │       │   └── page.tsx       # Page de création du nouveau mot de passe
@@ -59,13 +61,18 @@ src/lib/
 - `/auth/login` : Connexion
   - Formulaire de connexion email/mot de passe
   - Connexion avec réseaux sociaux (Google, Facebook, Apple)
-  - Intégration avec Supabase Auth
+  - Vérification de l'état de confirmation de l'email
   
 - `/auth/register` : Inscription
   - Formulaire d'inscription complet
   - Inscription avec réseaux sociaux
   - Validation des conditions d'utilisation
-  - Création automatique du profil utilisateur dans Supabase
+  - Redirection vers la page de vérification d'email
+  
+- `/auth/verify-email` : Vérification d'email
+  - Affichage du statut de vérification
+  - Option de renvoi de l'email de confirmation
+  - Redirection vers la connexion après confirmation
   
 - `/auth/reset-password` : Réinitialisation du mot de passe
   - Étape 1 : Demande de réinitialisation par email
@@ -93,3 +100,4 @@ src/lib/
   - Gestion de la connexion/déconnexion
   - Accès aux informations de l'utilisateur
   - Mise à jour du profil utilisateur
+  - Gestion de la vérification d'email
