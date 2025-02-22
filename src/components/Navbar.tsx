@@ -1,16 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Bell, MessageSquare, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, MessageSquare, Plus, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NavbarProps {
+  onOpenCreatePost?: () => void;
   className?: string;
 }
 
-export default function Navbar({ className }: NavbarProps) {
+export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    setIsDropdownOpen(false);
+    await signOut();
+    router.push('/auth/login');
+  };
+
+  const handleNavigation = (href: string) => {
+    setIsDropdownOpen(false);
+    router.push(href);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   return (
     <nav className={twMerge("h-[60px] bg-white border-b border-[#EAEAEA]", className)}>
       <div className="h-full mx-auto px-6 flex items-center justify-between">
@@ -58,24 +94,58 @@ export default function Navbar({ className }: NavbarProps) {
             <span>Créer</span>
           </button>
           <div className="flex items-center gap-2">
-            <img
-              src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop"
-              alt="Profile"
-              className="w-[32px] h-[32px] rounded-full object-cover"
-            />
-            <svg
-              className="w-4 h-4 text-[#666666]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={toggleDropdown}
+                className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#FA4D4D] focus:ring-opacity-50"
+              >
+                <Image
+                  src="/images/placeholder-user.jpg"
+                  alt="Avatar"
+                  width={40}
+                  height={40}
+                  className="object-cover"
+                />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
+                  <button
+                    onClick={() => handleNavigation('/profile')}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Mon profil</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => handleNavigation('/settings')}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Mes paramètres</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigation('/support')}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    <span>Support</span>
+                  </button>
+
+                  <div className="h-[1px] bg-gray-100 my-1" />
+
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-50 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Se déconnecter</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
