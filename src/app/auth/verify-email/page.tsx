@@ -1,36 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { EnvelopeOpen } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get('email');
+  const router = useRouter();
+  const { pendingVerificationEmail, resendConfirmationEmail } = useAuth();
   const [isResending, setIsResending] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
-  const { signUp } = useAuth();
+
+  // Redirect if no pending email verification
+  useEffect(() => {
+    if (!pendingVerificationEmail) {
+      router.replace('/auth/login');
+    }
+  }, [pendingVerificationEmail]);
 
   const handleResendEmail = async () => {
-    if (!email || isResending) return;
-
-    setIsResending(true);
     setResendError(null);
     setResendSuccess(false);
+    setIsResending(true);
 
     try {
-      const { error } = await signUp(email, '', {}); // Le mot de passe vide déclenchera uniquement l'envoi de l'email
+      const { error } = await resendConfirmationEmail();
+      
       if (error) {
         setResendError("Impossible d'envoyer l'email. Veuillez réessayer plus tard.");
       } else {
         setResendSuccess(true);
       }
     } catch (err) {
-      setResendError("Une erreur est survenue lors de l'envoi de l'email.");
+      console.error('Error resending email:', err);
+      setResendError("Une erreur s'est produite. Veuillez réessayer plus tard.");
     } finally {
       setIsResending(false);
     }
@@ -41,17 +47,17 @@ export default function VerifyEmailPage() {
       <div className="text-center space-y-6">
         <div className="flex justify-center">
           <div className="w-16 h-16 bg-[#FFF5F5] rounded-full flex items-center justify-center">
-            <EnvelopeOpen className="w-8 h-8 text-[#FA4D4D]" />
+            <Mail className="w-8 h-8 text-[#FA4D4D]" />
           </div>
         </div>
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-gray-900">Vérifiez votre email</h1>
           <p className="text-gray-600">
-            Un lien de confirmation a été envoyé à{' '}
-            <span className="font-medium">{email}</span>.
-            <br />
-            Veuillez cliquer sur ce lien pour activer votre compte.
+            Nous avons envoyé un email de confirmation à{' '}
+            <span className="font-medium text-gray-900">
+              {pendingVerificationEmail}
+            </span>
           </p>
         </div>
 
@@ -63,11 +69,11 @@ export default function VerifyEmailPage() {
             type="button"
             onClick={handleResendEmail}
             disabled={isResending}
-            className={`text-[#FA4D4D] hover:text-[#FA4D4D]/80 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={` bg-gray-50 px-4 py-2 rounded-[18px] text-[#FA4D4D] hover:text-[#FA4D4D]/80 font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
               isResending ? 'cursor-wait' : ''
             }`}
           >
-            cliquez ici pour renvoyer
+            Cliquez ici pour renvoyer
           </button>
 
           {resendError && (

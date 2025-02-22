@@ -99,7 +99,11 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
           onClick={togglePlay}
           className="w-10 h-10 rounded-full bg-[#FA4D4D] text-white flex items-center justify-center hover:bg-[#E63F3F] transition-colors"
         >
-          {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+          {isPlaying ? (
+            <Pause className="w-8 h-8" onClick={togglePlay} />
+          ) : (
+            <Play className="w-8 h-8" onClick={togglePlay} />
+          )}
         </button>
 
         <div className="flex items-center gap-2">
@@ -117,7 +121,11 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
             onClick={toggleMute}
             className="text-gray-600 hover:text-gray-800 transition-colors"
           >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            {isMuted ? (
+              <VolumeX className="w-6 h-6" onClick={toggleMute} />
+            ) : (
+              <Volume2 className="w-6 h-6" onClick={toggleMute} />
+            )}
           </button>
           <input
             type="range"

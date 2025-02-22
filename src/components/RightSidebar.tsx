@@ -32,8 +32,9 @@ export default function RightSidebar({ className }: RightSidebarProps) {
                     <p className="text-sm text-[#666666]">{user.followers} Abonnés</p>
                   </div>
                 </div>
-                <button className="bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-3 py-1 rounded-[18px] text-sm font-medium transition-colors">
-                  Suivre
+                <button className="flex items-center gap-2 text-[#FA4D4D] hover:text-[#E63F3F] transition-colors">
+                  <Plus className="w-5 h-5" />
+                  <span>Suivre</span>
                 </button>
               </div>
             ))}

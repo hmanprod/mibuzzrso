@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -78,7 +80,7 @@ export default function FeedPost({
           </div>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
-          <MoreHorizontal size={20} />
+          <MoreHorizontal className="w-6 h-6" />
         </button>
       </div>
 
@@ -108,28 +110,25 @@ export default function FeedPost({
       <div className="p-4 flex items-center gap-6 border-t border-gray-100">
         <button
           onClick={toggleLike}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#FA4D4D] transition-colors"
+          className={`flex items-center gap-1 ${liked ? 'text-red-500' : 'text-gray-600'}`}
         >
-          <Heart
-            size={20}
-            className={liked ? 'fill-[#FA4D4D] text-[#FA4D4D]' : ''}
-          />
-          <span className="text-sm">{likesCount}</span>
+          <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+          <span>{likesCount}</span>
         </button>
 
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#FA4D4D] transition-colors"
+          className="flex items-center gap-1 text-gray-600"
         >
-          <MessageCircle size={20} />
-          <span className="text-sm">{comments.length}</span>
+          <MessageCircle className="w-5 h-5" />
+          <span>{comments.length}</span>
         </button>
 
         <button
           onClick={handleShare}
-          className="flex items-center gap-2 text-gray-600 hover:text-[#FA4D4D] transition-colors"
+          className="flex items-center gap-1 text-gray-600"
         >
-          <Share2 size={20} />
+          <Share2 className="w-5 h-5" />
         </button>
 
         <span className="ml-auto text-sm text-gray-500">

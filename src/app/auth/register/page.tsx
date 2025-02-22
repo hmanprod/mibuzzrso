@@ -3,19 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Chrome } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import SocialButton from '@/components/auth/SocialButton';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, handleGoogleSignIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -25,29 +25,33 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
+      setIsLoading(false);
       return;
     }
 
     if (!formData.acceptTerms) {
       setError('Vous devez accepter les conditions d\'utilisation');
+      setIsLoading(false);
       return;
     }
 
     try {
-      const { error } = await signUp(formData.email, formData.password, {
-        username: formData.username,
-      });
+      const { error } = await signUp(formData.email, formData.password, {});
 
       if (error) {
         setError(error.message);
-      } else {
-        router.push('/auth/verify-email?email=' + encodeURIComponent(formData.email));
+        setIsLoading(false);
+        return;
       }
+      
+      router.push('/auth/verify-email');
     } catch (err) {
       setError('Une erreur est survenue lors de l\'inscription');
+      setIsLoading(false);
     }
   };
 
@@ -67,22 +71,6 @@ export default function RegisterPage() {
             {error}
           </div>
         )}
-
-        {/* Nom d'utilisateur */}
-        <div className="space-y-2">
-          <label htmlFor="username" className="block text-sm font-medium text-[#2D2D2D]">
-            Nom d&apos;utilisateur
-          </label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
-            required
-          />
-        </div>
 
         {/* Email */}
         <div className="space-y-2">
@@ -118,12 +106,12 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
+                <EyeOff className="w-5 h-5" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
+                <Eye className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -147,12 +135,12 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
             >
               {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
+                <EyeOff className="w-5 h-5" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
+                <Eye className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -179,9 +167,19 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[18px] shadow-sm text-sm font-medium text-white bg-[#FA4D4D] hover:bg-[#FA4D4D]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FA4D4D]"
+          disabled={isLoading}
+          className={`w-full bg-[#FA4D4D] text-white py-2.5 rounded-[18px] font-semibold hover:bg-[#E63F3F] transition-colors ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          S&apos;inscrire
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Inscription en cours...
+            </div>
+          ) : (
+            'S\'inscrire'
+          )}
         </button>
 
         <div className="relative">
@@ -193,11 +191,13 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <SocialButton provider="google" />
-          <SocialButton provider="facebook" />
-          <SocialButton provider="apple" />
-        </div>
+        <SocialButton
+          icon={<Chrome className="w-5 h-5" />}
+          onClick={handleGoogleSignIn}
+          isLoading={isLoading}
+        >
+          Continuer avec Google
+        </SocialButton>
 
         <p className="text-center text-sm text-gray-600">
           Déjà inscrit ?{' '}

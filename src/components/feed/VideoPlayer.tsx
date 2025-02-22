@@ -198,9 +198,13 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
             <div className="flex items-center gap-4">
               <button
                 onClick={togglePlay}
-                className="text-white hover:text-[#FA4D4D] transition-colors"
+                className="text-white hover:text-gray-200 transition-colors"
               >
-                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                {isPlaying ? (
+                  <Pause className="w-6 h-6" />
+                ) : (
+                  <Play className="w-6 h-6" />
+                )}
               </button>
 
               <div className="flex items-center gap-2 text-white">
@@ -212,9 +216,13 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleMute}
-                  className="text-white hover:text-[#FA4D4D] transition-colors"
+                  className="text-white hover:text-gray-200 transition-colors"
                 >
-                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                  {isMuted ? (
+                    <VolumeX className="w-6 h-6" />
+                  ) : (
+                    <Volume2 className="w-6 h-6" />
+                  )}
                 </button>
                 <input
                   type="range"
@@ -230,9 +238,9 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
 
             <button
               onClick={toggleFullscreen}
-              className="text-white hover:text-[#FA4D4D] transition-colors"
+              className="text-white hover:text-gray-200 transition-colors"
             >
-              <Maximize size={20} />
+              <Maximize className="w-6 h-6" />
             </button>
           </div>
         </div>

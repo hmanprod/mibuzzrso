@@ -41,7 +41,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X size={24} />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
@@ -81,11 +81,11 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
             <div className="text-center">
               {activeTab === 'audio' ? (
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#FA4D4D] bg-opacity-10 flex items-center justify-center">
-                  <Music className="text-[#FA4D4D]" size={24} />
+                  <Music className="w-6 h-6" />
                 </div>
               ) : (
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#FA4D4D] bg-opacity-10 flex items-center justify-center">
-                  <Video className="text-[#FA4D4D]" size={24} />
+                  <Video className="w-6 h-6" />
                 </div>
               )}
               <h3 className="text-lg font-medium text-[#2D2D2D] mb-2">

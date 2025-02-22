@@ -1,6 +1,9 @@
 'use client';
 
-import { Search, Bell, MessageCircle, Plus } from 'lucide-react';
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Search, Bell, MessageSquare, Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 interface NavbarProps {
@@ -19,7 +22,7 @@ export default function Navbar({ className }: NavbarProps) {
               Fil d&apos;actualité
             </button>
             <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
-              Services
+              Challenges
             </button>
             <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
               Bibliothèque
@@ -30,11 +33,11 @@ export default function Navbar({ className }: NavbarProps) {
         {/* Zone centrale : Recherche */}
         <div className="flex-1 max-w-[400px] mx-8 hidden md:block">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666666] h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Rechercher"
-              className="w-full bg-[#F2F2F2] rounded-full py-2 pl-10 pr-4 text-base text-[#2D2D2D] placeholder-[#666666] focus:outline-none focus:bg-[#FFFFFF] focus:ring-1 focus:ring-[#EAEAEA] transition-colors"
+              placeholder="Rechercher..."
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#FA4D4D] focus:ring-opacity-50"
             />
           </div>
         </div>
@@ -42,16 +45,16 @@ export default function Navbar({ className }: NavbarProps) {
         {/* Zone droite : Actions et profil */}
         <div className="flex items-center gap-6">
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors md:hidden">
-            <Search className="h-5 w-5" />
+            <Search className="w-5 h-5 text-gray-400" />
           </button>
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
-            <Bell className="h-5 w-5" />
+            <Bell className="w-6 h-6" />
           </button>
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
-            <MessageCircle className="h-5 w-5" />
+            <MessageSquare className="w-6 h-6" />
           </button>
           <button className="hidden md:flex items-center gap-2 bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
-            <Plus className="h-4 w-4" />
+            <Plus className="w-5 h-5" />
             <span>Créer</span>
           </button>
           <div className="flex items-center gap-2">
