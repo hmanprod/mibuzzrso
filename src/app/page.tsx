@@ -7,6 +7,8 @@ import RightSidebar from "@/components/RightSidebar";
 import FeedPost from '@/components/feed/FeedPost';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { useAuth } from '@/hooks/useAuth';
 
 // Données de test
 const mockPosts = [
@@ -74,41 +76,44 @@ const mockPosts = [
 
 export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      <Navbar className="fixed top-0 left-0 right-0 z-50" />
-      
-      <div className="flex pt-[72px]">
-        <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
+    <AuthGuard>
+      <div className="min-h-screen bg-[#FAFAFA]">
+        <Navbar className="fixed top-0 left-0 right-0 z-50" />
         
-        {/* Feed central */}
-        <main className="ml-[274px] max-w-[720px] w-full p-6 space-y-6">
-          {/* Bloc de création de post */}
-          <CreatePostBlock
-            userImage="/placeholder-user.jpg"
-            onOpen={() => setShowCreatePost(true)}
-          />
-
-          {/* Liste des posts */}
-          <div className="space-y-6">
-            {mockPosts.map((post) => (
-              <FeedPost key={post.id} {...post} />
-            ))}
-          </div>
-
-          {/* Dialog de création de post */}
-          {showCreatePost && (
-            <CreatePostDialog
-              isOpen={showCreatePost}
-              onClose={() => setShowCreatePost(false)}
+        <div className="flex pt-[72px]">
+          <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
+          
+          {/* Feed central */}
+          <main className="ml-[274px] max-w-[720px] w-full p-6 space-y-6">
+            {/* Bloc de création de post */}
+            <CreatePostBlock
+              userImage={user?.user_metadata?.avatar_url || "/placeholder-user.jpg"}
+              onOpen={() => setShowCreatePost(true)}
             />
-          )}
-        </main>
-        
-        {/* Sidebar droite */}
-        <RightSidebar className="fixed right-0 bottom-0 top-[72px] w-[350px]" />
+
+            {/* Liste des posts */}
+            <div className="space-y-6">
+              {mockPosts.map((post) => (
+                <FeedPost key={post.id} {...post} />
+              ))}
+            </div>
+
+            {/* Dialog de création de post */}
+            {showCreatePost && (
+              <CreatePostDialog
+                isOpen={showCreatePost}
+                onClose={() => setShowCreatePost(false)}
+              />
+            )}
+          </main>
+          
+          {/* Sidebar droite */}
+          <RightSidebar className="fixed right-0 bottom-0 top-[72px] w-[350px]" />
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

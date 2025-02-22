@@ -3,22 +3,44 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import AuthLayout from '@/components/auth/AuthLayout';
 import SocialButton from '@/components/auth/SocialButton';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { signIn } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implémenter la logique de connexion
+    setError(null);
+
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push('/');
+      }
+    } catch (err) {
+      setError('Une erreur est survenue lors de la connexion');
+    }
   };
 
   return (
     <AuthLayout>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+            {error}
+          </div>
+        )}
+        
         {/* Champ email */}
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-[#2D2D2D]">
