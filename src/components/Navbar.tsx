@@ -52,11 +52,16 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
       <div className="h-full mx-auto px-6 flex items-center justify-between">
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
-          <div className="text-[#2D2D2D] font-bold text-[20px]">BandLab</div>
+          <Link href="/">
+            <div className="text-[#2D2D2D] font-bold text-[20px]">BandLab</div>
+          </Link>
           <div className="hidden md:flex items-center gap-8">
-            <button className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2">
+            <Link 
+              href="/"
+              className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2"
+            >
               Fil d&apos;actualité
-            </button>
+            </Link>
             <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
               Challenges
             </button>
@@ -111,7 +116,10 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
                   <button
-                    onClick={() => handleNavigation('/profile')}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      router.push('/profile');
+                    }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
                   >
                     <User className="w-4 h-4" />
@@ -119,7 +127,10 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                   </button>
                   
                   <button
-                    onClick={() => handleNavigation('/settings')}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      router.push('/settings');
+                    }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
                   >
                     <Settings className="w-4 h-4" />
@@ -127,7 +138,10 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                   </button>
 
                   <button
-                    onClick={() => handleNavigation('/support')}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      router.push('/support');
+                    }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
                   >
                     <HelpCircle className="w-4 h-4" />

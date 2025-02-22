@@ -82,3 +82,8 @@ Application web servant de réseau social pour les créateurs de contenu musical
 - Permettre la découverte de nouveaux talents
 - Encourager la création à travers des défis
 - Offrir un espace de stockage et d'organisation pour les créations musicales
+
+# Technologies Utilisées
+- Frontend : React, Next.js, Tailwind CSS
+- Backend : Supabase
+- Autre : Lucide React, Cloudinary, Google Authentification

@@ -15,11 +15,14 @@ src/app/
 │       ├── [token]/
 │       │   └── page.tsx       # Page de création du nouveau mot de passe
 │       └── page.tsx           # Page de demande de réinitialisation
+├── profile/
+│   ├── edit/
+│   │   └── page.tsx           # Page d'édition du profil
+│   └── page.tsx               # Page de profil utilisateur
 ├── favicon.ico                # Icône du site
-├── globals.css               # Styles globaux
-├── layout.tsx               # Layout principal de l'application
-└── page.tsx                # Page d'accueil
-
+├── globals.css                # Styles globaux
+├── layout.tsx                 # Layout principal de l'application
+└── page.tsx                   # Page d'accueil
 ```
 
 ## Structure des composants
@@ -27,11 +30,16 @@ src/app/
 ```
 src/components/
 ├── auth/
-│   ├── AuthGuard.tsx        # Protection des routes authentifiées
-│   ├── AuthLayout.tsx       # Layout commun pour les pages d'auth
-│   └── SocialButton.tsx     # Bouton de connexion sociale
+│   ├── AuthGuard.tsx         # Protection des routes authentifiées
+│   ├── AuthLayout.tsx        # Layout commun pour les pages d'auth
+│   └── SocialButton.tsx      # Bouton de connexion sociale
+├── onboarding/
+│   ├── OnboardingModal.tsx   # Modal d'onboarding
+│   ├── ProfileCheck.tsx      # Vérification de la complétude du profil
+│   └── OnboardingForm.tsx    # Formulaire de collecte d'informations
 ├── providers/
-│   └── Providers.tsx        # Wrapper des providers (Auth, etc.)
+│   ├── Providers.tsx         # Wrapper des providers (Auth, etc.)
+│   └── OnboardingProvider.tsx # Gestion de l'état d'onboarding
 └── ...autres composants
 ```
 
@@ -39,14 +47,32 @@ src/components/
 
 ```
 src/hooks/
-└── useAuth.tsx             # Hook de gestion de l'authentification
+├── useAuth.tsx              # Hook de gestion de l'authentification
+├── useOnboarding.tsx        # Hook de gestion de l'onboarding
+└── useProfile.tsx           # Hook de gestion du profil utilisateur
 ```
 
 ## Structure de la configuration
 
 ```
 src/lib/
-└── supabase.ts            # Configuration du client Supabase
+├── supabase/
+│   ├── client.ts           # Configuration du client Supabase
+│   ├── database.types.ts   # Types générés pour la base de données
+│   └── schema.ts           # Schémas de validation
+└── utils/
+    └── profile.ts          # Utilitaires de gestion du profil
+```
+
+## Structure des migrations
+
+```
+supabase/
+├── migrations/
+│   ├── 20250222125247_create_profiles.sql
+│   ├── 20250222125248_create_challenges.sql
+│   └── 20250222125249_create_challenge_participations.sql
+└── seed.sql                # Données initiales
 ```
 
 ## 📝 Description des routes
@@ -56,16 +82,18 @@ src/lib/
   - Affiche le fil d'actualité musical
   - Sidebar droite avec suggestions
   - Protégée par AuthGuard (redirection vers /auth/login si non connecté)
+  - Vérification de la complétude du profil
 
 ### Pages d'Authentification
 - `/auth/login` : Connexion
   - Formulaire de connexion email/mot de passe
-  - Connexion avec réseaux sociaux (Google, Facebook, Apple)
+  - Connexion avec réseaux sociaux (Google)
   - Vérification de l'état de confirmation de l'email
+  - Déclenchement de l'onboarding si nécessaire
   
 - `/auth/register` : Inscription
   - Formulaire d'inscription complet
-  - Inscription avec réseaux sociaux
+  - Inscription avec Google
   - Validation des conditions d'utilisation
   - Redirection vers la page de vérification d'email
   
@@ -83,21 +111,29 @@ src/lib/
   - Le paramètre `[token]` est utilisé pour valider le lien de réinitialisation
   - Accessible uniquement via le lien envoyé par email
 
-## 🔒 Système d'Authentification
+## 🔒 Système d'Authentification et Onboarding
 
 ### Composants
 - `AuthGuard` : Protège les routes authentifiées
   - Vérifie la présence d'un utilisateur connecté
   - Redirige vers la page de connexion si nécessaire
   - Affiche un loader pendant la vérification
+  - Déclenche la vérification du profil
 
-- `Providers` : Fournit le contexte d'authentification
-  - Enveloppe l'application avec AuthProvider
-  - Gère l'état global de l'authentification
+- `Providers` : Fournit les contextes
+  - AuthProvider pour l'authentification
+  - OnboardingProvider pour l'état d'onboarding
+  - Gestion des états globaux
 
 ### Hooks
-- `useAuth` : Hook personnalisé pour l'authentification
+- `useAuth` : Hook d'authentification
   - Gestion de la connexion/déconnexion
   - Accès aux informations de l'utilisateur
   - Mise à jour du profil utilisateur
   - Gestion de la vérification d'email
+
+- `useOnboarding` : Hook d'onboarding
+  - Vérification de la complétude du profil
+  - Gestion du modal d'onboarding
+  - Sauvegarde des informations
+  - Navigation post-onboarding
