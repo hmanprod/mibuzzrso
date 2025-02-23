@@ -1,24 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { Image as ImageIcon, Music, Video } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
+import { useAuth } from '@/hooks/useAuth';
+import { Music, Video } from 'lucide-react';
 
 interface CreatePostBlockProps {
-  userImage: string;
   onOpen: () => void;
 }
 
-export default function CreatePostBlock({ userImage, onOpen }: CreatePostBlockProps) {
+export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
+  const { profile } = useAuth();
+
   return (
     <div className="bg-white rounded-[18px] shadow-sm p-4 space-y-4">
       {/* Zone de saisie */}
       <div className="flex items-center gap-3">
-        <img
-          src={userImage}
-          alt="Your profile"
-          className="w-10 h-10 rounded-full"
+        <Avatar
+          src={profile?.avatar_url || null}
+          stageName={profile?.stage_name}
+          size={40}
+          className="rounded-full"
         />
+        
         <button
           onClick={onOpen}
           className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"

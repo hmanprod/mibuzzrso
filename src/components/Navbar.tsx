@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, MessageSquare, Plus, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/hooks/useAuth';
+import { Avatar } from './ui/Avatar';
+import Image from 'next/image';
 
 interface NavbarProps {
   onOpenCreatePost?: () => void;
@@ -16,7 +17,7 @@ interface NavbarProps {
 export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -54,7 +55,13 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
           <Link href="/">
-            <Image src="/images/logo_black.svg" alt="BandLab Logo" width={130} height={39} />
+            <Image
+              src="/images/logo_black.svg"
+              alt="MIBUZZ Logo"
+              width={130}
+              height={45}
+              className="object-cover"
+            />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link 
@@ -105,11 +112,10 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                 onClick={toggleDropdown}
                 className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               >
-                <Image
-                  src="/images/placeholder-user.jpg"
-                  alt="Avatar"
-                  width={40}
-                  height={40}
+                <Avatar
+                  src={profile?.avatar_url || null}
+                  stageName={profile?.stage_name}
+                  size={40}
                   className="object-cover"
                 />
               </button>
