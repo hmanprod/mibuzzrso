@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
-import { ProfileCheck } from "@/components/onboarding/ProfileCheck";
+import { ProfileCheck } from "@/components/ProfileCheck";
 import { AuthDebug } from '@/components/debug/AuthDebug';
 
 const roboto = Roboto({

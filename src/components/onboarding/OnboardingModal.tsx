@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MultiSelect, type Option } from "@/components/ui/multi-select";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -107,7 +108,7 @@ const ALL_COUNTRIES: Option[] = [
 
 export function OnboardingModal() {
   const { isModalOpen, closeModal, updateProfile } = useOnboarding();
-  
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: '',
     activities: [],
@@ -118,6 +119,7 @@ export function OnboardingModal() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const { error } = await updateProfile(formData);
       if (error) {
@@ -126,6 +128,8 @@ export function OnboardingModal() {
       closeModal();
     } catch (error) {
       console.error('Failed to update profile:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -224,8 +228,15 @@ export function OnboardingModal() {
           </div>
 
           <div className="flex justify-end pt-4">
-            <Button type="submit">
-              Compléter votre profil
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Chargement...
+                </>
+              ) : (
+                'Compléter votre profil'
+              )}
             </Button>
           </div>
         </form>

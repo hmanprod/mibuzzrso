@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { OnboardingModal } from './OnboardingModal';
+import { OnboardingModal } from './onboarding/OnboardingModal';
 
 const PUBLIC_ROUTES = ['/auth/login', '/auth/logout', '/auth/register', '/auth/verify-email', '/auth/reset-password'];
 

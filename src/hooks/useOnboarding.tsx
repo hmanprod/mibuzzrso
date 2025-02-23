@@ -20,7 +20,7 @@ export const useOnboarding = () => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('stage_name, genre, activities, country')
+        .select('stage_name, genres, activities, country')
         .eq('id', user.id)
         .single();
 
@@ -31,8 +31,8 @@ export const useOnboarding = () => {
 
       const isComplete = Boolean(
         profile?.stage_name &&
-        profile?.genre &&
-        profile?.activities &&
+        profile?.genres?.length > 0 &&
+        profile?.activities?.length > 0 &&
         profile?.country
       );
 
