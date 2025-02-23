@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
@@ -22,17 +22,27 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
+    console.log('🔒 Starting login process...');
     try {
+      console.log('📨 Calling signIn with email:', email);
       const { data, error } = await signIn(email, password);
-      console.log(data, error);
+      console.log('📬 Sign in response:', { data, error });
+
       if (error) {
+        console.error('❌ Login error:', error);
         setError(error.message);
       } else if (data?.user) {
+        console.log('✅ Login successful, redirecting...');
         router.push('/');
+      } else {
+        console.error('⚠️ No user data in response');
+        setError('Erreur de connexion: données utilisateur manquantes');
       }
     } catch (err) {
+      console.error('💥 Unexpected error during login:', err);
       setError('Une erreur est survenue lors de la connexion');
     } finally {
+      console.log('🏁 Login process completed');
       setIsLoading(false);
     }
   };

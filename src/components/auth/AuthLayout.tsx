@@ -12,7 +12,7 @@ export default function AuthLayout({ children, className }: AuthLayoutProps) {
       <div className={twMerge("w-full max-w-[400px] bg-white rounded-[18px] p-10", className)}>
         {/* Logo */}
         <div className="flex justify-center mb-10">
-        <Image src="/images/logo_black.svg" alt="BandLab Logo" width={150} height={45} />
+        <Image src="/images/logo_black.svg" alt="BandLab Logo" width={150} height={45} priority={true}/>
         </div>
         {children}
       </div>

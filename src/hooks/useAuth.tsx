@@ -32,55 +32,112 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fonction utilitaire pour charger le profil
   const loadProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      console.log('🔍 Loading profile for user:', userId);
+      console.log('📱 Current local profile state:', profile);
 
-    if (!error && data) {
-      setProfile(data);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('❌ Error loading profile:', error);
+        return { data: null, error };
+      }
+
+      console.log('✨ Supabase profile data:', data);
+      return { data, error: null };
+    } catch (error) {
+      console.error('❌ Unexpected error loading profile:', error);
+      return { data: null, error };
     }
-    return { data, error };
   };
 
   useEffect(() => {
-    // Vérification initiale de la session
+    let mounted = true;
+
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await loadProfile(session.user.id);
-          // Reset pendingVerificationEmail si l'utilisateur est vérifié
-          if (session.user.email_confirmed_at) {
+        console.log('🚀 Initializing auth...');
+        console.log('📱 Current local state:', { user, profile });
+
+        // Get both session and user to compare
+        const [sessionResult, userResult] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser()
+        ]);
+
+        console.log('✨ Supabase getSession result:', sessionResult);
+        console.log('✨ Supabase getUser result:', userResult);
+
+        if (!mounted) return;
+        
+        const activeUser = userResult.data.user || sessionResult.data.session?.user;
+        
+        if (activeUser) {
+          console.log('👤 Setting user from init:', activeUser);
+          setUser(activeUser);
+          const { data: profileData } = await loadProfile(activeUser.id);
+          if (profileData) {
+            console.log('👥 Setting profile from init:', profileData);
+            setProfile(profileData);
+          }
+          if (activeUser.email_confirmed_at) {
             setPendingVerificationEmail(null);
           }
+        } else {
+          console.log('🚫 No active user found, clearing local state');
+          setUser(null);
+          setProfile(null);
         }
+      } catch (error) {
+        console.error('❌ Error initializing auth:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     initAuth();
 
-    // Souscription aux changements d'auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await loadProfile(session.user.id);
-          // Reset pendingVerificationEmail si l'utilisateur est vérifié
-          if (session.user.email_confirmed_at) {
+        if (!mounted) return;
+        
+        console.log('🔄 Auth state changed:', event);
+        console.log('📱 Current local state:', { user, profile });
+        console.log('✨ New session from onAuthStateChange:', session);
+
+        // Double check with getUser to ensure consistency
+        const { data: userData } = await supabase.auth.getUser();
+        console.log('✨ getUser result after state change:', userData);
+        
+        const activeUser = userData.user || session?.user;
+        
+        if (activeUser) {
+          console.log('👤 Setting user from auth change:', activeUser);
+          setUser(activeUser);
+          const { data: profileData } = await loadProfile(activeUser.id);
+          if (profileData) {
+            console.log('👥 Setting profile from auth change:', profileData);
+            setProfile(profileData);
+          }
+          if (activeUser.email_confirmed_at) {
             setPendingVerificationEmail(null);
           }
         } else {
+          console.log('🚫 No active user in state change, clearing local state');
+          setUser(null);
           setProfile(null);
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -116,28 +173,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('signIn', email);
+    console.log('🔑 Attempting sign in for:', email);
     try {
       setLoading(true);
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      console.log(authData, error);
-
-      if (!error && authData.user) {
-        const { data: profileData } = await loadProfile(authData.user.id);
-        return { 
-          data: { 
-            user: authData.user,
-            profile: profileData || null
-          },
-          error: null 
-        };
+      
+      // Clear any existing state first
+      setUser(null);
+      setProfile(null);
+      
+      console.log('📡 Starting Supabase auth call...');
+      
+      let authResponse;
+      try {
+        authResponse = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        console.log('✨ Raw auth response received:', authResponse);
+      } catch (signInError) {
+        console.error('💥 Error during signInWithPassword:', signInError);
+        throw signInError;
       }
 
-      return { data: null, error };
+      const { data: authData, error: signInError } = authResponse;
+      console.log('📋 Auth data:', authData);
+      console.log('❗ Auth error:', signInError);
+
+      if (signInError) {
+        console.error('❌ Sign in error:', signInError);
+        return { data: null, error: signInError };
+      }
+
+      if (!authData?.user) {
+        console.error('❌ No user data in auth response');
+        return { data: null, error: new Error('No user data received') };
+      }
+
+      // Set the user immediately
+      console.log('👤 Setting user after successful sign in:', authData.user);
+      setUser(authData.user);
+
+      // Load profile
+      console.log('🔍 Loading profile after sign in...');
+      let profileData = null;
+      try {
+        const profileResponse = await loadProfile(authData.user.id);
+        profileData = profileResponse.data;
+        console.log('📋 Profile response:', profileResponse);
+      } catch (profileError) {
+        console.error('💥 Error loading profile:', profileError);
+      }
+      
+      if (profileData) {
+        console.log('👥 Setting profile after sign in:', profileData);
+        setProfile(profileData);
+      } else {
+        console.log('⚠️ No profile data found after sign in');
+      }
+
+      const response = { 
+        data: { 
+          user: authData.user,
+          profile: profileData
+        },
+        error: null
+      };
+      console.log('✅ Final sign in response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Unexpected error during sign in:', error);
+      return { data: null, error: error as AuthError };
     } finally {
+      console.log('🏁 Sign in process completed');
       setLoading(false);
     }
   };
@@ -146,14 +253,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('signOut');
     setLoading(true);
     try {
+      setUser(null);
+      setProfile(null);
+      setPendingVerificationEmail(null);
+
       const { error } = await supabase.auth.signOut();
       console.log('Résultat de la déconnexion:', error ? 'Erreur' : 'Succès');
       console.log('Détails de l\'erreur:', error);
-      if (!error) {
-        setUser(null);
-        setProfile(null);
-        setPendingVerificationEmail(null);
-      }
+
       return { error };
     } finally {
       setLoading(false);

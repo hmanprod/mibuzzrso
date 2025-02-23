@@ -121,7 +121,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/profile');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <User className="w-4 h-4" />
                     <span>Mon profil</span>
@@ -132,7 +132,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/settings');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Mes paramètres</span>
@@ -143,7 +143,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/support');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <HelpCircle className="w-4 h-4" />
                     <span>Support</span>
@@ -153,7 +153,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
 
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 text-[#FA4D4D] hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Se déconnecter</span>
