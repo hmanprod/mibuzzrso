@@ -1,12 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 
 export function AuthDebug() {
   const { user, profile } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
+
+  useEffect(() => {
+    const channel = supabase.channel('system')
+      .subscribe((status) => {
+        setConnectionStatus(status === 'SUBSCRIBED' ? 'online' : 'offline');
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   if (!isVisible || !user) return null;
 
@@ -25,9 +38,9 @@ export function AuthDebug() {
         {profile && (
           <>
             <p>Name: {profile.stage_name || 'N/A'}</p>
-            <p>Role: {profile.role || 'N/A'}</p>
           </>
         )}
+        <p>Supabase: <span className={connectionStatus === 'online' ? 'text-green-400' : 'text-red-400'}>{connectionStatus}</span></p>
       </div>
     </div>
   );

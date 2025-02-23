@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Database } from '@/lib/supabase/database.types';
 import { useAuth } from './useAuth';
 import { supabase } from '@/lib/supabase';
 
@@ -54,17 +53,11 @@ export const useOnboarding = () => {
   };
 
   const closeModal = () => {
-    // Ne permettez pas la fermeture si le profil n'est pas complet
-    if (!isProfileComplete) {
-      return;
-    }
     setIsModalOpen(false);
   };
 
   useEffect(() => {
-    // if (user) {
-      checkProfileCompleteness();
-    // }
+    checkProfileCompleteness();
   }, [user]);
 
   return {
@@ -76,14 +69,53 @@ export const useOnboarding = () => {
       if (!user) return { error: new Error('No user') };
 
       try {
-        const { error } = await supabase
+        // First check if profile exists
+        const { data: existingProfile, error: fetchError } = await supabase
           .from('profiles')
-          .update(data)
-          .eq('id', user.id);
+          .select('id')
+          .eq('id', user.id)
+          .single();
 
-        if (error) throw error;
+        if (fetchError && fetchError.code === 'PGRST116') {
+          // Profile doesn't exist, create it
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ 
+              id: user.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              ...data 
+            }]);
 
-        await checkProfileCompleteness();
+          if (insertError) throw insertError;
+        } else if (fetchError) {
+          throw fetchError;
+        } else {
+          // Profile exists, update it
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              ...data,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+
+          if (updateError) throw updateError;
+        }
+
+        // Check if profile is complete with the new data
+        const isComplete = Boolean(
+          data.stage_name &&
+          data.genres?.length > 0 &&
+          data.activities?.length > 0 &&
+          data.country
+        );
+
+        setIsProfileComplete(isComplete);
+        if (isComplete) {
+          setIsModalOpen(false);
+        }
+
         return { error: null };
       } catch (error) {
         console.error('Error updating profile:', error);
