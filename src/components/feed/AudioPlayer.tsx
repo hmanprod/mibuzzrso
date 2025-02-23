@@ -97,7 +97,7 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
       <div className="flex items-center gap-4">
         <button
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-[#FA4D4D] text-white flex items-center justify-center hover:bg-[#E63F3F] transition-colors"
+          className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors"
         >
           {isPlaying ? (
             <Pause className="w-8 h-8" onClick={togglePlay} />
@@ -156,7 +156,7 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
               <div
                 className={`w-full h-full rounded-sm ${
                   (index / waveformData.length) <= (currentTime / duration)
-                    ? 'bg-[#FA4D4D]'
+                    ? 'bg-primary'
                     : 'bg-gray-300'
                 }`}
               />
@@ -170,7 +170,7 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
           return (
             <div
               key={comment.id}
-              className="absolute top-0 w-1 h-full bg-[#FA4D4D] opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
+              className="absolute top-0 w-1 h-full bg-primary opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
               style={{ left: `${position}%` }}
               title={comment.content}
             />

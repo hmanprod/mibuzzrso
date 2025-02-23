@@ -50,7 +50,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
           <button
             className={`flex-1 py-4 text-sm font-medium ${
               activeTab === 'audio'
-                ? 'text-[#FA4D4D] border-b-2 border-[#FA4D4D]'
+                ? 'text-primary border-b-2 border-primary'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => setActiveTab('audio')}
@@ -60,7 +60,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
           <button
             className={`flex-1 py-4 text-sm font-medium ${
               activeTab === 'video'
-                ? 'text-[#FA4D4D] border-b-2 border-[#FA4D4D]'
+                ? 'text-primary border-b-2 border-primary'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
             onClick={() => setActiveTab('video')}
@@ -80,11 +80,11 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
           <div className="border-2 border-dashed border-gray-200 rounded-[18px] p-8">
             <div className="text-center">
               {activeTab === 'audio' ? (
-                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#FA4D4D] bg-opacity-10 flex items-center justify-center">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
                   <Music className="w-6 h-6" />
                 </div>
               ) : (
-                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#FA4D4D] bg-opacity-10 flex items-center justify-center">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary bg-opacity-10 flex items-center justify-center">
                   <Video className="w-6 h-6" />
                 </div>
               )}
@@ -102,7 +102,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                   // TODO: Gérer le fichier sélectionné
                 }}
               />
-              <button className="bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-6 py-2 rounded-[18px] text-sm font-medium transition-colors">
+              <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-[18px] text-sm font-medium transition-colors">
                 Sélectionner un fichier
               </button>
               <p className="mt-4 text-xs text-gray-500">
@@ -122,7 +122,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
             </label>
             <input
               type="text"
-              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
+              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               placeholder="Donnez un titre à votre création"
             />
           </div>
@@ -132,7 +132,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
               Description (optionnelle)
             </label>
             <textarea
-              className="w-full h-24 px-4 py-3 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D] resize-none"
+              className="w-full h-24 px-4 py-3 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               placeholder="Décrivez votre création..."
             />
           </div>
@@ -141,7 +141,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
             <label className="block text-sm font-medium text-[#2D2D2D]">
               Genre musical
             </label>
-            <select className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]">
+            <select className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
               <option value="">Sélectionnez un genre</option>
               <option value="rock">Rock</option>
               <option value="pop">Pop</option>
@@ -157,18 +157,18 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
             </label>
             <input
               type="text"
-              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
+              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               placeholder="Ajoutez des tags séparés par des virgules"
             />
           </div>
 
           <div className="flex items-center justify-between pt-4">
-            <select className="h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]">
+            <select className="h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
               <option value="public">Public</option>
               <option value="private">Privé</option>
               <option value="followers">Abonnés uniquement</option>
             </select>
-            <button className="bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-6 py-2 rounded-[18px] text-sm font-medium transition-colors">
+            <button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-[18px] text-sm font-medium transition-colors">
               Publier
             </button>
           </div>

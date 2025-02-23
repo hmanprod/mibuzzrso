@@ -15,7 +15,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Flame className="w-6 h-6" />
@@ -25,7 +25,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Heart className="w-6 h-6" />
@@ -35,7 +35,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Users className="w-6 h-6" />
@@ -47,7 +47,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Music className="w-6 h-6" />
@@ -57,7 +57,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Disc className="w-6 h-6" />
@@ -67,7 +67,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <ListMusic className="w-6 h-6" />
@@ -77,7 +77,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-[#FA4D4D] transition-colors',
+            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
           )}
         >
           <Video className="w-6 h-6" />

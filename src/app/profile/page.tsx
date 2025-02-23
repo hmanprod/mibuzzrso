@@ -67,7 +67,7 @@ export default function ProfilePage() {
               <div className="mt-6">
                 <button 
                   onClick={() => router.push('/profile/edit')}
-                  className="bg-[#FA4D4D] text-white px-4 py-2 rounded-full hover:bg-[#E63F3F] flex items-center gap-2"
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 flex items-center gap-2"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Modifier le profil</span>
@@ -122,7 +122,7 @@ export default function ProfilePage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-2 pb-4 border-b-2 transition-colors ${
                         activeTab === tab.id
-                          ? 'border-[#FA4D4D] text-[#FA4D4D]'
+                          ? 'border-primary text-primary'
                           : 'border-transparent text-gray-600 hover:text-gray-900'
                       }`}
                     >
@@ -145,7 +145,7 @@ export default function ProfilePage() {
                         Vous verrez votre fil d'activités se remplir dès que vous commencerez à publier des
                         révisions ou des publications.
                       </p>
-                      <button className="mt-4 px-4 py-2 bg-[#FA4D4D] text-white rounded-full hover:bg-[#E63F3F]">
+                      <button className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90">
                         Commencer
                       </button>
                     </div>
@@ -159,7 +159,7 @@ export default function ProfilePage() {
               <div className="bg-white mt-20 p-4 rounded-lg shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold">Suggestions</h2>
-                  <button className="text-sm text-[#FA4D4D]">Actualiser</button>
+                  <button className="text-sm text-primary">Actualiser</button>
                 </div>
                 <div className="space-y-4">
                   {[
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                           <div className="text-sm text-gray-600">{user.followers}</div>
                         </div>
                       </div>
-                      <button className="text-[#FA4D4D]">
+                      <button className="text-primary">
                         <Plus className="w-5 h-5" />
                       </button>
                     </div>

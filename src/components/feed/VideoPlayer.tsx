@@ -144,7 +144,7 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
             }}
           >
             <div className="relative group">
-              <div className="w-6 h-6 bg-[#FA4D4D] rounded-full flex items-center justify-center text-white cursor-pointer">
+              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white cursor-pointer">
                 <span className="text-xs">+</span>
               </div>
               <div className="absolute left-full ml-2 hidden group-hover:block bg-white rounded-lg shadow-lg p-2 w-48">
@@ -176,7 +176,7 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
             onClick={handleProgressClick}
           >
             <div
-              className="absolute h-full bg-[#FA4D4D] rounded"
+              className="absolute h-full bg-primary rounded"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
             {/* Marqueurs de commentaires */}

@@ -84,7 +84,7 @@ export default function RegisterPage() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
+            className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             required
           />
         </div>
@@ -101,7 +101,7 @@ export default function RegisterPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D] pr-12"
+              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
               required
             />
             <button
@@ -130,7 +130,7 @@ export default function RegisterPage() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D] pr-12"
+              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
               required
             />
             <button
@@ -155,12 +155,12 @@ export default function RegisterPage() {
             name="acceptTerms"
             checked={formData.acceptTerms}
             onChange={handleChange}
-            className="h-4 w-4 rounded border-gray-300 text-[#FA4D4D] focus:ring-[#FA4D4D]"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             required
           />
           <label htmlFor="acceptTerms" className="text-sm text-gray-600">
             J&apos;accepte les{' '}
-            <Link href="/terms" className="text-[#FA4D4D] hover:text-[#FA4D4D]/80">
+            <Link href="/terms" className="text-primary hover:text-primary/80">
               conditions d&apos;utilisation
             </Link>
           </label>
@@ -169,7 +169,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full bg-[#FA4D4D] text-white py-2.5 rounded-[18px] font-semibold hover:bg-[#E63F3F] transition-colors ${
+          className={`w-full bg-primary text-white py-2.5 rounded-[18px] font-semibold hover:bg-primary/80 transition-colors ${
             isLoading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
@@ -204,7 +204,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-600">
           Déjà inscrit ?{' '}
-          <Link href="/auth/login" className="text-[#FA4D4D] hover:text-[#FA4D4D]/80">
+          <Link href="/auth/login" className="text-primary hover:text-primary/80">
             Se connecter
           </Link>
         </p>

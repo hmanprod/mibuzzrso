@@ -55,7 +55,7 @@ export default function LoginPage() {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
+            className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             required
           />
         </div>
@@ -71,7 +71,7 @@ export default function LoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D] pr-12"
+              className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
               placeholder="Saisissez au moins 6 caractères"
               required
             />
@@ -93,7 +93,7 @@ export default function LoginPage() {
         <div className="flex justify-end">
           <Link
             href="/auth/reset-password"
-            className="text-sm text-[#FA4D4D] hover:text-[#E63F3F] transition-colors"
+            className="text-sm text-primary hover:text-primary/80 transition-colors"
           >
             Mot de passe oublié ?
           </Link>
@@ -103,7 +103,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full bg-[#FA4D4D] text-white py-2.5 rounded-[18px] font-semibold hover:bg-[#E63F3F] transition-colors ${
+          className={`w-full bg-primary text-primary-foreground py-2.5 rounded-[18px] font-semibold hover:bg-primary/90 transition-colors ${
             isLoading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
@@ -142,7 +142,7 @@ export default function LoginPage() {
           <span>Vous n&apos;avez pas de compte ? </span>
           <Link
             href="/auth/register"
-            className="text-[#FA4D4D] hover:text-[#E63F3F] font-medium transition-colors"
+            className="text-primary hover:text-primary/80 font-medium transition-colors"
           >
             S&apos;inscrire
           </Link>

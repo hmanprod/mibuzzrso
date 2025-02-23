@@ -48,7 +48,7 @@ export default function Feed({ className }: FeedProps) {
                   <p className="text-sm text-[#666666]">@{post.user.name.toLowerCase()}</p>
                 </div>
               </div>
-              <button className="text-[#FA4D4D] font-medium text-sm hover:text-[#E63F3F] transition-colors">
+              <button className="text-primary font-medium text-sm hover:text-primary/80 transition-colors">
                 Suivre
               </button>
             </div>
@@ -70,24 +70,24 @@ export default function Feed({ className }: FeedProps) {
                   </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FAFAFA]">
-                  <div className="h-full w-0 bg-[#FA4D4D]" />
+                  <div className="h-full w-0 bg-primary" />
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-1 text-[#666666] hover:text-[#FA4D4D] transition-colors">
+              <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors">
                 <Heart className="h-5 w-5" />
                 <span className="text-sm">{post.likes}</span>
               </button>
-              <button className="flex items-center gap-1 text-[#666666] hover:text-[#FA4D4D] transition-colors">
+              <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors">
                 <MessageCircle className="h-5 w-5" />
                 <span className="text-sm">{post.comments}</span>
               </button>
-              <button className="flex items-center gap-1 text-[#666666] hover:text-[#FA4D4D] transition-colors">
+              <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors">
                 <Share2 className="h-5 w-5" />
               </button>
-              <button className="flex items-center gap-1 text-[#666666] hover:text-[#FA4D4D] transition-colors ml-auto">
+              <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors ml-auto">
                 <Bookmark className="h-5 w-5" />
               </button>
             </div>

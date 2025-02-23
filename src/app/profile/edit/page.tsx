@@ -87,7 +87,7 @@ export default function EditProfilePage() {
                   id="full_name"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#FA4D4D] focus:outline-none focus:ring-1 focus:ring-[#FA4D4D]"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -104,7 +104,7 @@ export default function EditProfilePage() {
                     id="username"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="block w-full rounded-r-md border border-gray-300 px-3 py-2 focus:border-[#FA4D4D] focus:outline-none focus:ring-1 focus:ring-[#FA4D4D]"
+                    className="block w-full rounded-r-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -118,7 +118,7 @@ export default function EditProfilePage() {
                   id="location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#FA4D4D] focus:outline-none focus:ring-1 focus:ring-[#FA4D4D]"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Rechercher une ville"
                 />
               </div>
@@ -132,7 +132,7 @@ export default function EditProfilePage() {
                   rows={4}
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-[#FA4D4D] focus:outline-none focus:ring-1 focus:ring-[#FA4D4D]"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Décrivez-vous en quelques mots..."
                 />
               </div>
@@ -155,7 +155,7 @@ export default function EditProfilePage() {
                           [link.platform.toLowerCase()]: e.target.value
                         }
                       })}
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-[#FA4D4D] focus:outline-none focus:ring-1 focus:ring-[#FA4D4D]"
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                       placeholder={`Ajouter un lien ${link.platform}`}
                     />
                   </div>
@@ -264,7 +264,7 @@ export default function EditProfilePage() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#FA4D4D] text-white rounded-full hover:bg-[#E63F3F]"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90"
               >
                 Mettre à jour
               </button>

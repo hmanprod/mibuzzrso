@@ -54,7 +54,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
           <Link href="/">
-            <div className="text-[#2D2D2D] font-bold text-[20px]">BandLab</div>
+            <Image src="/images/logo_black.svg" alt="BandLab Logo" width={100} height={30} />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link 
@@ -79,7 +79,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
             <input
               type="text"
               placeholder="Rechercher..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#FA4D4D] focus:ring-opacity-50"
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
             />
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageSquare className="w-6 h-6" />
           </button>
-          <button className="hidden md:flex items-center gap-2 bg-[#FA4D4D] hover:bg-[#E63F3F] text-white px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
+          <button className="hidden md:flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
             <Plus className="w-5 h-5" />
             <span>Créer</span>
           </button>
@@ -103,7 +103,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
-                className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#FA4D4D] focus:ring-opacity-50"
+                className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               >
                 <Image
                   src="/images/placeholder-user.jpg"
@@ -121,7 +121,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/profile');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
                   >
                     <User className="w-4 h-4" />
                     <span>Mon profil</span>
@@ -132,7 +132,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/settings');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Mes paramètres</span>
@@ -143,7 +143,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/support');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
                   >
                     <HelpCircle className="w-4 h-4" />
                     <span>Support</span>
