@@ -37,7 +37,9 @@ export const useOnboarding = () => {
       );
 
       setIsProfileComplete(isComplete);
-      setIsModalOpen(!isComplete);
+      if (!isComplete) {
+        setIsModalOpen(true);
+      }
     } catch (error) {
       console.error('Error checking profile:', error);
     } finally {
@@ -45,32 +47,42 @@ export const useOnboarding = () => {
     }
   };
 
+  const closeModal = () => {
+    // Ne permettez pas la fermeture si le profil n'est pas complet
+    if (!isProfileComplete) {
+      return;
+    }
+    setIsModalOpen(false);
+  };
+
   useEffect(() => {
-    checkProfileCompleteness();
+    if (user) {
+      checkProfileCompleteness();
+    }
   }, [user]);
 
   return {
     isProfileComplete,
     isModalOpen,
     loading,
-    updateProfile: async (profileData: Partial<Profile>) => {
-      if (!user) return;
+    closeModal,
+    updateProfile: async (data: Partial<Profile>) => {
+      if (!user) return { error: new Error('No user') };
 
       try {
         const { error } = await supabase
           .from('profiles')
-          .upsert({ id: user.id, ...profileData })
-          .select()
-          .single();
+          .update(data)
+          .eq('id', user.id);
 
         if (error) throw error;
 
         await checkProfileCompleteness();
+        return { error: null };
       } catch (error) {
         console.error('Error updating profile:', error);
-        throw error;
+        return { error };
       }
     },
-    closeModal: () => setIsModalOpen(false)
   };
 };
