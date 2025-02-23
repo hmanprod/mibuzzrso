@@ -25,7 +25,13 @@ export const useOnboarding = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error checking profile:', error);
+        console.error('Erreur lors de la vérification du profil:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          userId: user.id,
+        });
+        setLoading(false);
         return;
       }
 
