@@ -1,19 +1,17 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { Database } from '@/lib/supabase/database.types';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
+import { useAuth } from './useAuth';
+import { supabase } from '@/lib/supabase';
 
 export const useOnboarding = () => {
   const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const supabase = useSupabaseClient<Database>();
-  const user = useUser();
+  const { user } = useAuth();
 
-  const checkProfileCompleteness = async () => {
+  const checkProfileCompleteness = async () => {    
     if (!user) {
       setLoading(false);
       return;
@@ -47,57 +45,32 @@ export const useOnboarding = () => {
     }
   };
 
-  const updateProfile = async (profileData: Partial<Profile>) => {
-    if (!user) return;
-
-    try {
-      // Vérifie si le profil existe déjà
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', user.id)
-        .single();
-
-      if (existingProfile) {
-        // Mise à jour du profil existant
-        const { error } = await supabase
-          .from('profiles')
-          .update(profileData)
-          .eq('id', user.id);
-
-        if (error) throw error;
-      } else {
-        // Création d'un nouveau profil
-        const { error } = await supabase
-          .from('profiles')
-          .insert([{ ...profileData, id: user.id }]);
-
-        if (error) throw error;
-      }
-
-      await checkProfileCompleteness();
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
   useEffect(() => {
-    if (user) {
-      checkProfileCompleteness();
-    }
+    checkProfileCompleteness();
   }, [user]);
 
   return {
     isProfileComplete,
     isModalOpen,
     loading,
-    updateProfile,
-    closeModal,
-    checkProfileCompleteness,
+    updateProfile: async (profileData: Partial<Profile>) => {
+      if (!user) return;
+
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({ id: user.id, ...profileData })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        await checkProfileCompleteness();
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
+    },
+    closeModal: () => setIsModalOpen(false)
   };
 };

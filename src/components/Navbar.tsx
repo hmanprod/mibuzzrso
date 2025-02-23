@@ -33,14 +33,15 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
   }, []);
 
   const handleSignOut = async () => {
-    setIsDropdownOpen(false);
-    await signOut();
-    router.push('/auth/login');
-  };
-
-  const handleNavigation = (href: string) => {
-    setIsDropdownOpen(false);
-    router.push(href);
+    try {
+      setIsDropdownOpen(false);
+      router.push('/auth/login');
+      signOut().catch(error => {
+        console.error('Error during sign out:', error);
+      });
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
   };
 
   const toggleDropdown = () => {
@@ -152,7 +153,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
 
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-[#FA4D4D] hover:bg-gray-50 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Se déconnecter</span>

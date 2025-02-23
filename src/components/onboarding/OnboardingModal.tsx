@@ -64,7 +64,11 @@ export function OnboardingModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        showClose={false}
+        closeOnOverlayClick={false}
+      >
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>
         </DialogHeader>
@@ -138,10 +142,10 @@ export function OnboardingModal() {
             />
           </div>
 
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={closeModal}>
+          <div className="flex justify-end pt-4">
+            {/* <Button type="button" variant="outline" onClick={closeModal}>
               Skip for now
-            </Button>
+            </Button> */}
             <Button type="submit">
               Complete Profile
             </Button>
