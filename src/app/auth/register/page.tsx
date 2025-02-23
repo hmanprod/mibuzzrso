@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Chrome } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
 import SocialButton from '@/components/auth/SocialButton';
 import { useAuth } from '@/hooks/useAuth';
@@ -191,13 +192,15 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <SocialButton
-          icon={<Chrome className="w-5 h-5" />}
+        {/* Bouton Google */}
+        <button
+          type="button"
           onClick={handleGoogleSignIn}
-          isLoading={isLoading}
+          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-600 font-medium border border-gray-300 px-4 py-2.5 rounded-[18px] transition-colors"
         >
-          Continuer avec Google
-        </SocialButton>
+          <FcGoogle className="w-5 h-5" />
+          Connexion avec Google
+        </button>
 
         <p className="text-center text-sm text-gray-600">
           Déjà inscrit ?{' '}

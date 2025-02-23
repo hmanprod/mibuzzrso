@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 import { ProfileCheck } from "@/components/onboarding/ProfileCheck";
+import { AuthDebug } from '@/components/debug/AuthDebug';
 
 const roboto = Roboto({
   weight: ['400', '500', '700'],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Providers>
           <ProfileCheck>
             {children} {/* Contenu de l'application */}
+            {process.env.NODE_ENV === 'development' && <AuthDebug />}
           </ProfileCheck>
         </Providers>
       </body>

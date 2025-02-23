@@ -1,53 +1,37 @@
-"use client";
+'use client';
 
-import { useOnboarding } from '@/hooks/useOnboarding';
-import { OnboardingModal } from './OnboardingModal';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { OnboardingModal } from './OnboardingModal';
 
-interface ProfileCheckProps {
-  children: React.ReactNode;
-}
+const PUBLIC_ROUTES = ['/auth/login', '/auth/logout', '/auth/register', '/auth/verify-email', '/auth/reset-password'];
 
-export function ProfileCheck({ children }: ProfileCheckProps) {
-  const { loading: onboardingLoading } = useOnboarding();
-  const { user, loading: authLoading } = useAuth();
+export function ProfileCheck({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  const isAuthRoute = () => {
-    const authRoutes = [
-      '/auth/login',
-      '/auth/register',
-      '/auth/verify-email',
-      '/auth/reset-password'
-    ];
-    return authRoutes.some(route => pathname?.startsWith(route));
-  };
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
   useEffect(() => {
-    if (!authLoading && !user && !isAuthRoute()) {
+    // Si on n'est pas sur une route publique et qu'il n'y a pas d'utilisateur, on redirige
+    if (!isPublicRoute && !user) {
       router.push('/auth/login');
     }
-  }, [user, authLoading, pathname]);
+  }, [user, isPublicRoute, router]);
 
-  if (authLoading || onboardingLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+  // Sur une route publique, on affiche simplement le contenu
+  if (isPublicRoute) {
+    return children;
   }
 
-  if (isAuthRoute()) {
-    return <>{children}</>;
-  }
-
+  // Sur une route protégée sans utilisateur, on n'affiche rien
   if (!user) {
     return null;
   }
 
+  // Sur une route protégée avec utilisateur, on affiche le contenu et le modal d'onboarding
   return (
     <>
       {children}

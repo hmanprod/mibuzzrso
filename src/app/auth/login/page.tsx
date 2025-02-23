@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Chrome } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -22,10 +23,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      const { data, error } = await signIn(email, password);
       if (error) {
         setError(error.message);
-      } else {
+      } else if (data?.user) {
         router.push('/');
       }
     } catch (err) {
@@ -132,7 +133,7 @@ export default function LoginPage() {
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-600 font-medium border border-gray-300 px-4 py-2.5 rounded-[18px] transition-colors"
         >
-          <Chrome className="w-5 h-5" />
+          <FcGoogle className="w-5 h-5" />
           Connexion avec Google
         </button>
 
