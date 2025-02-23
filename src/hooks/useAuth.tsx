@@ -141,9 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('signOut');
     setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
+      console.log('Résultat de la déconnexion:', error ? 'Erreur' : 'Succès');
+      console.log('Détails de l\'erreur:', error);
       if (!error) {
         setUser(null);
         setProfile(null);

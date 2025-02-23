@@ -12,6 +12,7 @@ export default function LogoutPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = async () => {
+    console.log('handleLogout');
     if (isLoading) return;
     
     setIsLoading(true);
