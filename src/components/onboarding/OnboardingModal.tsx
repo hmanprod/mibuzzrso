@@ -11,35 +11,98 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MultiSelect, type Option } from "@/components/ui/multi-select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-const MUSICAL_ACTIVITIES = [
-  'DJ',
-  'Producer',
-  'Beatmaker',
-  'Singer',
-  'Rapper',
-  'Musician',
-  'Sound Engineer',
+const MUSICAL_ACTIVITIES: Option[] = [
+  { label: 'DJ', value: 'dj' },
+  { label: 'Producteur', value: 'producer' },
+  { label: 'Beatmaker', value: 'beatmaker' },
+  { label: 'Chanteur', value: 'singer' },
+  { label: 'Rappeur', value: 'rapper' },
+  { label: 'Musicien', value: 'musician' },
+  { label: 'Groupe', value: 'bands' },
+  { label: 'Ingénieur Son', value: 'sound_engineer' },
+  { label: 'Programmateur musical', value: 'curator' },
+  { label: 'Manageur', value: 'manager' },
 ];
 
-const GENRES = [
-  'Hip Hop',
-  'R&B',
-  'Pop',
-  'Rock',
-  'Electronic',
-  'Jazz',
-  'Classical',
-  'Other',
+const GENRES: Option[] = [
+  { label: 'Afro', value: 'afro' },
+  { label: 'Hip-Hop', value: 'hip_hop' },
+  { label: 'R&B', value: 'r_and_b' },
+  { label: 'Pop', value: 'pop' },
+  { label: 'Rock', value: 'rock' },
+  { label: 'Électronique', value: 'electronic' },
+  { label: 'Jazz', value: 'jazz' },
+  { label: 'Classique', value: 'classical' },
+];
+
+// Pays de l'océan Indien en premier
+const INDIAN_OCEAN_COUNTRIES: Option[] = [
+  { label: 'Madagascar', value: 'madagascar' },
+  { label: 'Comores', value: 'comoros' },
+  { label: 'La Réunion', value: 'reunion' },
+  { label: 'Maurice', value: 'mauritius' },
+  { label: 'Mayotte', value: 'mayotte' },
+];
+
+// Liste complète des pays
+const ALL_COUNTRIES: Option[] = [
+  ...INDIAN_OCEAN_COUNTRIES,
+  { label: 'Afrique du Sud', value: 'south_africa' },
+  { label: 'Algérie', value: 'algeria' },
+  { label: 'Angola', value: 'angola' },
+  { label: 'Bénin', value: 'benin' },
+  { label: 'Botswana', value: 'botswana' },
+  { label: 'Burkina Faso', value: 'burkina_faso' },
+  { label: 'Burundi', value: 'burundi' },
+  { label: 'Cameroun', value: 'cameroon' },
+  { label: 'Cap-Vert', value: 'cape_verde' },
+  { label: 'Congo', value: 'congo' },
+  { label: 'Côte d\'Ivoire', value: 'ivory_coast' },
+  { label: 'Djibouti', value: 'djibouti' },
+  { label: 'Égypte', value: 'egypt' },
+  { label: 'Érythrée', value: 'eritrea' },
+  { label: 'Éthiopie', value: 'ethiopia' },
+  { label: 'Gabon', value: 'gabon' },
+  { label: 'Gambie', value: 'gambia' },
+  { label: 'Ghana', value: 'ghana' },
+  { label: 'Guinée', value: 'guinea' },
+  { label: 'Guinée-Bissau', value: 'guinea_bissau' },
+  { label: 'Guinée équatoriale', value: 'equatorial_guinea' },
+  { label: 'Kenya', value: 'kenya' },
+  { label: 'Lesotho', value: 'lesotho' },
+  { label: 'Libéria', value: 'liberia' },
+  { label: 'Libye', value: 'libya' },
+  { label: 'Malawi', value: 'malawi' },
+  { label: 'Mali', value: 'mali' },
+  { label: 'Maroc', value: 'morocco' },
+  { label: 'Mauritanie', value: 'mauritania' },
+  { label: 'Mozambique', value: 'mozambique' },
+  { label: 'Namibie', value: 'namibia' },
+  { label: 'Niger', value: 'niger' },
+  { label: 'Nigeria', value: 'nigeria' },
+  { label: 'Ouganda', value: 'uganda' },
+  { label: 'République centrafricaine', value: 'central_african_republic' },
+  { label: 'République démocratique du Congo', value: 'democratic_republic_of_the_congo' },
+  { label: 'Rwanda', value: 'rwanda' },
+  { label: 'Sao Tomé-et-Principe', value: 'sao_tome_and_principe' },
+  { label: 'Sénégal', value: 'senegal' },
+  { label: 'Seychelles', value: 'seychelles' },
+  { label: 'Sierra Leone', value: 'sierra_leone' },
+  { label: 'Somalie', value: 'somalia' },
+  { label: 'Soudan', value: 'sudan' },
+  { label: 'Soudan du Sud', value: 'south_sudan' },
+  { label: 'Swaziland', value: 'swaziland' },
+  { label: 'Tanzanie', value: 'tanzania' },
+  { label: 'Tchad', value: 'chad' },
+  { label: 'Togo', value: 'togo' },
+  { label: 'Tunisie', value: 'tunisia' },
+  { label: 'Zambie', value: 'zambia' },
+  { label: 'Zimbabwe', value: 'zimbabwe' },
 ];
 
 export function OnboardingModal() {
@@ -47,15 +110,19 @@ export function OnboardingModal() {
   
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: '',
-    genre: '',
     activities: [],
+    genres: [],
     country: '',
+    label: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await updateProfile(formData);
+      const { error } = await updateProfile(formData);
+      if (error) {
+        throw error;
+      }
       closeModal();
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -70,84 +137,95 @@ export function OnboardingModal() {
         closeOnOverlayClick={false}
       >
         <DialogHeader>
-          <DialogTitle>Complete Your Profile</DialogTitle>
+          <DialogTitle>Compléter votre profil</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="stageName" className="text-sm font-medium">
-              Stage Name
+              Nom d'artiste
             </label>
             <Input
               id="stageName"
               value={formData.stage_name}
               onChange={(e) => setFormData({ ...formData, stage_name: e.target.value })}
-              placeholder="Your artist name"
+              placeholder="Nom d'artiste"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="genre" className="text-sm font-medium">
-              Primary Genre
+            <label htmlFor="label" className="text-sm font-medium flex items-center gap-2">
+              Label <span className="text-xs text-muted-foreground">(optionnel)</span>
             </label>
-            <Select
-              value={formData.genre}
-              onValueChange={(value) => setFormData({ ...formData, genre: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a genre" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENRES.map((genre) => (
-                  <SelectItem key={genre} value={genre.toLowerCase()}>
-                    {genre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              id="label"
+              value={formData.label || ''}
+              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+              placeholder="Nom de votre label"
+            />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="activities" className="text-sm font-medium">
-              Activities
+              Vous êtes
             </label>
-            <Select
-              value={formData.activities?.[0]}
-              onValueChange={(value) => setFormData({ ...formData, activities: [value] })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your main activity" />
-              </SelectTrigger>
-              <SelectContent>
-                {MUSICAL_ACTIVITIES.map((activity) => (
-                  <SelectItem key={activity} value={activity.toLowerCase()}>
-                    {activity}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelect
+              options={MUSICAL_ACTIVITIES}
+              selected={formData.activities || []}
+              onChange={(values) => setFormData({ ...formData, activities: values })}
+              placeholder="Choisir une ou plusieurs activités"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="genres" className="text-sm font-medium">
+              Vos genres musicaux
+            </label>
+            <MultiSelect
+              options={GENRES}
+              selected={formData.genres || []}
+              onChange={(values) => setFormData({ ...formData, genres: values })}
+              placeholder="Choisir un ou plusieurs genres"
+            />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="country" className="text-sm font-medium">
-              Country
+              Pays
             </label>
-            <Input
-              id="country"
+            <Select
               value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-              placeholder="Your country"
-              required
-            />
+              onValueChange={(value) => setFormData({ ...formData, country: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir votre pays" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Océan Indien</SelectLabel>
+                  {INDIAN_OCEAN_COUNTRIES.map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel>Autres pays</SelectLabel>
+                  {ALL_COUNTRIES.slice(INDIAN_OCEAN_COUNTRIES.length).map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end pt-4">
-            {/* <Button type="button" variant="outline" onClick={closeModal}>
-              Skip for now
-            </Button> */}
             <Button type="submit">
-              Complete Profile
+              Compléter votre profil
             </Button>
           </div>
         </form>

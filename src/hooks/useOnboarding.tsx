@@ -56,9 +56,9 @@ export const useOnboarding = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    // if (user) {
       checkProfileCompleteness();
-    }
+    // }
   }, [user]);
 
   return {
