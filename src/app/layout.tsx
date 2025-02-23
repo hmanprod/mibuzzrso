@@ -12,8 +12,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "RSO - Réseau Social Musical",
-  description: "Plateforme de partage musical et social",
+  title: "mibuzz.",
+  description: "Plateforme de partage musical",
 };
 
 export default function RootLayout({

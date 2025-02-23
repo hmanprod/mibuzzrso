@@ -54,7 +54,7 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
           <Link href="/">
-            <Image src="/images/logo_black.svg" alt="BandLab Logo" width={100} height={30} />
+            <Image src="/images/logo_black.svg" alt="BandLab Logo" width={130} height={39} />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link 

@@ -24,6 +24,7 @@ export default function LoginPage() {
 
     try {
       const { data, error } = await signIn(email, password);
+      console.log(data, error);
       if (error) {
         setError(error.message);
       } else if (data?.user) {
