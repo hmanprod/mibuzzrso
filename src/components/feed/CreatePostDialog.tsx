@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { X, Upload, Image as ImageIcon, Music, Video } from 'lucide-react';
+import { X, Music, Video } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
 import { toast } from '@/components/ui/use-toast';
@@ -30,7 +30,32 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
   const { user } = useAuth();
   const { uploadToCloudinary, isUploading, progress, cancelUpload } = useCloudinaryUpload();
 
-  if (!isOpen) return null;
+  const handleFileSelect = useCallback((files: File[]) => {
+    const validFiles = files.filter(file => {
+      if (activeTab === 'audio') {
+        return file.type.startsWith('audio/');
+      } else {
+        return file.type.startsWith('video/');
+      }
+    });
+
+    if (validFiles.length === 0) {
+      toast({
+        title: "Format non supporté",
+        description: `Veuillez sélectionner un fichier ${activeTab === 'audio' ? 'audio' : 'vidéo'} valide.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newFiles = validFiles.map(file => ({
+      file,
+      progress: 0,
+      status: 'waiting' as const
+    }));
+
+    setSelectedFiles(prev => [...prev, ...newFiles]);
+  }, [activeTab]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -49,133 +74,84 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
 
     const files = Array.from(e.dataTransfer.files);
     handleFileSelect(files);
+  }, [handleFileSelect]);
+
+  const handleFileButtonClick = useCallback(() => {
+    fileInputRef.current?.click();
   }, []);
 
-  const handleFileSelect = useCallback((files: File[]) => {
-    const validFiles = files.filter(file => {
-      if (activeTab === 'audio') {
-        return file.type.startsWith('audio/');
-      } else {
-        return file.type.startsWith('video/');
-      }
-    });
-
-    if (validFiles.length !== files.length) {
-      toast({
-        title: "Invalid file type",
-        description: `Please select only ${activeTab} files`,
-        variant: "destructive"
-      });
+  const removeFile = useCallback((index: number) => {
+    if (selectedFiles[index].status === 'uploading') {
+      cancelUpload();
     }
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  }, [selectedFiles, cancelUpload]);
 
-    const newFiles = validFiles.map(file => ({
-      file,
-      progress: 0,
-      status: 'waiting' as const,
-    }));
-
-    setSelectedFiles(prev => [...prev, ...newFiles]);
-  }, [activeTab]);
-
-  const handleSubmit = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to create a post",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSubmit = useCallback(async () => {
+    if (!user) return;
     
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-
       // 1. Upload all media files to Cloudinary
       const mediaUploads = await Promise.all(
-        selectedFiles.map(async ({ file }, index) => {
-          try {
-            // Update file status to uploading
-            setSelectedFiles(prev => prev.map((f, i) => 
-              i === index ? { ...f, status: 'uploading' as const } : f
-            ));
-
-            const result = await uploadToCloudinary(file, activeTab);
-            
-            // Update file status to done
-            setSelectedFiles(prev => prev.map((f, i) => 
-              i === index ? { ...f, status: 'done' as const, progress: 100 } : f
-            ));
-
-            // 2. Create media records in Supabase
-            const { data: mediaData, error: mediaError } = await supabase
-              .from('medias')
-              .insert({
-                media_type: activeTab,
-                media_url: result.url,
-                media_public_id: result.publicId,
-                duration: result.duration,
-                title: file.name,
-                user_id: user.id
-              })
-              .select()
-              .single();
-
-            if (mediaError) {
-              toast({
-                title: "Error",
-                description: "Failed to create media record",
-                variant: "destructive"
-              });
-              throw mediaError;
-            }
-
-            return { mediaId: mediaData.id, position: index };
-          } catch (error) {
-            // Update file status to error
-            setSelectedFiles(prev => prev.map((f, i) => 
-              i === index ? { ...f, status: 'error' as const } : f
-            ));
-            throw error;
-          }
+        selectedFiles.map(async ({ file }) => {
+          const uploadResult = await uploadToCloudinary(file, activeTab);
+          if (!uploadResult) throw new Error('Failed to upload media');
+          return uploadResult;
         })
       );
 
-      // 3. Create the post
+      // 2. Create media entries in Supabase
+      const { data: mediaEntries, error: mediaError } = await supabase
+        .from('medias')
+        .insert(
+          mediaUploads.map(upload => ({
+            user_id: user.id,
+            media_type: activeTab,
+            media_url: upload.url,
+            media_public_id: upload.publicId,
+            duration: upload.duration
+          }))
+        )
+        .select();
+
+      if (mediaError) throw mediaError;
+
+      // 3. Create post in Supabase
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert({
-          content: postText,
-          user_id: user.id
+          user_id: user.id,
+          content: postText
         })
         .select()
         .single();
 
       if (postError) throw postError;
 
-      // 4. Create post_media relationships
-      if (mediaUploads.length > 0) {
-        const { error: relationError } = await supabase
+      // 4. Create post_media entries to link post with media
+      if (mediaEntries && mediaEntries.length > 0) {
+        const { error: linkError } = await supabase
           .from('posts_medias')
           .insert(
-            mediaUploads.map(({ mediaId, position }) => ({
+            mediaEntries.map((media, index) => ({
               post_id: postData.id,
-              media_id: mediaId,
-              position
+              media_id: media.id,
+              position: index
             }))
           );
 
-        if (relationError) throw relationError;
+        if (linkError) throw linkError;
       }
 
-      toast({
-        title: "Success",
-        description: "Your post has been created",
-      });
-
-      // Reset form
+      // 5. Close dialog and reset state
+      onClose();
       setPostText('');
       setSelectedFiles([]);
-      onClose();
+      toast({
+        title: "Success",
+        description: "Your post has been created!",
+      });
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
@@ -186,18 +162,9 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [user, selectedFiles, uploadToCloudinary, activeTab, postText, onClose]);
 
-  const removeFile = useCallback((index: number) => {
-    if (selectedFiles[index].status === 'uploading') {
-      cancelUpload();
-    }
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  }, [selectedFiles, cancelUpload]);
-
-  const handleFileButtonClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

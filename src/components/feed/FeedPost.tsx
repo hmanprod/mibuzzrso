@@ -2,15 +2,14 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
 
 interface Author {
   id: string;
-  name: string;
-  image: string;
+  stage_name: string;
+  avatar_url: string | null;
   username: string;
 }
 
@@ -37,7 +36,6 @@ interface FeedPostProps {
 }
 
 export default function FeedPost({
-  id,
   author,
   title,
   description,
@@ -69,13 +67,15 @@ export default function FeedPost({
       {/* En-tête du post */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src={author.image}
-            alt={author.name}
-            className="w-10 h-10 rounded-full"
+          <Image
+            src={author.avatar_url || '/images/default-avatar.png'}
+            alt={`${author.stage_name}'s avatar`}
+            width={40}
+            height={40}
+            className="rounded-full"
           />
           <div>
-            <h3 className="font-medium text-[#2D2D2D]">{author.name}</h3>
+            <h3 className="font-medium text-[#2D2D2D]">{author.stage_name}</h3>
             <p className="text-sm text-gray-500">@{author.username}</p>
           </div>
         </div>
@@ -141,15 +141,17 @@ export default function FeedPost({
         <div className="border-t border-gray-100 p-4">
           {/* Formulaire de commentaire */}
           <form className="flex gap-3 mb-4">
-            <img
-              src="/placeholder-user.jpg" // TODO: Utiliser l'image de l'utilisateur connecté
+            <Image
+              src={author.avatar_url || '/images/default-avatar.png'}
               alt="Your avatar"
-              className="w-8 h-8 rounded-full"
+              width={32}
+              height={32}
+              className="rounded-full"
             />
             <input
               type="text"
-              placeholder="Ajouter un commentaire..."
-              className="flex-1 h-10 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-[#FA4D4D] focus:ring-1 focus:ring-[#FA4D4D]"
+              placeholder="Add a comment..."
+              className="flex-1 bg-gray-50 rounded-full px-4 text-sm"
             />
           </form>
 
@@ -157,15 +159,17 @@ export default function FeedPost({
           <div className="space-y-4">
             {comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
-                <img
-                  src={comment.author.image}
-                  alt={comment.author.name}
-                  className="w-8 h-8 rounded-full"
+                <Image
+                  src={comment.author.avatar_url || '/images/default-avatar.png'}
+                  alt={`${comment.author.stage_name}'s avatar`}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
                 />
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">
-                      {comment.author.name}
+                      {comment.author.stage_name}
                     </span>
                     <span className="text-xs text-gray-500">
                       à {Math.floor(comment.timestamp / 60)}:

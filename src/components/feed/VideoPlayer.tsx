@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, X } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import Image from 'next/image';
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -11,8 +12,9 @@ interface VideoPlayerProps {
     content: string;
     position?: { x: number; y: number };
     author: {
-      name: string;
-      image: string;
+      stage_name: string;
+      avatar_url: string | null;
+      username: string;
     };
   }[];
 }
@@ -27,20 +29,33 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
   const [showControls, setShowControls] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.addEventListener('loadedmetadata', () => {
         setDuration(videoRef.current?.duration || 0);
       });
-    }
 
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-    };
+      const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+      };
+
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+      return () => {
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      };
+    }
   }, []);
 
   const togglePlay = () => {
@@ -87,13 +102,15 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
     }
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      containerRef.current.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && containerRef.current) {
+        await containerRef.current.requestFullscreen();
+      } else if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
     }
   };
 
@@ -149,12 +166,14 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
               </div>
               <div className="absolute left-full ml-2 hidden group-hover:block bg-white rounded-lg shadow-lg p-2 w-48">
                 <div className="flex items-center gap-2 mb-1">
-                  <img
-                    src={comment.author.image}
-                    alt={comment.author.name}
-                    className="w-6 h-6 rounded-full"
+                  <Image
+                    src={comment.author.avatar_url || '/images/default-avatar.png'}
+                    alt={`${comment.author.stage_name}'s avatar`}
+                    width={24}
+                    height={24}
+                    className="rounded-full"
                   />
-                  <span className="text-sm font-medium">{comment.author.name}</span>
+                  <span className="text-sm font-medium">{comment.author.stage_name}</span>
                 </div>
                 <p className="text-sm text-gray-600">{comment.content}</p>
               </div>
@@ -240,7 +259,11 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
               onClick={toggleFullscreen}
               className="text-white hover:text-gray-200 transition-colors"
             >
-              <Maximize className="w-6 h-6" />
+              {isFullscreen ? (
+                <Minimize className="w-6 h-6" />
+              ) : (
+                <Maximize className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>

@@ -49,7 +49,8 @@ export default function RegisterPage() {
       }
       
       router.push('/auth/verify-email');
-    } catch (err) {
+    } catch (error) {
+      console.error('Une erreur est survenue lors de l\'inscription:', error);
       setError('Une erreur est survenue lors de l\'inscription');
       setIsLoading(false);
     }

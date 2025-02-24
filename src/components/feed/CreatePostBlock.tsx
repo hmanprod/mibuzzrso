@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Avatar } from '../ui/Avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { Music, Video } from 'lucide-react';

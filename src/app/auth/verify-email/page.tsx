@@ -19,7 +19,7 @@ export default function VerifyEmailPage() {
     if (!pendingVerificationEmail) {
       router.replace('/auth/login');
     }
-  }, [pendingVerificationEmail]);
+  }, [pendingVerificationEmail, router]);
 
   const handleResendEmail = async () => {
     setResendError(null);

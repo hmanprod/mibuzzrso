@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/lib/supabase';
+import { Profile } from '@/types/database';
 
 export const useOnboarding = () => {
   const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
@@ -10,7 +11,7 @@ export const useOnboarding = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
 
-  const checkProfileCompleteness = async () => {    
+  const checkProfileCompleteness = useCallback(async () => {    
     if (!user) {
       setLoading(false);
       return;
@@ -19,7 +20,7 @@ export const useOnboarding = () => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('stage_name, genres, activities, country')
+        .select('stage_name, talents, musical_interests, country')
         .eq('id', user.id)
         .single();
 
@@ -36,8 +37,8 @@ export const useOnboarding = () => {
 
       const isComplete = Boolean(
         profile?.stage_name &&
-        profile?.genres?.length > 0 &&
-        profile?.activities?.length > 0 &&
+        Array.isArray(profile?.talents) && profile?.talents.length > 0 &&
+        Array.isArray(profile?.musical_interests) && profile?.musical_interests.length > 0 &&
         profile?.country
       );
 
@@ -50,64 +51,43 @@ export const useOnboarding = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  }, [user]);
 
   useEffect(() => {
     checkProfileCompleteness();
-  }, [user]);
+  }, [user, checkProfileCompleteness]);
 
   return {
     isProfileComplete,
     isModalOpen,
     loading,
-    closeModal,
+    closeModal: () => setIsModalOpen(false),
     updateProfile: async (data: Partial<Profile>) => {
-      if (!user) return { error: new Error('No user') };
-
       try {
-        // First check if profile exists
-        const { data: existingProfile, error: fetchError } = await supabase
+        if (!user) {
+          return { error: new Error('No user') };
+        }
+
+        // Validate required fields
+        if (data.stage_name === undefined && data.musical_interests === undefined && data.talents === undefined && data.country === undefined) {
+          return { error: new Error('No profile data provided') };
+        }
+
+        // Update profile
+        const { error: updateError } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+          .update(data)
+          .eq('id', user.id);
 
-        if (fetchError && fetchError.code === 'PGRST116') {
-          // Profile doesn't exist, create it
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert([{ 
-              id: user.id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              ...data 
-            }]);
-
-          if (insertError) throw insertError;
-        } else if (fetchError) {
-          throw fetchError;
-        } else {
-          // Profile exists, update it
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              ...data,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-
-          if (updateError) throw updateError;
+        if (updateError) {
+          return { error: updateError };
         }
 
         // Check if profile is complete with the new data
         const isComplete = Boolean(
           data.stage_name &&
-          data.musical_interests?.length > 0 &&
-          data.talents?.length > 0 &&
+          data.musical_interests && data.musical_interests.length > 0 &&
+          data.talents && data.talents.length > 0 &&
           data.country
         );
 
@@ -122,5 +102,6 @@ export const useOnboarding = () => {
         return { error };
       }
     },
+    checkProfileCompleteness
   };
 };

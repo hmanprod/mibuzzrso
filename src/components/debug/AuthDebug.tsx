@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 export function AuthDebug() {
   const { user, profile } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
-  const [supabaseUser, setSupabaseUser] = useState<any>(null);
+  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
 
   useEffect(() => {
     const channel = supabase.channel('system')
@@ -22,6 +23,9 @@ export function AuthDebug() {
       if (user) {
         setSupabaseUser(user);
       }
+
+      if(error)
+        console.error('AuthDebug getUser error:', error);
     };
 
     getSupabaseUser();

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, MessageSquare, Plus, User, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Search, Bell, MessageSquare, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar } from './ui/Avatar';

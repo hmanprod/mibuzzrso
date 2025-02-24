@@ -43,11 +43,14 @@ export default function EditProfilePage() {
         stage_name: profile.stage_name || '',
         country: profile.country || '',
         bio: profile.bio || '',
-        social_links: profile.social_links || {
-          instagram: '',
-          spotify: '',
-          youtube: '',
-          website: ''
+        social_links: {
+          instagram: profile.social_links?.instagram || '',
+          facebook: profile.social_links?.facebook || '',
+          tiktok: profile.social_links?.tiktok || '',
+          spotify: profile.social_links?.spotify || '',
+          moozik: profile.social_links?.moozik || '',
+          youtube: profile.social_links?.youtube || '',
+          website: profile.social_links?.website || ''
         },
         musical_interests: profile.musical_interests || [],
         talents: profile.talents || []

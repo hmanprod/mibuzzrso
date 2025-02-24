@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import Image from 'next/image';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -11,8 +12,10 @@ interface AudioPlayerProps {
     timestamp: number;
     content: string;
     author: {
-      name: string;
-      image: string;
+      id: string;
+      stage_name: string;
+      avatar_url: string | null;
+      username: string;
     };
   }[];
 }
@@ -191,14 +194,16 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
               }
             }}
           >
-            <img
-              src={comment.author.image}
-              alt={comment.author.name}
-              className="w-8 h-8 rounded-full"
+            <Image
+              src={comment.author.avatar_url || '/images/default-avatar.png'}
+              alt={`${comment.author.stage_name}'s avatar`}
+              width={32}
+              height={32}
+              className="rounded-full"
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm">{comment.author.name}</span>
+                <span className="font-medium text-sm">{comment.author.stage_name}</span>
                 <span className="text-xs text-gray-500">
                   {formatTime(comment.timestamp)}
                 </span>

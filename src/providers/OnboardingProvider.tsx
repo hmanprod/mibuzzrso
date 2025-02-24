@@ -1,11 +1,12 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { Profile } from '@/types/database';
 
 interface OnboardingContextType {
   isProfileComplete: boolean;
   isModalOpen: boolean;
   loading: boolean;
-  updateProfile: (data: any) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<{ error: unknown }>;
   closeModal: () => void;
   checkProfileCompleteness: () => Promise<void>;
 }

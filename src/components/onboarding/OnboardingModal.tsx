@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { Database } from '@/lib/supabase/database.types';
+import { Profile } from '@/types/database';
 import {
   Dialog,
   DialogContent,
@@ -14,8 +14,6 @@ import { Input } from "@/components/ui/input";
 import { MultiSelect, type Option } from "@/components/ui/multi-select";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const MUSICAL_ACTIVITIES: Option[] = [
   { label: 'DJ', value: 'dj' },
@@ -111,8 +109,8 @@ export function OnboardingModal() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: '',
-    activities: [],
-    genres: [],
+    musical_interests: [],
+    talents: [],
     country: '',
     label: '',
   });
@@ -147,11 +145,11 @@ export function OnboardingModal() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="stageName" className="text-sm font-medium">
-              Nom d'artiste
+              Nom d&apos;artiste
             </label>
             <Input
               id="stageName"
-              value={formData.stage_name}
+              value={formData.stage_name || ''}
               onChange={(e) => setFormData({ ...formData, stage_name: e.target.value })}
               placeholder="Nom d'artiste"
               required
@@ -199,7 +197,7 @@ export function OnboardingModal() {
               Pays
             </label>
             <Select
-              value={formData.country}
+              value={formData.country || ''}
               onValueChange={(value) => setFormData({ ...formData, country: value })}
             >
               <SelectTrigger>

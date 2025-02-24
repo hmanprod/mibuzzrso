@@ -1,9 +1,14 @@
 'use client';
 
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { Profile } from '../lib/supabase';
+import type { Profile } from '@/types/database';
+
+type GoogleSignInResponse = {
+  user: User | null;
+  profile: Profile | null;
+};
 
 type AuthContextType = {
   user: User | null;
@@ -19,8 +24,7 @@ type AuthContextType = {
   killAllSessions: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   resendConfirmationEmail: () => Promise<{ error: AuthError | null }>;
-  confirmEmail: (confirmationCode: string) => Promise<{ error: AuthError | null }>;
-  handleGoogleSignIn: () => Promise<{ data: any; error: Error | null }>;
+  handleGoogleSignIn: () => Promise<{ data: GoogleSignInResponse | null; error: Error | null }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -207,7 +211,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!authData?.user) {
         console.error('❌ No user data in auth response');
-        return { data: null, error: new Error('No user data received') };
+        return {
+          data: null,
+          error: new AuthError('No user data received', 400)
+        };
       }
 
       // Set the user immediately
@@ -232,8 +239,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('⚠️ No profile data found after sign in');
       }
 
-      const response = { 
-        data: { 
+      const response: {
+        data: { user: User | null; profile: Profile | null } | null;
+        error: AuthError | null;
+      } = {
+        data: {
           user: authData.user,
           profile: profileData
         },
@@ -243,7 +253,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return response;
     } catch (error) {
       console.error('❌ Unexpected error during sign in:', error);
-      return { data: null, error: error as AuthError };
+      const authError = new AuthError(
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+        500
+      );
+      return {
+        data: null,
+        error: authError
+      };
     } finally {
       console.log('🏁 Sign in process completed');
       setLoading(false);
@@ -307,7 +324,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resendConfirmationEmail = async () => {
     if (!pendingVerificationEmail) {
-      return { error: new Error('No pending verification email') };
+      return { error: new AuthError('No pending verification email', 400) };
     }
     return await supabase.auth.resend({
       type: 'signup',
@@ -315,35 +332,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const confirmEmail = async (confirmationCode: string) => {
-    const { error } = await supabase.auth.verifyOTP({
-      confirmationCode,
-      email: pendingVerificationEmail,
-    });
-
-    if (!error) {
-      setPendingVerificationEmail(null);
-    }
-
-    return { error };
-  };
-
   const handleGoogleSignIn = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback/google`,
-        },
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
-      
+
       if (error) {
-        throw error;
+        console.error('Error during Google sign in:', error);
+        return { data: null, error };
       }
-  
-      return { data, error };
+
+      // After successful OAuth, we need to get the user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const googleSignInResponse: GoogleSignInResponse = {
+        user,
+        profile: null // Profile will be fetched separately by the auth state change listener
+      };
+
+      return { data: googleSignInResponse, error: null };
     } catch (error) {
-      return { error: error as Error };
+      console.error('Error during Google sign in:', error);
+      return {
+        data: null,
+        error: error instanceof Error ? error : new Error('An unknown error occurred')
+      };
     }
   };
 
@@ -360,8 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         killAllSessions,
         updateProfile,
         resendConfirmationEmail,
-        handleGoogleSignIn,
-        confirmEmail,
+        handleGoogleSignIn
       }}
     >
       {children}
