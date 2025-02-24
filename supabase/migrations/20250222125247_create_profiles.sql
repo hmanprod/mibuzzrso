@@ -10,7 +10,6 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid NOT NULL,
     bio text,
-    genre text DEFAULT ''::text,
     avatar_url text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
@@ -20,10 +19,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     gender text,
     phone text,
     stage_name text,
-    facebook_url text,
-    instagram_url text,
-    tiktok_url text,
-    activities jsonb DEFAULT '{}'::jsonb,
+    musical_interests jsonb DEFAULT '{}'::jsonb,
+    talents jsonb DEFAULT '{}'::jsonb,
+    social_links jsonb DEFAULT '{}'::jsonb,
     CONSTRAINT profiles_pkey PRIMARY KEY (id),
     CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE,
     CONSTRAINT phone_format CHECK (
@@ -37,14 +35,13 @@ COMMENT ON TABLE public.profiles IS 'Holds extended profile information for each
 COMMENT ON COLUMN public.profiles.id IS 'References the auth.users.id';
 COMMENT ON COLUMN public.profiles.bio IS 'User biography text';
 COMMENT ON COLUMN public.profiles.stage_name IS 'Artist stage name';
-COMMENT ON COLUMN public.profiles.activities IS 'JSON object containing user activities and preferences';
+COMMENT ON COLUMN public.profiles.musical_interests IS 'JSON object containing user musical interests';
+COMMENT ON COLUMN public.profiles.talents IS 'JSON object containing user talents';
+COMMENT ON COLUMN public.profiles.social_links IS 'JSON object containing user social links';
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS profiles_phone_idx ON public.profiles USING btree (phone);
 CREATE INDEX IF NOT EXISTS profiles_stage_name_idx ON public.profiles USING btree (stage_name);
-CREATE INDEX IF NOT EXISTS profiles_facebook_url_idx ON public.profiles USING btree (facebook_url);
-CREATE INDEX IF NOT EXISTS profiles_instagram_url_idx ON public.profiles USING btree (instagram_url);
-CREATE INDEX IF NOT EXISTS profiles_tiktok_url_idx ON public.profiles USING btree (tiktok_url);
 
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

@@ -20,6 +20,7 @@ type AuthContextType = {
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   resendConfirmationEmail: () => Promise<{ error: AuthError | null }>;
   confirmEmail: (confirmationCode: string) => Promise<{ error: AuthError | null }>;
+  handleGoogleSignIn: () => Promise<{ data: any; error: Error | null }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

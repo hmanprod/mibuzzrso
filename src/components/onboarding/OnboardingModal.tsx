@@ -176,8 +176,8 @@ export function OnboardingModal() {
             </label>
             <MultiSelect
               options={MUSICAL_ACTIVITIES}
-              selected={formData.activities || []}
-              onChange={(values) => setFormData({ ...formData, activities: values })}
+              selected={formData.talents || []}
+              onChange={(values) => setFormData({ ...formData, talents: values })}
               placeholder="Choisir une ou plusieurs activités"
             />
           </div>
@@ -188,8 +188,8 @@ export function OnboardingModal() {
             </label>
             <MultiSelect
               options={GENRES}
-              selected={formData.genres || []}
-              onChange={(values) => setFormData({ ...formData, genres: values })}
+              selected={formData.musical_interests || []}
+              onChange={(values) => setFormData({ ...formData, musical_interests: values })}
               placeholder="Choisir un ou plusieurs genres"
             />
           </div>

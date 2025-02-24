@@ -106,8 +106,8 @@ export const useOnboarding = () => {
         // Check if profile is complete with the new data
         const isComplete = Boolean(
           data.stage_name &&
-          data.genres?.length > 0 &&
-          data.activities?.length > 0 &&
+          data.musical_interests?.length > 0 &&
+          data.talents?.length > 0 &&
           data.country
         );
 

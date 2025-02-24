@@ -9,7 +9,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 export type Profile = {
   id: string;
   bio: string | null;
-  genre: string | null;
   avatar_url: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -19,8 +18,7 @@ export type Profile = {
   gender: string | null;
   phone: string | null;
   stage_name: string | null;
-  facebook_url: string | null;
-  instagram_url: string | null;
-  tiktok_url: string | null;
-  activities: any | null;
+  social_links: string | null;
+  musical_interests: any | null;
+  talents: any | null;
 };

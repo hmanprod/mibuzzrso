@@ -90,7 +90,6 @@ export default function Home() {
           <main className="ml-[274px] max-w-[720px] w-full p-6 space-y-6">
             {/* Bloc de création de post */}
             <CreatePostBlock
-              userImage={user?.user_metadata?.avatar_url || "/placeholder-user.jpg"}
               onOpen={() => setShowCreatePost(true)}
             />
 

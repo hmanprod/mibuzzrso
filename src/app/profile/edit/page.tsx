@@ -18,13 +18,17 @@ export default function EditProfilePage() {
   const { user, profile, updateProfile } = useAuth();
 
   const [formData, setFormData] = useState({
-    full_name: '',
-    username: '',
-    location: '',
+    first_name: '',
+    last_name: '',
+    stage_name: '',
+    country: '',
     bio: '',
     social_links: {
       instagram: '',
+      facebook: '',
+      tiktok: '',
       spotify: '',
+      moozik: '',
       youtube: '',
       website: ''
     },
@@ -35,9 +39,10 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: profile.full_name || '',
-        username: profile.username || '',
-        location: profile.location || '',
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        stage_name: profile.stage_name || '',
+        country: profile.country || '',
         bio: profile.bio || '',
         social_links: profile.social_links || {
           instagram: '',
@@ -85,8 +90,8 @@ export default function EditProfilePage() {
                 <input
                   type="text"
                   id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -102,8 +107,8 @@ export default function EditProfilePage() {
                   <input
                     type="text"
                     id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    value={formData.stage_name}
+                    onChange={(e) => setFormData({ ...formData, stage_name: e.target.value })}
                     className="block w-full rounded-r-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
