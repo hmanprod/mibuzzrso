@@ -35,7 +35,7 @@ export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
       <div className="h-[1px] bg-gray-100" />
 
       {/* Options de publication */}
-      <div className="flex items-center gap-4 mt-4 border-t border-gray-100 pt-4">
+      <div className="flex items-center gap-4 mt-4">
         {/* <button
           onClick={onOpen}
           className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-full transition-colors"

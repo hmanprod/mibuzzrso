@@ -15,17 +15,17 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Flame className="w-6 h-6" />
-          <span className="font-medium">Tendances</span>
+          <span className="font-medium">Challenges</span>
         </Link>
 
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Heart className="w-6 h-6" />
@@ -35,7 +35,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Users className="w-6 h-6" />
@@ -47,37 +47,37 @@ export default function Sidebar({ className }: SidebarProps) {
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Music className="w-6 h-6" />
           <span className="font-medium">Musique</span>
         </Link>
 
-        <Link
+        {/* <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Disc className="w-6 h-6" />
           <span className="font-medium">Albums aimés</span>
-        </Link>
+        </Link> */}
 
-        <Link
+        {/* <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <ListMusic className="w-6 h-6" />
           <span className="font-medium">Playlists aimées</span>
-        </Link>
+        </Link> */}
 
         <Link
           href="/"
           className={twMerge(
-            'flex items-center gap-3 px-4 py-2 text-gray-600 hover:text-primary transition-colors',
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
         >
           <Video className="w-6 h-6" />
