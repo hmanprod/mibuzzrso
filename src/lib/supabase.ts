@@ -18,7 +18,7 @@ export type Profile = {
   gender: string | null;
   phone: string | null;
   stage_name: string | null;
-  social_links: string | null;
+  social_links: any | null;
   musical_interests: any | null;
   talents: any | null;
 };

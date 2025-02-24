@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
-import SocialButton from '@/components/auth/SocialButton';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function RegisterPage() {

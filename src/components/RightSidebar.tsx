@@ -2,6 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
+import Image from 'next/image';
 
 interface RightSidebarProps {
   className?: string;
@@ -26,7 +27,7 @@ export default function RightSidebar({ className }: RightSidebarProps) {
             {suggestions.map(user => (
               <div key={user.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <img src={user.image} alt={user.name} className="w-[30px] h-[30px] rounded-full object-cover" />
+                  <Image src={user.image} alt={user.name} className="w-[30px] h-[30px] rounded-full object-cover" />
                   <div>
                     <p className="font-medium text-base text-[#2D2D2D]">{user.name}</p>
                     <p className="text-sm text-[#666666]">{user.followers} Abonnés</p>

@@ -2,6 +2,7 @@
 
 import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
+import Image from 'next/image';
 
 interface FeedProps {
   className?: string;
@@ -42,7 +43,7 @@ export default function Feed({ className }: FeedProps) {
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img src={post.user.image} alt={post.user.name} className="w-10 h-10 rounded-full object-cover" />
+                <Image src={post.user.image} alt={post.user.name} className="w-10 h-10 rounded-full object-cover" />
                 <div>
                   <h3 className="font-semibold text-base text-[#2D2D2D]">{post.user.name}</h3>
                   <p className="text-sm text-[#666666]">@{post.user.name.toLowerCase()}</p>

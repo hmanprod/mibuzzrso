@@ -8,7 +8,6 @@ import FeedPost from '@/components/feed/FeedPost';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { useAuth } from '@/hooks/useAuth';
 
 // Données de test
 const mockPosts = [
@@ -76,7 +75,6 @@ const mockPosts = [
 
 export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const { user } = useAuth();
 
   return (
     <AuthGuard>

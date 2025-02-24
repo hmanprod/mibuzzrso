@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { twMerge } from 'tailwind-merge';
-import { Flame, Heart, Users, Music, Disc, ListMusic, Video } from 'lucide-react';
+import { Flame, Heart, Users, Music, Video } from 'lucide-react';
 
 interface SidebarProps {
   className?: string;

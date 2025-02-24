@@ -14,7 +14,7 @@ interface NavbarProps {
   className?: string;
 }
 
-export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
+export default function Navbar({ className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { signOut, profile } = useAuth();
@@ -102,10 +102,10 @@ export default function Navbar({ onOpenCreatePost, className }: NavbarProps) {
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageSquare className="w-6 h-6" />
           </button>
-          <button className="hidden md:flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
+          {/* <button className="hidden md:flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
             <Plus className="w-5 h-5" />
             <span>Créer</span>
-          </button>
+          </button> */}
           <div className="flex items-center gap-2">
             <div className="relative" ref={dropdownRef}>
               <button

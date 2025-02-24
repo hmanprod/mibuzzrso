@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { Instagram, Music2, Video, Globe2, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -15,7 +14,7 @@ interface SocialLink {
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, profile, updateProfile } = useAuth();
+  const { profile, updateProfile } = useAuth();
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -98,7 +97,7 @@ export default function EditProfilePage() {
 
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Nom d'utilisateur
+                  Nom d&apos;utilisateur
                 </label>
                 <div className="mt-1 flex rounded-md shadow-sm">
                   <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500">
@@ -116,13 +115,13 @@ export default function EditProfilePage() {
 
               <div>
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                  Localisation
+                  Pays
                 </label>
                 <input
                   type="text"
                   id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   placeholder="Rechercher une ville"
                 />

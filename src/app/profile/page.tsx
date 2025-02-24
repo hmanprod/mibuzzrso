@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Camera, Users, Play, Music, Video, UsersRound, Zap, Plus, Settings } from 'lucide-react';
+import { Camera, Music, Video, UsersRound, Plus, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { useRouter } from 'next/navigation';
@@ -59,8 +59,8 @@ export default function ProfilePage() {
 
               {/* Informations utilisateur */}
               <div className="mt-4">
-                <h1 className="text-2xl font-bold text-gray-900">{profile?.full_name || 'Utilisateur'}</h1>
-                <p className="text-gray-600">@{profile?.username || user?.email?.split('@')[0]}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{profile?.stage_name || 'Utilisateur'}</h1>
+                <p className="text-gray-600">@{profile?.first_name || user?.email?.split('@')[0]}</p>
               </div>
 
               {/* Bouton Modifier le profil */}
@@ -137,12 +137,12 @@ export default function ProfilePage() {
               <div className="mt-6">
                 {activeTab === 'activity' && (
                   <div>
-                    <CreatePostBlock userImage="/images/placeholder-user.jpg" onOpen={() => {}} />
+                    <CreatePostBlock onOpen={() => {}} />
                     <div className="mt-8 text-center text-gray-600">
                       <Music className="w-12 h-12 mx-auto text-gray-400" />
                       <h3 className="mt-2 text-lg font-medium">Il est temps de faire de la musique</h3>
                       <p className="mt-1">
-                        Vous verrez votre fil d'activités se remplir dès que vous commencerez à publier des
+                        Vous verrez votre fil d&apos;activités se remplir dès que vous commencerez à publier des
                         révisions ou des publications.
                       </p>
                       <button className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90">
