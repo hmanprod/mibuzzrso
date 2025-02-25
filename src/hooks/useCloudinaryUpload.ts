@@ -44,7 +44,7 @@ export const useCloudinaryUpload = () => {
         {
           method: 'POST',
           body: formData,
-          mode: 'cors',
+          mode: 'no-cors',
         }
       );
 
