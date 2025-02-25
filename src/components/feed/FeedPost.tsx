@@ -6,8 +6,9 @@ import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
 import type { Post, Media, Profile } from '@/types/database';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/components/ui/use-toast';
 
 // interface Comment {
 //   id: string;
@@ -42,10 +43,19 @@ export default function FeedPost({
   const mediaItem = media[0];
 
   const toggleLike = async () => {
-    if (!user) return;
-    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to like posts",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setLoading(true);
+      
+      const supabase = createClient();
       
       if (liked) {
         // Unlike
@@ -72,6 +82,11 @@ export default function FeedPost({
       setLiked(!liked);
     } catch (error) {
       console.error('Error toggling like:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like status",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

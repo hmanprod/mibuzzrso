@@ -1,107 +1,88 @@
-"use client";
-
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/types/database';
 
-export const useOnboarding = () => {
-  const [isProfileComplete, setIsProfileComplete] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+export function useOnboarding() {
   const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const checkProfileCompleteness = useCallback(async () => {    
+  useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
     }
-    
+
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const supabase = createClient();
+        
+        const { data, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error loading profile:', profileError);
+          setError('Failed to load profile data');
+          return;
+        }
+
+        setProfile(data);
+      } catch (err) {
+        console.error('Error in loadProfile:', err);
+        setError('An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user) {
+      throw new Error('User must be logged in to update profile');
+    }
+
     try {
-      const { data: profile, error } = await supabase
+      setLoading(true);
+      setError(null);
+
+      const supabase = createClient();
+
+      const { data, error: updateError } = await supabase
         .from('profiles')
-        .select('stage_name, talents, musical_interests, country')
-        .eq('id', user.id)
+        .update(updates)
+        .eq('user_id', user.id)
+        .select()
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erreur lors de la vérification du profil:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          userId: user.id,
-        });
-        setLoading(false);
-        return;
+      if (updateError) {
+        console.error('Error updating profile:', updateError);
+        throw new Error('Failed to update profile');
       }
 
-      const isComplete = Boolean(
-        profile?.stage_name &&
-        Array.isArray(profile?.talents) && profile?.talents.length > 0 &&
-        Array.isArray(profile?.musical_interests) && profile?.musical_interests.length > 0 &&
-        profile?.country
-      );
-
-      setIsProfileComplete(isComplete);
-      if (!isComplete) {
-        setIsModalOpen(true);
-      }
-    } catch (error) {
-      console.error('Error checking profile:', error);
+      setProfile(data);
+      return data;
+    } catch (err) {
+      console.error('Error in updateProfile:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  useEffect(() => {
-    checkProfileCompleteness();
-  }, [user, checkProfileCompleteness]);
+  };
 
   return {
-    isProfileComplete,
-    isModalOpen,
+    profile,
     loading,
-    closeModal: () => setIsModalOpen(false),
-    updateProfile: async (data: Partial<Profile>) => {
-      try {
-        if (!user) {
-          return { error: new Error('No user') };
-        }
-
-        // Validate required fields
-        if (data.stage_name === undefined && data.musical_interests === undefined && data.talents === undefined && data.country === undefined) {
-          return { error: new Error('No profile data provided') };
-        }
-
-        // Update profile
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update(data)
-          .eq('id', user.id);
-
-        if (updateError) {
-          return { error: updateError };
-        }
-
-        // Check if profile is complete with the new data
-        const isComplete = Boolean(
-          data.stage_name &&
-          data.musical_interests && data.musical_interests.length > 0 &&
-          data.talents && data.talents.length > 0 &&
-          data.country
-        );
-
-        setIsProfileComplete(isComplete);
-        if (isComplete) {
-          setIsModalOpen(false);
-        }
-
-        return { error: null };
-      } catch (error) {
-        console.error('Error updating profile:', error);
-        return { error };
-      }
-    },
-    checkProfileCompleteness
+    error,
+    updateProfile
   };
-};
+}

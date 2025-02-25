@@ -13,7 +13,7 @@ export function AuthDebug() {
   const [showDetails, setShowDetails] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [sessionData, setSessionData] = useState<any>(null);
+  const [sessionData, setSessionData] = useState<Record<string, unknown> | null>(null);
   const [cookieData, setCookieData] = useState<string[]>([]);
   const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
 

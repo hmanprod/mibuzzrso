@@ -105,7 +105,8 @@ const ALL_COUNTRIES: Option[] = [
 ];
 
 export function OnboardingModal() {
-  const { isModalOpen, closeModal, updateProfile } = useOnboarding();
+  const { updateProfile } = useOnboarding();
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: '',
@@ -123,16 +124,16 @@ export function OnboardingModal() {
       if (error) {
         throw error;
       }
-      closeModal();
     } catch (error) {
       console.error('Failed to update profile:', error);
     } finally {
       setIsLoading(false);
+      setIsModalOpen(false);
     }
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={closeModal}>
+    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogContent
         className="sm:max-w-[425px]"
         showClose={false}

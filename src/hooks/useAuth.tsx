@@ -12,8 +12,8 @@ interface AuthContextType {
   error: AuthError | null;
   isLoading: boolean;
   pendingVerificationEmail: string | null;
-  signIn: (email: string, password: string) => Promise<{ data: any; error: AuthError | null }>;
-  signUp: (email: string, password: string, profileData?: Partial<Profile>) => Promise<{ data: any; error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ data: { user: User | null }; error: AuthError | null }>;
+  signUp: (email: string, password: string, profileData?: Partial<Profile>) => Promise<{ data: { user: User | null }; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   handleGoogleSignIn: () => Promise<{ error: AuthError | null }>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -55,20 +55,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getUser = async () => {
+      console.log('🔄 Checking user...');
       try {
-        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+        const supabase = createClient();
+        const { data, error: userError } = await supabase.auth.getUser();
+        console.log('🔄 Current user:', data?.user);
+        
         if (userError) {
           setError(userError);
           setUser(null);
           setProfile(null);
         } else {
-          setUser(currentUser);
-          if (currentUser) {
-            await loadProfile(currentUser.id);
+          setUser(data?.user ?? null);
+          if (data?.user) {
+            await loadProfile(data.user.id);
           } else {
             setProfile(null);
           }
-          setError(null);
         }
       } catch (err) {
         console.error('Error getting user:', err);
@@ -109,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [supabase, router, loadProfile]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -123,11 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await loadProfile(data.user.id);
         setPendingVerificationEmail(null);
       }
-      return { data, error };
+      return { data: { user: data.user }, error };
     } catch (err) {
       console.error('Sign in error:', err);
       const error = new Error('Failed to sign in') as AuthError;
-      return { data: null, error };
+      return { data: { user: null }, error };
     }
   };
 
@@ -162,11 +165,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await loadProfile(data.user.id);
         }
       }
-      return { data, error };
+      return { data: { user: data.user }, error };
     } catch (err) {
       console.error('Sign up error:', err);
       const error = new Error('Failed to sign up') as AuthError;
-      return { data: null, error };
+      return { data: { user: null }, error };
     }
   };
 

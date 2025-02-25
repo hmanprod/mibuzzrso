@@ -9,9 +9,9 @@ import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import type { Post, Media, Profile } from '@/types/database';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PostMedia {
   media: Media;
@@ -39,6 +39,8 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
+
+      const supabase = createClient();
 
       // Fetch posts with profiles and media
       const { data: postsData, error: postsError } = await supabase
