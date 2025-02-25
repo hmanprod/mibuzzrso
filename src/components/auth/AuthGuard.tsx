@@ -2,24 +2,28 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { OnboardingModal } from '../onboarding/OnboardingModal';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/login');
+    if (!isLoading && !user) {
+      // Store the current path for redirect after login
+      if (pathname !== '/auth/login') {
+        router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
+      }
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router, pathname]);
 
   // Show loading spinner while checking auth state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -29,8 +33,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  return <>
-    {children}
-    <OnboardingModal />
-  </>;
+  return (
+    <>
+      {children}
+      <OnboardingModal />
+    </>
+  );
 }

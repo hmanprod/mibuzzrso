@@ -1,46 +1,39 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { User, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/database';
 
-type GoogleSignInResponse = {
+interface AuthContextType {
   user: User | null;
   profile: Profile | null;
-};
-
-type AuthContextType = {
-  user: User | null;
-  profile: Profile | null;
-  loading: boolean;
+  error: AuthError | null;
+  isLoading: boolean;
   pendingVerificationEmail: string | null;
-  signUp: (email: string, password: string, userData: Partial<Profile>) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ 
-    data: { user: User | null; profile: Profile | null } | null;
-    error: AuthError | null 
-  }>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: AuthError | null }>;
+  signUp: (email: string, password: string, profileData?: Partial<Profile>) => Promise<{ data: any; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  killAllSessions: () => Promise<void>;
+  handleGoogleSignIn: () => Promise<{ error: AuthError | null }>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   resendConfirmationEmail: () => Promise<{ error: AuthError | null }>;
-  handleGoogleSignIn: () => Promise<{ data: GoogleSignInResponse | null; error: Error | null }>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<AuthError | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [supabase] = useState(() => createClient());
+  const router = useRouter();
 
-  // Fonction utilitaire pour charger le profil
-  const loadProfile = useCallback(async (userId: string) => {
+  // Function to load profile data
+  const loadProfile = async (userId: string) => {
     try {
-      console.log('🔍 Loading profile for user:', userId);
-      console.log('📱 Current local profile state:', profile);
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -48,269 +41,150 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.error('❌ Error loading profile:', error);
-        return { data: null, error };
+        console.error('Error loading profile:', error);
+        return null;
       }
 
-      console.log('✨ Supabase profile data:', data);
-      return { data, error: null };
-    } catch (error) {
-      console.error('❌ Unexpected error loading profile:', error);
-      return { data: null, error };
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const initAuth = async () => {
-      try {
-        console.log('🚀 Initializing auth...');
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('✨ Initial session:', session);
-        
-        if (!mounted) return;
-
-        if (session?.user) {
-          setUser(session.user);
-          const { data: profileData } = await loadProfile(session.user.id);
-          if (mounted && profileData) {
-            setProfile(profileData);
-          }
-          if (session.user.email_confirmed_at) {
-            setPendingVerificationEmail(null);
-          }
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-      } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 Auth state changed:', event, session);
-        
-        if (!mounted) return;
-
-        try {
-          if (session?.user) {
-            setUser(session.user);
-            const { data: profileData } = await loadProfile(session.user.id);
-            if (mounted && profileData) {
-              setProfile(profileData);
-            }
-            if (session.user.email_confirmed_at) {
-              setPendingVerificationEmail(null);
-            }
-          } else {
-            setUser(null);
-            setProfile(null);
-          }
-        } catch (error) {
-          console.error('❌ Error handling auth state change:', error);
-        }
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [loadProfile]);
-
-  // Reset pendingVerificationEmail après 1 heure
-  useEffect(() => {
-    if (pendingVerificationEmail) {
-      const timeout = setTimeout(() => {
-        setPendingVerificationEmail(null);
-      }, 60 * 60 * 1000); // 1 heure
-
-      return () => clearTimeout(timeout);
-    }
-  }, [pendingVerificationEmail]);
-
-  const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
-    try {
-      setLoading(true);
-      const result = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: userData,
-        }
-      });
-      if (!result.error) {
-        setPendingVerificationEmail(email);
-      }
-      return result;
-    } finally {
-      setLoading(false);
+      setProfile(data);
+      return data;
+    } catch (err) {
+      console.error('Error in loadProfile:', err);
+      return null;
     }
   };
 
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          setError(userError);
+          setUser(null);
+          setProfile(null);
+        } else {
+          setUser(currentUser);
+          if (currentUser) {
+            await loadProfile(currentUser.id);
+          } else {
+            setProfile(null);
+          }
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error getting user:', err);
+        setUser(null);
+        setProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Initial user check
+    getUser();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN') {
+        setUser(session?.user || null);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        }
+        router.refresh();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setPendingVerificationEmail(null);
+        router.refresh();
+      } else if (event === 'USER_UPDATED') {
+        setUser(session?.user || null);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        }
+        router.refresh();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, router]);
+
   const signIn = async (email: string, password: string) => {
-    console.log('🔑 Attempting sign in for:', email);
     try {
-      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error);
+      } else if (data.user) {
+        await loadProfile(data.user.id);
+        setPendingVerificationEmail(null);
+      }
+      return { data, error };
+    } catch (err) {
+      console.error('Sign in error:', err);
+      const error = new Error('Failed to sign in') as AuthError;
+      return { data: null, error };
+    }
+  };
+
+  const signUp = async (email: string, password: string, profileData: Partial<Profile> = {}) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
       
-      // Clear any existing state first
-      setUser(null);
-      setProfile(null);
-      
-      console.log('📡 Starting Supabase auth call...');
-      
-      let authResponse;
-      try {
-        authResponse = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        console.log('✨ Raw auth response received:', authResponse);
-      } catch (signInError) {
-        console.error('💥 Error during signInWithPassword:', signInError);
-        throw signInError;
+      if (error) {
+        setError(error);
+      } else if (data.user) {
+        // Set pending verification email
+        setPendingVerificationEmail(email);
+        
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: data.user.id,
+            email: data.user.email,
+            ...profileData
+          }]);
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        } else {
+          await loadProfile(data.user.id);
+        }
       }
-
-      const { data: authData, error: signInError } = authResponse;
-      console.log('📋 Auth data:', authData);
-      console.log('❗ Auth error:', signInError);
-
-      if (signInError) {
-        console.error('❌ Sign in error:', signInError);
-        return { data: null, error: signInError };
-      }
-
-      if (!authData?.user) {
-        console.error('❌ No user data in auth response');
-        return {
-          data: null,
-          error: new AuthError('No user data received', 400)
-        };
-      }
-
-      // Set the user immediately
-      console.log('👤 Setting user after successful sign in:', authData.user);
-      setUser(authData.user);
-
-      // Load profile
-      console.log('🔍 Loading profile after sign in...');
-      let profileData = null;
-      try {
-        const profileResponse = await loadProfile(authData.user.id);
-        profileData = profileResponse.data;
-        console.log('📋 Profile response:', profileResponse);
-      } catch (profileError) {
-        console.error('💥 Error loading profile:', profileError);
-      }
-      
-      if (profileData) {
-        console.log('👥 Setting profile after sign in:', profileData);
-        setProfile(profileData);
-      } else {
-        console.log('⚠️ No profile data found after sign in');
-      }
-
-      const response: {
-        data: { user: User | null; profile: Profile | null } | null;
-        error: AuthError | null;
-      } = {
-        data: {
-          user: authData.user,
-          profile: profileData
-        },
-        error: null
-      };
-      console.log('✅ Final sign in response:', response);
-      return response;
-    } catch (error) {
-      console.error('❌ Unexpected error during sign in:', error);
-      const authError = new AuthError(
-        error instanceof Error ? error.message : 'An unexpected error occurred',
-        500
-      );
-      return {
-        data: null,
-        error: authError
-      };
-    } finally {
-      console.log('🏁 Sign in process completed');
-      setLoading(false);
+      return { data, error };
+    } catch (err) {
+      console.error('Sign up error:', err);
+      const error = new Error('Failed to sign up') as AuthError;
+      return { data: null, error };
     }
   };
 
   const signOut = async () => {
-    console.log('signOut');
-    setLoading(true);
     try {
-      setUser(null);
-      setProfile(null);
-      setPendingVerificationEmail(null);
-
       const { error } = await supabase.auth.signOut();
-      // console.log('Résultat de la déconnexion:', error ? 'Erreur' : 'Succès');
-      // console.log('Détails de l\'erreur:', error);
-
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const killAllSessions = async () => {
-    try {
-      setLoading(true);
-      // Récupérer la session actuelle
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Déconnecter la session actuelle
-        await supabase.auth.signOut();
+      if (error) {
+        setError(error);
+      } else {
+        setProfile(null);
+        setPendingVerificationEmail(null);
       }
-      // Réinitialiser les states
-      setUser(null);
-      setProfile(null);
-      setPendingVerificationEmail(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProfile = async (data: Partial<Profile>) => {
-    try {
-      if (!user) throw new Error('No user logged in');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('id', user.id);
-
-      if (!error) {
-        setProfile((prev) => prev ? { ...prev, ...data } : null);
-      }
-
       return { error };
-    } catch (error) {
-      return { error: error as Error };
+    } catch (err) {
+      console.error('Sign out error:', err);
+      const error = new Error('Failed to sign out') as AuthError;
+      return { error };
     }
-  };
-
-  const resendConfirmationEmail = async () => {
-    if (!pendingVerificationEmail) {
-      return { error: new AuthError('No pending verification email', 400) };
-    }
-    return await supabase.auth.resend({
-      type: 'signup',
-      email: pendingVerificationEmail,
-    });
   };
 
   const handleGoogleSignIn = async () => {
@@ -318,52 +192,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-
       if (error) {
-        console.error('Error during Google sign in:', error);
-        return { data: null, error };
+        setError(error);
+      } else {
+        setPendingVerificationEmail(null);
       }
-
-      // After successful OAuth, we need to get the user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const googleSignInResponse: GoogleSignInResponse = {
-        user,
-        profile: null // Profile will be fetched separately by the auth state change listener
-      };
-
-      return { data: googleSignInResponse, error: null };
-    } catch (error) {
-      console.error('Error during Google sign in:', error);
-      return {
-        data: null,
-        error: error instanceof Error ? error : new Error('An unknown error occurred')
-      };
+      return { error };
+    } catch (err) {
+      console.error('Google sign in error:', err);
+      const error = new Error('Failed to sign in with Google') as AuthError;
+      return { error };
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        loading,
-        pendingVerificationEmail,
-        signUp,
-        signIn,
-        signOut,
-        killAllSessions,
-        updateProfile,
-        resendConfirmationEmail,
-        handleGoogleSignIn
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const updateProfile = async (data: Partial<Profile>) => {
+    if (!user) return { error: new Error('Not authenticated') };
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id);
+
+      if (!error) {
+        setProfile(prev => prev ? { ...prev, ...data } : null);
+      }
+
+      return { error: error as Error | null };
+    } catch (error) {
+      console.error('Error in updateProfile:', error);
+      return { error: error as Error };
+    }
+  };
+
+  const resendConfirmationEmail = async () => {
+    if (!pendingVerificationEmail) {
+      return { error: new Error('No pending verification email') as AuthError };
+    }
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: pendingVerificationEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      return { error };
+    } catch (err) {
+      console.error('Error in resendConfirmationEmail:', err);
+      const error = new Error('Failed to resend confirmation email') as AuthError;
+      return { error };
+    }
+  };
+
+  const value = {
+    user,
+    profile,
+    error,
+    isLoading,
+    pendingVerificationEmail,
+    signIn,
+    signUp,
+    signOut,
+    handleGoogleSignIn,
+    updateProfile,
+    resendConfirmationEmail,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

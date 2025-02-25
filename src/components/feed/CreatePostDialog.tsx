@@ -110,7 +110,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
 
         <div className="space-y-4">
           <textarea
-            className="w-full min-h-[100px] resize-none text-[15px] placeholder-gray-500 focus:outline-none border rounded-lg p-2"
+            className="w-full min-h-[100px] resize-none text-[15px] placeholder-gray-500 focus:outline-none"
             placeholder="Que souhaitez-vous partager ?"
             value={postText}
             onChange={(e) => setPostText(e.target.value)}

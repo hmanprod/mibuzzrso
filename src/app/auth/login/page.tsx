@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
@@ -14,35 +14,60 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { signIn, handleGoogleSignIn } = useAuth();
+  const searchParams = useSearchParams();
+  const { signIn, handleGoogleSignIn, user } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const next = searchParams.get('next') || '/feed';
+    if (window.location.pathname === next) return;
+  }, [router, searchParams, mounted, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    console.log('🔒 Starting login process...');
     try {
-      console.log('📨 Calling signIn with email:', email);
       const { data, error } = await signIn(email, password);
-      console.log('📬 Sign in response:', { data, error });
 
       if (error) {
-        console.error('❌ Login error:', error);
         setError(error.message);
-      } else if (data?.user) {
-        console.log('✅ Login successful, redirecting...');
-        router.push('/feed');
-      } else {
-        console.error('⚠️ No user data in response');
-        setError('Erreur de connexion: données utilisateur manquantes');
+        return;
+      }
+
+      if (data?.user) {
+        const next = searchParams.get('next') || '/feed';
+        router.push(next);
       }
     } catch (err) {
-      console.error('💥 Unexpected error during login:', err);
-      setError('Une erreur est survenue lors de la connexion');
+      setError('An unexpected error occurred');
+      console.error('Login error:', err);
     } finally {
-      console.log('🏁 Login process completed');
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await handleGoogleSignIn();
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+      console.error('Google login error:', err);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -55,15 +80,16 @@ export default function LoginPage() {
             {error}
           </div>
         )}
-        
-        {/* Champ email */}
+
+        {/* Email */}
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium text-[#2D2D2D]">
-            Nom d&apos;utilisateur ou e-mail
+            Email
           </label>
           <input
-            type="text"
+            type="email"
             id="email"
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -71,19 +97,24 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Champ mot de passe */}
+        {/* Password */}
         <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-[#2D2D2D]">
-            Mot de passe
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-medium text-[#2D2D2D]">
+              Password
+            </label>
+            <Link href="/auth/reset-password" className="text-sm text-primary hover:text-primary/80">
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               id="password"
+              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
-              placeholder="Saisissez au moins 6 caractères"
               required
             />
             <button
@@ -100,64 +131,48 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Lien mot de passe oublié */}
-        <div className="flex justify-end">
-          <Link
-            href="/auth/reset-password"
-            className="text-sm text-primary hover:text-primary/80 transition-colors"
-          >
-            Mot de passe oublié ?
-          </Link>
-        </div>
-
-        {/* Bouton de connexion */}
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full bg-primary text-primary-foreground py-2.5 rounded-[18px] font-semibold hover:bg-primary/90 transition-colors ${
+          className={`w-full bg-primary text-white py-2.5 rounded-[18px] font-semibold hover:bg-primary/80 transition-colors ${
             isLoading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Connexion en cours...
+              Signing in...
             </div>
           ) : (
-            'Se connecter'
+            'Sign in'
           )}
         </button>
 
-        {/* Séparateur */}
-        <div className="relative my-8">
+        <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
+            <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 text-gray-500 bg-white">ou continuer avec</span>
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
           </div>
         </div>
 
-        {/* Bouton Google */}
+        {/* Google Button */}
         <button
           type="button"
-          onClick={handleGoogleSignIn}
+          onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-600 font-medium border border-gray-300 px-4 py-2.5 rounded-[18px] transition-colors"
         >
           <FcGoogle className="w-5 h-5" />
-          Connexion avec Google
+          Google
         </button>
 
-        {/* Lien d'inscription */}
-        <div className="text-center text-sm text-gray-600">
-          <span>Vous n&apos;avez pas de compte ? </span>
-          <Link
-            href="/auth/register"
-            className="text-primary hover:text-primary/80 font-medium transition-colors"
-          >
-            S&apos;inscrire
+        <p className="text-center text-sm text-gray-600">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/register" className="text-primary hover:text-primary/80 font-medium">
+            Sign up
           </Link>
-        </div>
+        </p>
       </form>
     </AuthLayout>
   );

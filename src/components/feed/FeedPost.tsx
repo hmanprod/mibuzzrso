@@ -133,7 +133,7 @@ export default function FeedPost({
       {/* Title and description */}
       <div className="px-4 pb-4">
         {content && (
-          <p className="mt-1 text-gray-600">{content}</p>
+          <p className="text-gray-600">{content}</p>
         )}
       </div>
 
