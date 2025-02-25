@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Instagram, Music2, Video, Globe2, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 interface SocialLink {
   platform: string;
@@ -76,7 +77,7 @@ export default function EditProfilePage() {
   ];
 
   return (
-    <>
+    <AuthGuard>
       <Navbar />
       <div className="min-h-screen bg-white py-8">
         <div className="max-w-2xl mx-auto px-4">
@@ -279,6 +280,6 @@ export default function EditProfilePage() {
           </form>
         </div>
       </div>
-    </>
+    </AuthGuard>
   );
 }

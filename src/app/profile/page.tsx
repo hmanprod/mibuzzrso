@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 interface Tab {
   id: string;
@@ -27,7 +28,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   return (
-    <>
+    <AuthGuard>
       <Navbar />
       <div className="min-h-screen bg-white">
         {/* Cover Image */}
@@ -186,6 +187,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </>
+    </AuthGuard>
   );
 }

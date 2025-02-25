@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '@/types/database';
@@ -60,103 +60,103 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // useEffect(() => {
-  //   let mounted = true;
+  useEffect(() => {
+    let mounted = true;
 
-  //   const initAuth = async () => {
-  //     try {
-  //       console.log('🚀 Initializing auth...');
-  //       console.log('📱 Current local state:', { user, profile });
+    const initAuth = async () => {
+      try {
+        console.log('🚀 Initializing auth...');
+        console.log('📱 Current local state:', { user, profile });
 
-  //       // Get both session and user to compare
-  //       const [sessionResult, userResult] = await Promise.all([
-  //         supabase.auth.getSession(),
-  //         supabase.auth.getUser()
-  //       ]);
+        // Get both session and user to compare
+        const [sessionResult, userResult] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser()
+        ]);
 
-  //       console.log('✨ Supabase getSession result:', sessionResult);
-  //       console.log('✨ Supabase getUser result:', userResult);
+        console.log('✨ Supabase getSession result:', sessionResult);
+        console.log('✨ Supabase getUser result:', userResult);
 
-  //       if (!mounted) return;
+        if (!mounted) return;
         
-  //       const activeUser = userResult.data.user || sessionResult.data.session?.user;
+        const activeUser = userResult.data.user || sessionResult.data.session?.user;
         
-  //       if (activeUser) {
-  //         console.log('👤 Setting user from init:', activeUser);
-  //         setUser(activeUser);
-  //         const { data: profileData } = await loadProfile(activeUser.id);
-  //         if (profileData) {
-  //           console.log('👥 Setting profile from init:', profileData);
-  //           setProfile(profileData);
-  //         }
-  //         if (activeUser.email_confirmed_at) {
-  //           setPendingVerificationEmail(null);
-  //         }
-  //       } else {
-  //         console.log('🚫 No active user found, clearing local state');
-  //         setUser(null);
-  //         setProfile(null);
-  //       }
-  //     } catch (error) {
-  //       console.error('❌ Error initializing auth:', error);
-  //     } finally {
-  //       if (mounted) {
-  //         setLoading(false);
-  //       }
-  //     }
-  //   };
+        if (activeUser) {
+          console.log('👤 Setting user from init:', activeUser);
+          setUser(activeUser);
+          const { data: profileData } = await loadProfile(activeUser.id);
+          if (profileData) {
+            console.log('👥 Setting profile from init:', profileData);
+            setProfile(profileData);
+          }
+          if (activeUser.email_confirmed_at) {
+            setPendingVerificationEmail(null);
+          }
+        } else {
+          console.log('🚫 No active user found, clearing local state');
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('❌ Error initializing auth:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
-  //   initAuth();
+    initAuth();
 
-  //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  //     async (event, session) => {
-  //       if (!mounted) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
         
-  //       console.log('🔄 Auth state changed:', event);
-  //       console.log('📱 Current local state:', { user, profile });
-  //       console.log('✨ New session from onAuthStateChange:', session);
+        console.log('🔄 Auth state changed:', event);
+        console.log('📱 Current local state:', { user, profile });
+        console.log('✨ New session from onAuthStateChange:', session);
 
-  //       // Double check with getUser to ensure consistency
-  //       const { data: userData } = await supabase.auth.getUser();
-  //       console.log('✨ getUser result after state change:', userData);
+        // Double check with getUser to ensure consistency
+        const { data: userData } = await supabase.auth.getUser();
+        console.log('✨ getUser result after state change:', userData);
         
-  //       const activeUser = userData.user || session?.user;
+        const activeUser = userData.user || session?.user;
         
-  //       if (activeUser) {
-  //         console.log('👤 Setting user from auth change:', activeUser);
-  //         setUser(activeUser);
-  //         const { data: profileData } = await loadProfile(activeUser.id);
-  //         if (profileData) {
-  //           console.log('👥 Setting profile from auth change:', profileData);
-  //           setProfile(profileData);
-  //         }
-  //         if (activeUser.email_confirmed_at) {
-  //           setPendingVerificationEmail(null);
-  //         }
-  //       } else {
-  //         console.log('🚫 No active user in state change, clearing local state');
-  //         setUser(null);
-  //         setProfile(null);
-  //       }
-  //     }
-  //   );
+        if (activeUser) {
+          console.log('👤 Setting user from auth change:', activeUser);
+          setUser(activeUser);
+          const { data: profileData } = await loadProfile(activeUser.id);
+          if (profileData) {
+            console.log('👥 Setting profile from auth change:', profileData);
+            setProfile(profileData);
+          }
+          if (activeUser.email_confirmed_at) {
+            setPendingVerificationEmail(null);
+          }
+        } else {
+          console.log('🚫 No active user in state change, clearing local state');
+          setUser(null);
+          setProfile(null);
+        }
+      }
+    );
 
-  //   return () => {
-  //     mounted = false;
-  //     subscription.unsubscribe();
-  //   };
-  // }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
-  // // Reset pendingVerificationEmail après 1 heure
-  // useEffect(() => {
-  //   if (pendingVerificationEmail) {
-  //     const timeout = setTimeout(() => {
-  //       setPendingVerificationEmail(null);
-  //     }, 60 * 60 * 1000); // 1 heure
+  // Reset pendingVerificationEmail après 1 heure
+  useEffect(() => {
+    if (pendingVerificationEmail) {
+      const timeout = setTimeout(() => {
+        setPendingVerificationEmail(null);
+      }, 60 * 60 * 1000); // 1 heure
 
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [pendingVerificationEmail]);
+      return () => clearTimeout(timeout);
+    }
+  }, [pendingVerificationEmail]);
 
   const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
     try {

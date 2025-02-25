@@ -33,7 +33,7 @@ src/app/
 ```
 src/components/
 ├── auth/
-│   ├── AuthGuard.tsx         # Protection d'authentification
+│   ├── AuthGuard.tsx         # Protection des routes authentifiées
 │   ├── AuthLayout.tsx        # Layout commun pour les pages d'auth
 │   ├── SignInForm.tsx        # Formulaire de connexion
 │   ├── SignUpForm.tsx        # Formulaire d'inscription
@@ -56,7 +56,6 @@ src/components/
 │   └── button.tsx           # Composant bouton réutilisable
 ├── Feed.tsx                 # Composant de fil d'actualité principal
 ├── Navbar.tsx               # Barre de navigation
-├── ProfileCheck.tsx         # Vérification de la complétude du profil
 ├── RightSidebar.tsx        # Composant de barre latérale droite
 └── Sidebar.tsx             # Composant de barre latérale principale
 ```
@@ -113,40 +112,25 @@ src/lib/
   - Vérification de l'adresse e-mail
 
 ### Composants Principaux
-- `ProfileCheck` : Protection et vérification du profil
-  - Gestion des routes publiques/privées
-  - Redirection vers login si non authentifié
-  - Affichage du modal d'onboarding si nécessaire
-
-- `AuthDebug` : Composant de débogage
-  - Affichage des informations de l'utilisateur connecté
-  - Visible uniquement en développement
-  - Fermable manuellement
-
-### Composants
 - `AuthGuard` : Protège les routes authentifiées
   - Vérifie la présence d'un utilisateur connecté
-  - Redirige vers la page de connexion si nécessaire
-  - Affiche un loader pendant la vérification
-  - Déclenche la vérification du profil
+  - Redirige vers la page de connexion si non authentifié
+  - Intègre le modal d'onboarding si nécessaire
+  - Utilisé directement dans les pages protégées
 
-- `Providers` : Fournit les contextes
-  - AuthProvider pour l'authentification
-  - OnboardingProvider pour l'état d'onboarding
-  - Gestion des états globaux
+### Routes Protégées
+Les routes suivantes nécessitent l'AuthGuard :
+- `/feed` : Page principale du fil d'actualité
+- `/profile` : Page de profil utilisateur
+- `/profile/edit` : Page d'édition du profil
 
-### Hooks
-- `useAuth` : Hook d'authentification
-  - Gestion de la connexion/déconnexion
-  - Accès aux informations de l'utilisateur
-  - Mise à jour du profil utilisateur
-  - Gestion de la vérification d'email
-
-- `useOnboarding` : Hook d'onboarding
-  - Vérification de la complétude du profil
-  - Gestion du modal d'onboarding
-  - Sauvegarde des informations
-  - Navigation post-onboarding
+### Routes Publiques
+Les routes suivantes sont accessibles sans authentification :
+- `/auth/login` : Connexion
+- `/auth/register` : Inscription
+- `/auth/logout` : Déconnexion
+- `/auth/verify-email` : Vérification email
+- `/auth/reset-password` : Réinitialisation du mot de passe
 
 ## 🔐 Gestion des Routes
 
@@ -161,7 +145,7 @@ const PUBLIC_ROUTES = [
   '/auth/callback/google'
 ];
 ```
-Ces routes sont accessibles sans authentification. Elles sont gérées par le composant `ProfileCheck`.
+Ces routes sont accessibles sans authentification. Elles sont gérées par le composant `AuthGuard`.
 
 ### Routes Protégées
 Toutes les autres routes nécessitent une authentification. Si un utilisateur non authentifié tente d'y accéder, il sera redirigé vers `/auth/login`.
