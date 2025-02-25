@@ -34,47 +34,32 @@ export const useCloudinaryUpload = () => {
     setProgress(0);
 
     try {
-      // Create a new FormData instance
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', getUploadPreset(mediaType));
       formData.append('cloud_name', cloudName);
 
-      // Use XMLHttpRequest for better upload progress tracking
-      const result = await new Promise<UploadResult>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`,
+        {
+          method: 'POST',
+          body: formData,
+          mode: 'cors',
+        }
+      );
 
-        // Track upload progress
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = Math.round((event.loaded / event.total) * 100);
-            setProgress(percentComplete);
-          }
-        };
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
 
-        // Handle successful upload
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText);
-            resolve({
-              url: response.secure_url,
-              publicId: response.public_id,
-              duration: response.duration,
-            });
-          } else {
-            reject(new Error('Upload failed'));
-          }
-        };
+      const data = await response.json();
+      setProgress(100);
 
-        // Handle network errors
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-
-        // Open and send the request
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`);
-        xhr.send(formData);
-      });
-
-      return result;
+      return {
+        url: data.secure_url,
+        publicId: data.public_id,
+        duration: data.duration,
+      };
     } catch (error) {
       console.error('Cloudinary upload error:', error);
       throw error;
