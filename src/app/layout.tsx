@@ -47,8 +47,8 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${roboto.variable} font-sans antialiased bg-[#FAFAFA] min-h-screen`}>
         <Providers>
-            {children} {/* Contenu de l'application */}
-            {process.env.NODE_ENV === 'development' && <AuthDebug />}
+          {children} {/* Contenu de l'application */}
+          {process.env.NODE_ENV === 'development' && <AuthDebug />}
         </Providers>
       </body>
     </html>

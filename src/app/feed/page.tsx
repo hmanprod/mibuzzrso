@@ -9,6 +9,7 @@ import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+
 import { supabase } from '@/lib/supabase';
 import type { Post, Media, Profile } from '@/types/database';
 
@@ -89,6 +90,7 @@ export default function Home() {
 
   return (
     <AuthGuard>
+
       <div className="min-h-screen bg-[#FAFAFA]">
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
         

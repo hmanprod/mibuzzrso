@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { MediaType } from '@/types/database';
 
 interface UploadResult {
@@ -6,6 +6,8 @@ interface UploadResult {
   publicId: string;
   duration?: number;
 }
+
+const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 
 const getUploadPreset = (mediaType: MediaType | 'avatar'): string => {
   switch (mediaType) {
@@ -23,16 +25,6 @@ const getUploadPreset = (mediaType: MediaType | 'avatar'): string => {
 export const useCloudinaryUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const xhrRef = useRef<XMLHttpRequest | null>(null);
-
-  const cancelUpload = () => {
-    if (xhrRef.current) {
-      xhrRef.current.abort();
-      xhrRef.current = null;
-      setIsUploading(false);
-      setProgress(0);
-    }
-  };
 
   const uploadToCloudinary = async (
     file: File,
@@ -42,14 +34,17 @@ export const useCloudinaryUpload = () => {
     setProgress(0);
 
     try {
+      // Create a new FormData instance
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', getUploadPreset(mediaType));
+      formData.append('cloud_name', cloudName);
 
-      return await new Promise((resolve, reject) => {
+      // Use XMLHttpRequest for better upload progress tracking
+      const result = await new Promise<UploadResult>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhrRef.current = xhr;
 
+        // Track upload progress
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const percentComplete = Math.round((event.loaded / event.total) * 100);
@@ -57,43 +52,33 @@ export const useCloudinaryUpload = () => {
           }
         };
 
+        // Handle successful upload
         xhr.onload = () => {
           if (xhr.status === 200) {
-            const data = JSON.parse(xhr.responseText);
+            const response = JSON.parse(xhr.responseText);
             resolve({
-              url: data.secure_url,
-              publicId: data.public_id,
-              duration: data.duration,
+              url: response.secure_url,
+              publicId: response.public_id,
+              duration: response.duration,
             });
           } else {
             reject(new Error('Upload failed'));
           }
         };
 
-        xhr.onerror = () => {
-          reject(new Error('Network error'));
-        };
+        // Handle network errors
+        xhr.onerror = () => reject(new Error('Network error during upload'));
 
-        xhr.onabort = () => {
-          reject(new Error('Upload cancelled'));
-        };
-
-        // First open the request
-        xhr.open('POST', 
-          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`
-        );
-
-        // Then set headers after opening
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-        // Finally send the request
+        // Open and send the request
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`);
         xhr.send(formData);
       });
+
+      return result;
     } catch (error) {
       console.error('Cloudinary upload error:', error);
       throw error;
     } finally {
-      xhrRef.current = null;
       setIsUploading(false);
     }
   };
@@ -102,6 +87,5 @@ export const useCloudinaryUpload = () => {
     uploadToCloudinary,
     isUploading,
     progress,
-    cancelUpload,
   };
 };
