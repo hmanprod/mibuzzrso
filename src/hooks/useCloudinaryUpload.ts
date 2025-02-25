@@ -36,32 +36,23 @@ export const useCloudinaryUpload = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', getUploadPreset(mediaType));
-      formData.append('cloud_name', cloudName);
+      formData.append('mediaType', mediaType);
 
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`,
-        {
-          method: 'POST',
-          body: formData,
-          mode: 'no-cors',
-        }
-      );
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const error = await response.json();
+        throw new Error(error.details || 'Upload failed');
       }
 
       const data = await response.json();
       setProgress(100);
-
-      return {
-        url: data.secure_url,
-        publicId: data.public_id,
-        duration: data.duration,
-      };
+      return data;
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
+      console.error('Upload error:', error);
       throw error;
     } finally {
       setIsUploading(false);
