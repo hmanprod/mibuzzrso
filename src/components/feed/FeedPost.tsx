@@ -1,82 +1,103 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import { Avatar } from '../ui/Avatar';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
-
-interface Author {
-  id: string;
-  stage_name: string;
-  avatar_url: string | null;
-  username: string;
-}
+import type { Post, Media, Profile } from '@/types/database';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Comment {
   id: string;
   timestamp: number;
   content: string;
-  author: Author;
+  author: Profile;
   position?: { x: number; y: number };
 }
 
-interface FeedPostProps {
-  id: string;
-  author: Author;
-  title: string;
-  description?: string;
-  type: 'audio' | 'video';
-  mediaUrl: string;
-  waveformData?: number[];
-  comments: Comment[];
+interface FeedPostProps extends Post {
+  profile: Profile;
+  media: Media[];
   likes: number;
-  createdAt: string;
-  isLiked: boolean;
+  is_liked: boolean;
 }
 
 export default function FeedPost({
-  author,
-  title,
-  description,
-  type,
-  mediaUrl,
-  waveformData,
-  comments,
+  id,
+  profile,
+  content,
+  media,
   likes,
-  createdAt,
-  isLiked,
+  is_liked,
+  created_at,
 }: FeedPostProps) {
-  const [liked, setLiked] = useState(isLiked);
+  const { user } = useAuth();
+  const [liked, setLiked] = useState(is_liked);
   const [likesCount, setLikesCount] = useState(likes);
   const [showComments, setShowComments] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const toggleLike = () => {
-    // TODO: Implémenter l'API pour liker
-    setLiked(!liked);
-    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+  // Get the first media item (for now we'll just handle single media)
+  const mediaItem = media[0];
+
+  const toggleLike = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      if (liked) {
+        // Unlike
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', id)
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+        
+        setLikesCount(prev => prev - 1);
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('post_likes')
+          .insert({ post_id: id, user_id: user.id });
+          
+        if (error) throw error;
+        
+        setLikesCount(prev => prev + 1);
+      }
+      
+      setLiked(!liked);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShare = () => {
-    // TODO: Implémenter le partage
+    // TODO: Implement proper sharing
     navigator.clipboard.writeText(window.location.href);
   };
 
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden">
-      {/* En-tête du post */}
+      {/* Post header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Image
-            src={author.avatar_url || '/images/default-avatar.png'}
-            alt={`${author.stage_name}'s avatar`}
-            width={40}
-            height={40}
+          <Avatar
+            src={profile?.avatar_url || null}
+            stageName={profile?.stage_name}
+            size={40}
             className="rounded-full"
           />
+
           <div>
-            <h3 className="font-medium text-[#2D2D2D]">{author.stage_name}</h3>
-            <p className="text-sm text-gray-500">@{author.username}</p>
+            <h3 className="font-medium text-[#2D2D2D]">{profile.stage_name}</h3>
+            <p className="text-sm text-gray-500">@{profile.id}</p>
           </div>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -84,103 +105,65 @@ export default function FeedPost({
         </button>
       </div>
 
-      {/* Titre et description */}
+      {/* Title and description */}
+      {mediaItem && (
+        <div className="px-4 pb-4">
+          <h2 className="text-lg font-semibold text-[#2D2D2D]">{mediaItem?.title || 'Untitled'}</h2>
+          {mediaItem.description && (
+            <p className="mt-1 text-gray-600">{mediaItem.description}</p>
+          )}
+        </div>
+      )}
+
+      {/* Media player */}
+      {mediaItem && (
+        mediaItem.media_type === 'audio' ? (
+          <AudioPlayer
+            audioUrl={mediaItem.media_url}
+            waveformData={[]} // TODO: Add waveform data to Media type
+            comments={[]} // TODO: Implement comments
+          />
+        ) : (
+          <VideoPlayer videoUrl={mediaItem.media_url} />
+        )
+      )}
+
+      {/* Title and description */}
       <div className="px-4 pb-4">
-        <h2 className="text-lg font-semibold text-[#2D2D2D]">{title}</h2>
-        {description && (
-          <p className="mt-1 text-gray-600">{description}</p>
+        {content && (
+          <p className="mt-1 text-gray-600">{content}</p>
         )}
       </div>
 
-      {/* Lecteur média */}
-      {type === 'audio' && waveformData ? (
-        <AudioPlayer
-          audioUrl={mediaUrl}
-          waveformData={waveformData}
-          comments={comments}
-        />
-      ) : (
-        <VideoPlayer
-          videoUrl={mediaUrl}
-          comments={comments}
-        />
-      )}
-
       {/* Actions */}
-      <div className="p-4 flex items-center gap-6 border-t border-gray-100">
-        <button
+      <div className="p-4 flex items-center gap-6">
+        <button 
+          className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600'} ${loading ? 'opacity-50' : 'hover:text-red-500'} transition-colors`}
           onClick={toggleLike}
-          className={`flex items-center gap-1 ${liked ? 'text-red-500' : 'text-gray-600'}`}
+          disabled={loading}
         >
-          <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+          <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} />
           <span>{likesCount}</span>
         </button>
-
-        <button
+        <button 
+          className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors"
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1 text-gray-600"
         >
-          <MessageCircle className="w-5 h-5" />
-          <span>{comments.length}</span>
+          <MessageCircle className="w-6 h-6" />
+          <span>0</span>
         </button>
-
-        <button
+        <button 
+          className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
           onClick={handleShare}
-          className="flex items-center gap-1 text-gray-600"
         >
-          <Share2 className="w-5 h-5" />
+          <Share2 className="w-6 h-6" />
         </button>
-
-        <span className="ml-auto text-sm text-gray-500">
-          {new Date(createdAt).toLocaleDateString()}
-        </span>
       </div>
 
-      {/* Zone de commentaires */}
+      {/* Comments section - TODO: Implement */}
       {showComments && (
         <div className="border-t border-gray-100 p-4">
-          {/* Formulaire de commentaire */}
-          <form className="flex gap-3 mb-4">
-            <Image
-              src={author.avatar_url || '/images/default-avatar.png'}
-              alt="Your avatar"
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <input
-              type="text"
-              placeholder="Add a comment..."
-              className="flex-1 bg-gray-50 rounded-full px-4 text-sm"
-            />
-          </form>
-
-          {/* Liste des commentaires */}
-          <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-3">
-                <Image
-                  src={comment.author.avatar_url || '/images/default-avatar.png'}
-                  alt={`${comment.author.stage_name}'s avatar`}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">
-                      {comment.author.stage_name}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      à {Math.floor(comment.timestamp / 60)}:
-                      {String(Math.floor(comment.timestamp % 60)).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{comment.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="text-gray-500 text-center">Comments coming soon</p>
         </div>
       )}
     </article>

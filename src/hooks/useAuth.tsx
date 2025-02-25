@@ -66,34 +66,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         console.log('🚀 Initializing auth...');
-        console.log('📱 Current local state:', { user, profile });
-
-        // Get both session and user to compare
-        const [sessionResult, userResult] = await Promise.all([
-          supabase.auth.getSession(),
-          supabase.auth.getUser()
-        ]);
-
-        console.log('✨ Supabase getSession result:', sessionResult);
-        console.log('✨ Supabase getUser result:', userResult);
-
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('✨ Initial session:', session);
+        
         if (!mounted) return;
-        
-        const activeUser = userResult.data.user || sessionResult.data.session?.user;
-        
-        if (activeUser) {
-          console.log('👤 Setting user from init:', activeUser);
-          setUser(activeUser);
-          const { data: profileData } = await loadProfile(activeUser.id);
-          if (profileData) {
-            console.log('👥 Setting profile from init:', profileData);
+
+        if (session?.user) {
+          setUser(session.user);
+          const { data: profileData } = await loadProfile(session.user.id);
+          if (mounted && profileData) {
             setProfile(profileData);
           }
-          if (activeUser.email_confirmed_at) {
+          if (session.user.email_confirmed_at) {
             setPendingVerificationEmail(null);
           }
         } else {
-          console.log('🚫 No active user found, clearing local state');
           setUser(null);
           setProfile(null);
         }
@@ -110,33 +98,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 Auth state changed:', event, session);
+        
         if (!mounted) return;
-        
-        console.log('🔄 Auth state changed:', event);
-        console.log('📱 Current local state:', { user, profile });
-        console.log('✨ New session from onAuthStateChange:', session);
 
-        // Double check with getUser to ensure consistency
-        const { data: userData } = await supabase.auth.getUser();
-        console.log('✨ getUser result after state change:', userData);
-        
-        const activeUser = userData.user || session?.user;
-        
-        if (activeUser) {
-          console.log('👤 Setting user from auth change:', activeUser);
-          setUser(activeUser);
-          const { data: profileData } = await loadProfile(activeUser.id);
-          if (profileData) {
-            console.log('👥 Setting profile from auth change:', profileData);
-            setProfile(profileData);
+        try {
+          if (session?.user) {
+            setUser(session.user);
+            const { data: profileData } = await loadProfile(session.user.id);
+            if (mounted && profileData) {
+              setProfile(profileData);
+            }
+            if (session.user.email_confirmed_at) {
+              setPendingVerificationEmail(null);
+            }
+          } else {
+            setUser(null);
+            setProfile(null);
           }
-          if (activeUser.email_confirmed_at) {
-            setPendingVerificationEmail(null);
-          }
-        } else {
-          console.log('🚫 No active user in state change, clearing local state');
-          setUser(null);
-          setProfile(null);
+        } catch (error) {
+          console.error('❌ Error handling auth state change:', error);
         }
       }
     );

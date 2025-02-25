@@ -16,8 +16,8 @@ export default function RightSidebar({ className }: RightSidebarProps) {
   ];
 
   return (
-    <aside className={twMerge("bg-[#F9F9F9] p-6", className)}>
-      <div className="space-y-6">
+    <aside className={twMerge("bg-[#F9F9F9] p-3", className)}>
+      <div className="space-y-3">
         <div className="bg-white rounded-[18px] p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium text-lg text-[#2D2D2D]">Suggestions à suivre</h3>

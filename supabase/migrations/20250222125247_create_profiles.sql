@@ -60,4 +60,11 @@ CREATE POLICY "Users can update own profile"
     USING (auth.uid() = id)
     WITH CHECK (auth.uid() = id);
 
+-- Add relationship with posts table
+ALTER TABLE public.posts
+ADD CONSTRAINT fk_posts_profiles
+FOREIGN KEY (user_id) 
+REFERENCES public.profiles(id)
+ON DELETE CASCADE;
+
 COMMIT;

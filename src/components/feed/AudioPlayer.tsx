@@ -130,7 +130,7 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
               <Volume2 className="w-6 h-6" onClick={toggleMute} />
             )}
           </button>
-          <input
+          {/* <input
             type="range"
             min="0"
             max="1"
@@ -138,7 +138,7 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
             value={volume}
             onChange={handleVolumeChange}
             className="w-24"
-          />
+          /> */}
         </div>
       </div>
 
