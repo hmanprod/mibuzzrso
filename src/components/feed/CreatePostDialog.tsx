@@ -21,25 +21,24 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
   const [postText, setPostText] = useState('');
   const [title, setTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((file: File | null) => {
     if (!file) return;
+    setError(null);
+    setUploadedUrl(null);
 
     const isValidType = activeTab === 'audio' 
       ? file.type.startsWith('audio/') 
       : file.type.startsWith('video/');
 
     if (!isValidType) {
-      toast({
-        title: "Format non supporté",
-        description: `Veuillez sélectionner un fichier ${activeTab === 'audio' ? 'audio' : 'vidéo'} valide.`,
-        variant: "destructive"
-      });
+      setError(`Please select a valid ${activeTab} file`);
       return;
     }
 
@@ -48,15 +47,17 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedFile || !title.trim()) return;
+    if (!user || !selectedFile || !title.trim()) {
+      setError('Please fill in all required fields');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
-      setUploadProgress(0);
+      setError(null);
 
-      console.log('Starting upload for file:', selectedFile.name, 'type:', selectedFile.type);
       const result = await uploadToCloudinary(selectedFile, activeTab);
-      console.log('Upload result:', result);
+      setUploadedUrl(result.url);
 
       const { error: insertError } = await supabase
         .from('medias')
@@ -81,18 +82,22 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
       setSelectedFile(null);
       setTitle('');
       setPostText('');
-      setUploadProgress(0);
+      setError(null);
+      setUploadedUrl(null);
     } catch (error) {
       console.error('Error creating post:', error);
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur est survenue lors de la création du post.",
-        variant: "destructive"
-      });
+      setError(error instanceof Error ? error.message : "Une erreur est survenue lors de la création du post.");
     } finally {
       setIsSubmitting(false);
     }
   }, [user, selectedFile, title, activeTab, uploadToCloudinary, onPostCreated, onClose]);
+
+  const handleTabChange = (newTab: MediaType) => {
+    setActiveTab(newTab);
+    setSelectedFile(null);
+    setError(null);
+    setUploadedUrl(null);
+  };
 
   if (!isOpen) return null;
 
@@ -118,7 +123,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
                   ? 'bg-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              onClick={() => setActiveTab('audio')}
+              onClick={() => handleTabChange('audio')}
               type="button"
             >
               <Music className="h-5 w-5" />
@@ -130,25 +135,12 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
                   ? 'bg-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              onClick={() => setActiveTab('video')}
+              onClick={() => handleTabChange('video')}
               type="button"
             >
               <Video className="h-5 w-5" />
               <span>Video</span>
             </button>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Titre du media
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Donnez un titre à votre media"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
           </div>
 
           <div>
@@ -165,7 +157,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
                       className="sr-only"
                       onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
                       accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploading}
                     />
                   </label>
                 </div>
@@ -180,6 +172,21 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
               </div>
             </div>
           </div>
+
+          {selectedFile && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Titre du media
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Donnez un titre à votre media"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+          )}
 
           {isUploading && (
             <div className="mt-4">
@@ -206,6 +213,33 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
             </div>
           )}
 
+          {error && (
+            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
+          {selectedFile && uploadedUrl && (
+            <div className="mt-4 space-y-4">
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+                Upload successful!
+              </div>
+              {activeTab === 'video' && (
+                <video
+                  controls
+                  className="w-full rounded-lg shadow-lg"
+                  src={uploadedUrl}
+                />
+              )}
+              {activeTab === 'audio' && (
+                <audio
+                  controls
+                  className="w-full"
+                  src={uploadedUrl}
+                />
+              )}
+            </div>
+          )}
           <div className="flex justify-end gap-3 mt-4">
             <Button
               variant="outline"

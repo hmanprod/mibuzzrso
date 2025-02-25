@@ -257,8 +257,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPendingVerificationEmail(null);
 
       const { error } = await supabase.auth.signOut();
-      console.log('Résultat de la déconnexion:', error ? 'Erreur' : 'Succès');
-      console.log('Détails de l\'erreur:', error);
+      // console.log('Résultat de la déconnexion:', error ? 'Erreur' : 'Succès');
+      // console.log('Détails de l\'erreur:', error);
 
       return { error };
     } finally {

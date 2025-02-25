@@ -16,7 +16,7 @@ export default function TestPage() {
       setError(null);
       setUploadedUrl(null);
       
-      const result = await uploadToCloudinary(file, 'video');
+      const result = await uploadToCloudinary(file, 'audio');
       setUploadedUrl(result.url);
       console.log('Upload result:', result);
     } catch (err) {
@@ -109,13 +109,6 @@ export default function TestPage() {
                   controls
                   className="w-full rounded-lg shadow-lg"
                   src={uploadedUrl}
-                />
-              )}
-              {uploadedUrl.includes('image') && (
-                <img
-                  src={uploadedUrl}
-                  alt="Uploaded content"
-                  className="w-full rounded-lg shadow-lg"
                 />
               )}
               {uploadedUrl.includes('audio') && (

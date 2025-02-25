@@ -29,34 +29,48 @@ export const useCloudinaryUpload = () => {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', getUploadPreset(mediaType));
+      formData.append('upload_preset', getUploadPreset());
       formData.append('cloud_name', cloudName);
 
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`;
-      console.log('Uploading to:', uploadUrl);
+      const resourceType = mediaType === 'avatar' ? 'image' : 'video';
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
+      const xhr = new XMLHttpRequest();
+      
+      // Track upload progress
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentage = Math.round((e.loaded * 100) / e.total);
+          setProgress(percentage);
+        }
+      };
+
+      // Return a promise that resolves with the upload result
+      const uploadPromise = new Promise<UploadResult>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const response = JSON.parse(xhr.responseText);
+            resolve({
+              url: response.secure_url,
+              publicId: response.public_id,
+              duration: response.duration,
+            });
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Upload failed'));
       });
 
-      console.log('Cloudinary response status:', response.status);
+      // Send the request
+      xhr.open('POST', uploadUrl, true);
+      xhr.send(formData);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Cloudinary error response:', errorText);
-        throw new Error(errorText || 'Upload failed');
-      }
-
-      const data = await response.json();
-      console.log('Cloudinary success response:', data);
+      const result = await uploadPromise;
+      console.log('Cloudinary success response:', result);
       
       setProgress(100);
-      return {
-        url: data.secure_url,
-        publicId: data.public_id,
-        duration: data.duration,
-      };
+      return result;
     } catch (error) {
       console.error('Cloudinary upload error:', error);
       throw error;
