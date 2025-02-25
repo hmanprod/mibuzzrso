@@ -32,7 +32,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { uploadToCloudinary, isUploading, progress, cancelUpload } = useCloudinaryUpload();
+  const { uploadToCloudinary } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((files: File[]) => {
     const validFiles = files.filter(file => {
@@ -86,11 +86,8 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
   }, []);
 
   const removeFile = useCallback((index: number) => {
-    if (selectedFiles[index].status === 'uploading') {
-      cancelUpload();
-    }
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  }, [selectedFiles, cancelUpload]);
+  }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,14 +161,10 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
         description: "Votre post a été publié.",
       });
 
-      // Reset form
-      setPostText('');
-      setSelectedFiles([]);
-      
-      // Close dialog and notify parent
-      onClose();
       onPostCreated?.();
-
+      onClose();
+      setSelectedFiles([]);
+      setPostText('');
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
@@ -182,7 +175,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
     } finally {
       setIsSubmitting(false);
     }
-  }, [user, selectedFiles, uploadToCloudinary, activeTab, postText, onClose, onPostCreated]);
+  }, [user, selectedFiles, activeTab, uploadToCloudinary, onPostCreated, onClose]);
 
   if (!isOpen) return null;
 
@@ -301,7 +294,7 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
                 )}
                 {fileState.status === 'error' && (
                   <div className="mt-2 text-xs text-red-600">
-                    Erreur lors de l'envoi
+                    Erreur lors de l&apos;envoi
                   </div>
                 )}
               </div>

@@ -9,13 +9,13 @@ import type { Post, Media, Profile } from '@/types/database';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
-interface Comment {
-  id: string;
-  timestamp: number;
-  content: string;
-  author: Profile;
-  position?: { x: number; y: number };
-}
+// interface Comment {
+//   id: string;
+//   timestamp: number;
+//   content: string;
+//   author: Profile;
+//   position?: { x: number; y: number };
+// }
 
 interface FeedPostProps extends Post {
   profile: Profile;
@@ -31,7 +31,6 @@ export default function FeedPost({
   media,
   likes,
   is_liked,
-  created_at,
 }: FeedPostProps) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(is_liked);
@@ -124,7 +123,10 @@ export default function FeedPost({
             comments={[]} // TODO: Implement comments
           />
         ) : (
-          <VideoPlayer videoUrl={mediaItem.media_url} />
+          <VideoPlayer 
+          videoUrl={mediaItem.media_url} 
+          comments={[]} // TODO: Implement comments
+          />
         )
       )}
 

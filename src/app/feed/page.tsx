@@ -12,6 +12,10 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { supabase } from '@/lib/supabase';
 import type { Post, Media, Profile } from '@/types/database';
 
+interface PostMedia {
+  media: Media;
+}
+
 interface ExtendedPost extends Post {
   profile: Profile;
   media: Media[];
@@ -67,7 +71,7 @@ export default function Home() {
           ...post,
           profile: post.profile || null,
           // Transform nested media structure
-          media: post.media?.map((pm: any) => pm.media) || [],
+          media: post.media?.map((pm: PostMedia) => pm.media) || [],
           likes: 0, // We'll add likes back later
           is_liked: false
         };

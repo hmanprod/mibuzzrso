@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '@/types/database';
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
   // Fonction utilitaire pour charger le profil
-  const loadProfile = async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string) => {
     try {
       console.log('🔍 Loading profile for user:', userId);
       console.log('📱 Current local profile state:', profile);
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Unexpected error loading profile:', error);
       return { data: null, error };
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadProfile]);
 
   // Reset pendingVerificationEmail après 1 heure
   useEffect(() => {
