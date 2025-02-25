@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MediaType } from '@/types/database';
+import { cloudName, getUploadPreset } from '@/config/cloudinary';
 
 interface UploadResult {
   url: string;
@@ -19,25 +20,45 @@ export const useCloudinaryUpload = () => {
     setProgress(0);
 
     try {
+      console.log('Starting Cloudinary upload:', {
+        fileName: file.name,
+        fileType: file.type,
+        mediaType,
+        size: file.size
+      });
+
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('mediaType', mediaType);
+      formData.append('upload_preset', getUploadPreset(mediaType));
+      formData.append('cloud_name', cloudName);
 
-      const response = await fetch('/api/upload', {
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`;
+      console.log('Uploading to:', uploadUrl);
+
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Cloudinary response status:', response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || 'Upload failed');
+        const errorText = await response.text();
+        console.error('Cloudinary error response:', errorText);
+        throw new Error(errorText || 'Upload failed');
       }
 
       const data = await response.json();
+      console.log('Cloudinary success response:', data);
+      
       setProgress(100);
-      return data;
+      return {
+        url: data.secure_url,
+        publicId: data.public_id,
+        duration: data.duration,
+      };
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Cloudinary upload error:', error);
       throw error;
     } finally {
       setIsUploading(false);

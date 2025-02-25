@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import { X, Music, Video } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Music, Video } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 interface CreatePostDialogProps {
@@ -16,34 +16,25 @@ interface CreatePostDialogProps {
   onPostCreated?: () => void;
 }
 
-interface FileUploadState {
-  file: File;
-  progress: number;
-  status: 'waiting' | 'uploading' | 'done' | 'error';
-  title: string;
-}
-
 export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: CreatePostDialogProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('audio');
-  const [dragActive, setDragActive] = useState(false);
   const [postText, setPostText] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<FileUploadState[]>([]);
+  const [title, setTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const { uploadToCloudinary } = useCloudinaryUpload();
+  const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
 
-  const handleFileSelect = useCallback((files: File[]) => {
-    const validFiles = files.filter(file => {
-      if (activeTab === 'audio') {
-        return file.type.startsWith('audio/');
-      } else {
-        return file.type.startsWith('video/');
-      }
-    });
+  const handleFileSelect = useCallback((file: File | null) => {
+    if (!file) return;
 
-    if (validFiles.length === 0) {
+    const isValidType = activeTab === 'audio' 
+      ? file.type.startsWith('audio/') 
+      : file.type.startsWith('video/');
+
+    if (!isValidType) {
       toast({
         title: "Format non supporté",
         description: `Veuillez sélectionner un fichier ${activeTab === 'audio' ? 'audio' : 'vidéo'} valide.`,
@@ -52,107 +43,31 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
       return;
     }
 
-    const newFiles = validFiles.map(file => ({
-      file,
-      progress: 0,
-      status: 'waiting' as const,
-      title: '',
-    }));
-
-    setSelectedFiles(prev => [...prev, ...newFiles]);
+    setSelectedFile(file);
   }, [activeTab]);
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    handleFileSelect(files);
-  }, [handleFileSelect]);
-
-  const handleFileButtonClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const removeFile = useCallback((index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !selectedFile || !title.trim()) return;
 
     try {
-      // Validate that all files have titles
-      const emptyTitleFiles = selectedFiles.filter(file => !file.title.trim());
-      if (emptyTitleFiles.length > 0) {
-        toast({
-          title: "Validation Error",
-          description: "Veuillez donner un titre à tous les media.",
-          variant: "destructive"
-        });
-        return;
-      }
-
       setIsSubmitting(true);
+      setUploadProgress(0);
 
-      // Upload media files to Cloudinary
-      const mediaPromises = selectedFiles.map(async ({ file, title }, index) => {
-        try {
-          setSelectedFiles(prev =>
-            prev.map((f, i) =>
-              i === index ? { ...f, status: 'uploading' } : f
-            )
-          );
+      console.log('Starting upload for file:', selectedFile.name, 'type:', selectedFile.type);
+      const result = await uploadToCloudinary(selectedFile, activeTab);
+      console.log('Upload result:', result);
 
-          const result = await uploadToCloudinary(file, activeTab);
-
-          setSelectedFiles(prev =>
-            prev.map((f, i) =>
-              i === index ? { ...f, status: 'done', progress: 100 } : f
-            )
-          );
-
-          return {
-            ...result,
-            title
-          };
-        } catch (error) {
-          setSelectedFiles(prev =>
-            prev.map((f, i) =>
-              i === index ? { ...f, status: 'error', progress: 0 } : f
-            )
-          );
-          throw error;
-        }
-      });
-
-      const mediaResults = await Promise.all(mediaPromises);
-
-      // Create post with media
       const { error: insertError } = await supabase
         .from('medias')
-        .insert(
-          mediaResults.map(({ url, publicId, duration, title }) => ({
-            media_type: activeTab,
-            media_url: url,
-            media_public_id: publicId,
-            duration: duration || null,
-            title,
-            user_id: user.id
-          }))
-        );
+        .insert({
+          media_type: activeTab,
+          media_url: result.url,
+          media_public_id: result.publicId,
+          duration: result.duration || null,
+          title: title.trim(),
+          user_id: user.id
+        });
 
       if (insertError) throw insertError;
 
@@ -163,19 +78,21 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
 
       onPostCreated?.();
       onClose();
-      setSelectedFiles([]);
+      setSelectedFile(null);
+      setTitle('');
       setPostText('');
+      setUploadProgress(0);
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création du post.",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de la création du post.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
-  }, [user, selectedFiles, activeTab, uploadToCloudinary, onPostCreated, onClose]);
+  }, [user, selectedFile, title, activeTab, uploadToCloudinary, onPostCreated, onClose]);
 
   if (!isOpen) return null;
 
@@ -186,131 +103,125 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
           <DialogTitle>Créer un post</DialogTitle>
         </DialogHeader>
 
-        <textarea
-          className="w-full min-h-[100px] resize-none text-[15px] placeholder-gray-500 focus:outline-none"
-          placeholder="Que souhaitez-vous partager ?"
-          value={postText}
-          onChange={(e) => setPostText(e.target.value)}
-        />
+        <div className="space-y-4">
+          <textarea
+            className="w-full min-h-[100px] resize-none text-[15px] placeholder-gray-500 focus:outline-none border rounded-lg p-2"
+            placeholder="Que souhaitez-vous partager ?"
+            value={postText}
+            onChange={(e) => setPostText(e.target.value)}
+          />
 
-        <div className="flex gap-4 border-b pb-4">
-          <button
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === 'audio'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => setActiveTab('audio')}
-          >
-            <Music className="w-4 h-4" />
-            <span>Audio</span>
-          </button>
-          <button
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-              activeTab === 'video'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => setActiveTab('video')}
-          >
-            <Video className="w-4 h-4" />
-            <span>Video</span>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div 
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={handleFileButtonClick}
-            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-              dragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50'
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                handleFileSelect(files);
-                e.target.value = '';
-              }}
-              multiple
-            />
-            <p className="text-sm text-gray-500">
-              Glissez-déposez vos fichiers ici ou cliquez pour sélectionner
-            </p>
+          <div className="flex gap-4 border-b pb-4">
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                activeTab === 'audio'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              onClick={() => setActiveTab('audio')}
+              type="button"
+            >
+              <Music className="h-5 w-5" />
+              <span>Audio</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                activeTab === 'video'
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              onClick={() => setActiveTab('video')}
+              type="button"
+            >
+              <Video className="h-5 w-5" />
+              <span>Video</span>
+            </button>
           </div>
 
-          <div className="space-y-4 mt-4">
-            {selectedFiles.map((fileState, index) => (
-              <div key={index} className="relative p-4 bg-gray-100 rounded-lg">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile(index);
-                  }}
-                  className="absolute top-2 right-2 p-1 hover:bg-gray-200 rounded-full"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                <p className="text-sm font-medium mb-2">{fileState.file.name}</p>
-                <input
-                  type="text"
-                  placeholder="Titre *"
-                  className="w-full mb-2 px-3 py-2 border rounded-md"
-                  value={fileState.title}
-                  required
-                  onChange={(e) => {
-                    setSelectedFiles(prev =>
-                      prev.map((f, i) =>
-                        i === index ? { ...f, title: e.target.value } : f
-                      )
-                    );
-                  }}
-                />
-                {fileState.status === 'uploading' && (
-                  <div className="mt-2">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Envoi en cours...</span>
-                      <span>{fileState.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${fileState.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-                {fileState.status === 'done' && (
-                  <div className="mt-2 text-xs text-green-600">
-                    Envoi terminé
-                  </div>
-                )}
-                {fileState.status === 'error' && (
-                  <div className="mt-2 text-xs text-red-600">
-                    Erreur lors de l&apos;envoi
-                  </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Titre du media
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Donnez un titre à votre media"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Choisir un fichier
+            </label>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+              <div className="space-y-1 text-center">
+                <div className="flex text-sm text-gray-600">
+                  <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                    <span>Upload a file</span>
+                    <input
+                      type="file"
+                      className="sr-only"
+                      onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                      accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
+                      disabled={isSubmitting}
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {activeTab === 'audio' ? 'Audio' : 'Video'} files only
+                </p>
+                {selectedFile && (
+                  <p className="text-sm text-gray-500">
+                    Selected: {selectedFile.name}
+                  </p>
                 )}
               </div>
-            ))}
+            </div>
+          </div>
+
+          {isUploading && (
+            <div className="mt-4">
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
+                      Uploading
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-semibold inline-block text-indigo-600">
+                      {progress}%
+                    </span>
+                  </div>
+                </div>
+                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
+                  <div
+                    style={{ width: `${progress}%` }}
+                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500 transition-all duration-300"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !selectedFile || !title.trim()}
+            >
+              Publier
+            </Button>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isSubmitting || selectedFiles.length === 0}
-          >
-            {isSubmitting ? 'Publication...' : 'Publier'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
