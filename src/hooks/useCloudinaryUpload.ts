@@ -78,11 +78,15 @@ export const useCloudinaryUpload = () => {
           reject(new Error('Upload cancelled'));
         };
 
-        // Use unsigned upload with upload preset
+        // First open the request
         xhr.open('POST', 
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${mediaType === 'avatar' ? 'image' : mediaType}/upload`
         );
 
+        // Then set headers after opening
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        // Finally send the request
         xhr.send(formData);
       });
     } catch (error) {

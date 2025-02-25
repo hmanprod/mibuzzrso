@@ -24,7 +24,7 @@ interface FileUploadState {
 }
 
 export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: CreatePostDialogProps) {
-  const [activeTab, setActiveTab] = useState<MediaType>('audio');
+  const [activeTab, setActiveTab] = useState<MediaType>('audios');
   const [dragActive, setDragActive] = useState(false);
   const [postText, setPostText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<FileUploadState[]>([]);
