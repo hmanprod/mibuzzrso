@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ Unexpected error loading profile:', error);
       return { data: null, error };
     }
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     let mounted = true;
