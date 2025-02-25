@@ -65,14 +65,11 @@ export default function Navbar({ className }: NavbarProps) {
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link 
-              href="/"
+              href="/feed"
               className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2"
             >
               Fil d&apos;actualité
             </Link>
-            <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
-              Challenges
-            </button>
             <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
               Bibliothèque
             </button>

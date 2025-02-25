@@ -11,12 +11,21 @@ src/app/
 │   │   └── page.tsx           # Page d'inscription
 │   ├── logout/
 │   │   └── page.tsx           # Page de déconnexion
-│   └── callback/
-│       └── google/
-│           └── page.tsx       # Callback pour l'auth Google
+│   ├── reset-password/
+│   │   ├── [token]/
+│   │   │   └── page.tsx       # Réinitialisation du mot de passe avec jeton
+│   │   └── page.tsx           # Demande de réinitialisation du mot de passe
+│   └── verify-email/
+│       └── page.tsx           # Vérification de l'adresse e-mail
+├── feed/
+│   └── page.tsx               # Page de fil d'actualité
+├── profile/
+│   ├── edit/
+│   │   └── page.tsx           # Page de modification du profil
+│   └── page.tsx               # Page de profil
 ├── layout.tsx                 # Layout principal de l'application
 ├── globals.css                # Styles globaux
-└── page.tsx                   # Page d'accueil
+└── page.tsx                   # Page d'accueil (redirection vers /feed)
 ```
 
 ## Structure des composants
@@ -24,15 +33,32 @@ src/app/
 ```
 src/components/
 ├── auth/
+│   ├── AuthGuard.tsx         # Protection d'authentification
 │   ├── AuthLayout.tsx        # Layout commun pour les pages d'auth
+│   ├── SignInForm.tsx        # Formulaire de connexion
+│   ├── SignUpForm.tsx        # Formulaire d'inscription
 │   └── SocialButton.tsx      # Bouton de connexion sociale
 ├── debug/
-│   └── AuthDebug.tsx         # Composant de debug pour l'auth
+│   └── AuthDebug.tsx         # Composant de débogage pour l'auth
+├── feed/
+│   ├── AudioPlayer.tsx       # Composant lecteur audio
+│   ├── CreatePostBlock.tsx   # Bloc de création de publication
+│   ├── CreatePostDialog.tsx  # Dialogue de création de publication
+│   ├── FeedPost.tsx         # Composant de publication individuelle
+│   └── VideoPlayer.tsx      # Composant lecteur vidéo
+├── onboarding/
+│   └── OnboardingModal.tsx   # Modal de flux d'intégration
 ├── providers/
 │   └── Providers.tsx         # Wrapper des providers (Auth, etc.)
 ├── ui/
-│   └── button.tsx            # Composant bouton réutilisable
-└── ProfileCheck.tsx          # Vérification de la complétude du profil
+│   ├── Avatar.tsx           # Composant avatar
+│   ├── badge.tsx            # Composant badge
+│   └── button.tsx           # Composant bouton réutilisable
+├── Feed.tsx                 # Composant de fil d'actualité principal
+├── Navbar.tsx               # Barre de navigation
+├── ProfileCheck.tsx         # Vérification de la complétude du profil
+├── RightSidebar.tsx        # Composant de barre latérale droite
+└── Sidebar.tsx             # Composant de barre latérale principale
 ```
 
 ## Structure des hooks
@@ -54,10 +80,14 @@ src/lib/
 
 ### Pages Principales
 - `/` : Page d'accueil
+  - Redirection automatique vers `/feed`
+
+- `/feed` : Fil d'actualité
   - Affiche le fil d'actualité musical
+  - Création de posts (audio/vidéo)
+  - Sidebar gauche avec navigation
   - Sidebar droite avec suggestions
-  - Protégée par AuthGuard (redirection vers /auth/login si non connecté)
-  - Vérification de la complétude du profil
+  - Protégée par AuthGuard
 
 ### Pages d'Authentification
 - `/auth/login` : Connexion
@@ -75,9 +105,12 @@ src/lib/
   - Gestion du loading state
   - Redirection vers login
 
-- `/auth/callback/google` : Callback Google
-  - Gestion du retour de l'authentification Google
-  - Redirection après authentification réussie
+- `/auth/reset-password` : Réinitialisation du mot de passe
+  - Demande de réinitialisation du mot de passe
+  - Réinitialisation du mot de passe avec jeton
+  
+- `/auth/verify-email` : Vérification de l'adresse e-mail
+  - Vérification de l'adresse e-mail
 
 ### Composants Principaux
 - `ProfileCheck` : Protection et vérification du profil

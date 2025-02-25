@@ -33,7 +33,7 @@ export default function LoginPage() {
         setError(error.message);
       } else if (data?.user) {
         console.log('✅ Login successful, redirecting...');
-        router.push('/');
+        router.push('/feed');
       } else {
         console.error('⚠️ No user data in response');
         setError('Erreur de connexion: données utilisateur manquantes');
