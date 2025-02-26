@@ -79,7 +79,7 @@ export default function Home() {
           <div className="flex flex-1 ml-[274px]">
             {/* Feed central */}
             <main className="flex-1 max-w-[744px] mx-auto px-8 py-8">
-              <CreatePostBlock onClick={() => setShowCreatePost(true)} />
+              <CreatePostBlock onOpen={() => setShowCreatePost(true)} />
               
               <div className="mt-8 space-y-4">
                 {loading ? (
