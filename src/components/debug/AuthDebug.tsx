@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 
 export function AuthDebug() {
   const { user, profile } = useAuth();
@@ -13,7 +13,7 @@ export function AuthDebug() {
   const [showDetails, setShowDetails] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline'>('online');
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [sessionData, setSessionData] = useState<Record<string, unknown> | null>(null);
+  const [sessionData, setSessionData] = useState<Session | null>(null);
   const [cookieData, setCookieData] = useState<string[]>([]);
   const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
 
@@ -56,6 +56,7 @@ export function AuthDebug() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
           console.error('AuthDebug getSession error:', sessionError);
+          setSessionData(null);
         } else {
           setSessionData(session);
         }

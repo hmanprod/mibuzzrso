@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, AuthError } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
@@ -12,10 +12,7 @@ interface AuthContextType {
   error: AuthError | null;
   isLoading: boolean;
   pendingVerificationEmail: string | null;
-  signIn: (email: string, password: string) => Promise<{ data: { user: User | null }; error: AuthError | null }>;
-  signUp: (email: string, password: string, profileData?: Partial<Profile>) => Promise<{ data: { user: User | null }; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  handleGoogleSignIn: () => Promise<{ error: AuthError | null }>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   resendConfirmationEmail: () => Promise<{ error: AuthError | null }>;
 }
@@ -31,8 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() => createClient());
   const router = useRouter();
 
-  // Function to load profile data
-  const loadProfile = async (userId: string) => {
+  // Function to load profile data wrapped in useCallback
+  const loadProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -51,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error in loadProfile:', err);
       return null;
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     const getUser = async () => {
@@ -114,65 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, router, loadProfile]);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setError(error);
-      } else if (data.user) {
-        await loadProfile(data.user.id);
-        setPendingVerificationEmail(null);
-      }
-      return { data: { user: data.user }, error };
-    } catch (err) {
-      console.error('Sign in error:', err);
-      const error = new Error('Failed to sign in') as AuthError;
-      return { data: { user: null }, error };
-    }
-  };
-
-  const signUp = async (email: string, password: string, profileData: Partial<Profile> = {}) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        }
-      });
-      
-      if (error) {
-        setError(error);
-      } else if (data.user) {
-        // Set pending verification email
-        setPendingVerificationEmail(email);
-        
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: data.user.id,
-            email: data.user.email,
-            ...profileData
-          }]);
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-        } else {
-          await loadProfile(data.user.id);
-        }
-      }
-      return { data: { user: data.user }, error };
-    } catch (err) {
-      console.error('Sign up error:', err);
-      const error = new Error('Failed to sign up') as AuthError;
-      return { data: { user: null }, error };
-    }
-  };
-
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -186,27 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('Sign out error:', err);
       const error = new Error('Failed to sign out') as AuthError;
-      return { error };
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) {
-        setError(error);
-      } else {
-        setPendingVerificationEmail(null);
-      }
-      return { error };
-    } catch (err) {
-      console.error('Google sign in error:', err);
-      const error = new Error('Failed to sign in with Google') as AuthError;
       return { error };
     }
   };
@@ -258,10 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error,
     isLoading,
     pendingVerificationEmail,
-    signIn,
-    signUp,
     signOut,
-    handleGoogleSignIn,
     updateProfile,
     resendConfirmationEmail,
   };

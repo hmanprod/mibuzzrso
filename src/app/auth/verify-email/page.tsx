@@ -1,25 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function VerifyEmailPage() {
-  const router = useRouter();
-  const { pendingVerificationEmail, resendConfirmationEmail } = useAuth();
+  const { resendConfirmationEmail } = useAuth();
   const [isResending, setIsResending] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
 
-  // Redirect if no pending email verification
-  useEffect(() => {
-    if (!pendingVerificationEmail) {
-      router.replace('/auth/login');
-    }
-  }, [pendingVerificationEmail, router]);
 
   const handleResendEmail = async () => {
     setResendError(null);
@@ -54,10 +46,7 @@ export default function VerifyEmailPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-gray-900">Vérifiez votre email</h1>
           <p className="text-gray-600">
-            Nous avons envoyé un email de confirmation à{' '}
-            <span className="font-medium text-gray-900">
-              {pendingVerificationEmail}
-            </span>
+            Nous vous avons envoyé un email pour la confirmation de votre compte.
           </p>
         </div>
 

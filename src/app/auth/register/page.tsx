@@ -1,68 +1,56 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
-import { useAuth } from '@/hooks/useAuth';
+import { register, signInWithGoogle } from './actions';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { signUp, handleGoogleSignIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false
-  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  async function handleGoogleSignIn() {
     setIsLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+    setError(null);
+    
+    try {
+      const result = await signInWithGoogle();
+      if (result.error) {
+        setError(result.error);
+      } else if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (e) {
+      console.error(e);
+      setError('Une erreur est survenue lors de l\'inscription');
+    } finally {
       setIsLoading(false);
-      return;
     }
+  }
 
-    if (!formData.acceptTerms) {
-      setError('Vous devez accepter les conditions d\'utilisation');
-      setIsLoading(false);
-      return;
-    }
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
 
     try {
-      const { error } = await signUp(formData.email, formData.password, {});
-
-      if (error) {
-        setError(error.message);
-        setIsLoading(false);
-        return;
+      const result = await register(formData);
+      if (result?.error) {
+        setError(result.error);
       }
-      
-      router.push('/auth/verify-email');
-    } catch (error) {
-      console.error('Une erreur est survenue lors de l\'inscription:', error);
+    } catch (e) {
+      console.error(e);
       setError('Une erreur est survenue lors de l\'inscription');
+    } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+  }
 
   return (
     <AuthLayout>
@@ -82,14 +70,12 @@ export default function RegisterPage() {
             type="email"
             id="email"
             name="email"
-            value={formData.email}
-            onChange={handleChange}
             className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             required
           />
         </div>
 
-        {/* Mot de passe */}
+        {/* Password */}
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-medium text-[#2D2D2D]">
             Mot de passe
@@ -99,8 +85,6 @@ export default function RegisterPage() {
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
-              value={formData.password}
-              onChange={handleChange}
               className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
               required
             />
@@ -118,7 +102,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Confirmer le mot de passe */}
+        {/* Confirm Password */}
         <div className="space-y-2">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#2D2D2D]">
             Confirmer le mot de passe
@@ -128,8 +112,6 @@ export default function RegisterPage() {
               type={showConfirmPassword ? "text" : "password"}
               id="confirmPassword"
               name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
               className="w-full h-12 px-4 rounded-[18px] bg-gray-50 border border-gray-100 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-12"
               required
             />
@@ -147,14 +129,12 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Conditions d'utilisation */}
+        {/* Terms */}
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
             id="acceptTerms"
             name="acceptTerms"
-            checked={formData.acceptTerms}
-            onChange={handleChange}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             required
           />
@@ -192,19 +172,19 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Bouton Google */}
+        {/* Google Button */}
         <button
           type="button"
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-600 font-medium border border-gray-300 px-4 py-2.5 rounded-[18px] transition-colors"
         >
           <FcGoogle className="w-5 h-5" />
-          Connexion avec Google
+          Google
         </button>
 
         <p className="text-center text-sm text-gray-600">
-          Déjà inscrit ?{' '}
-          <Link href="/auth/login" className="text-primary hover:text-primary/80">
+          Vous avez déjà un compte ?{' '}
+          <Link href="/auth/login" className="text-primary hover:text-primary/80 font-medium">
             Se connecter
           </Link>
         </p>

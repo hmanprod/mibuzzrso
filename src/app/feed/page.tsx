@@ -9,13 +9,8 @@ import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { createClient } from '@/lib/supabase/client';
 import type { Post, Media, Profile } from '@/types/database';
-import { useAuth } from '@/hooks/useAuth';
-
-interface PostMedia {
-  media: Media;
-}
+import { getPosts, createPost } from './actions';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -40,48 +35,14 @@ export default function Home() {
       setLoading(true);
       setError(null);
 
-      const supabase = createClient();
-
-      // Fetch posts with profiles and media
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profile:profiles(*),
-          media:posts_medias(
-            media:medias(*)
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (postsError) {
-        console.error('❌ Supabase error:', postsError);
-        throw postsError;
+      const result = await getPosts();
+      
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      if (!postsData) {
-        console.log('⚠️ No posts data returned');
-        return;
-      }
-
-      console.log('✨ Posts data:', postsData);
-      console.log('📊 Number of posts:', postsData.length);
-
-      // Transform the data to match our ExtendedPost interface
-      const transformedPosts: ExtendedPost[] = postsData.map(post => {
-        console.log('🔍 Processing post:', post.id, 'Profile:', post.profile, 'Media:', post.media);
-        return {
-          ...post,
-          profile: post.profile || null,
-          // Transform nested media structure
-          media: post.media?.map((pm: PostMedia) => pm.media) || [],
-          likes: 0, // We'll add likes back later
-          is_liked: false
-        };
-      });
-
-      console.log('🎯 Transformed posts:', transformedPosts);
-      setPosts(transformedPosts);
+      console.log('✨ Posts loaded:', result.posts);
+      setPosts(result.posts || []);
     } catch (err) {
       console.error('❌ Error loading posts:', err);
       setError('Failed to load posts. Please try again later.');
@@ -90,9 +51,25 @@ export default function Home() {
     }
   };
 
+  const handleCreatePost = async (formData: FormData) => {
+    try {
+      const result = await createPost(formData);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Reload posts after successful creation
+      await loadPosts();
+      setShowCreatePost(false);
+    } catch (err) {
+      console.error('❌ Error creating post:', err);
+      // Handle error in the UI as needed
+    }
+  };
+
   return (
     <AuthGuard>
-
       <div className="min-h-screen bg-[#FAFAFA]">
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
         
@@ -101,65 +78,48 @@ export default function Home() {
           
           <div className="flex flex-1 ml-[274px]">
             {/* Feed central */}
-            <main className="max-w-[720px] w-full p-3 space-y-3">
-              {/* Bloc de création de post */}
-              <CreatePostBlock
-                onOpen={() => setShowCreatePost(true)}
-              />
-
-              {/* Debug refresh button */}
-              {process.env.NODE_ENV === 'development' && (
-                <button
-                  onClick={loadPosts}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded-lg font-medium transition-colors"
-                >
-                  🔄 Refresh Posts (Debug)
-                </button>
-              )}
-
-              {/* Loading state */}
-              {loading && (
-                <div className="space-y-6">
-                  {[...Array(3)].map((_, index) => (
-                    <FeedPostSkeleton key={index} />
-                  ))}
-                </div>
-              )}
-
-              {/* Error state */}
-              {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-lg text-center">
-                  {error}
-                </div>
-              )}
-
-              {/* Liste des posts */}
-              {!loading && !error && (
-                <div className="space-y-6">
-                  {posts.map((post) => (
-                    <FeedPost key={post.id} {...post} />
-                  ))}
-                </div>
-              )}
-
-              {/* Dialog de création de post */}
-              {showCreatePost && (
-                <CreatePostDialog
-                  isOpen={showCreatePost}
-                  onClose={() => setShowCreatePost(false)}
-                  onPostCreated={() => {
-                    loadPosts(); // Reload posts after creation
-                    setShowCreatePost(false);
-                  }}
-                />
-              )}
+            <main className="flex-1 max-w-[744px] mx-auto px-8 py-8">
+              <CreatePostBlock onClick={() => setShowCreatePost(true)} />
+              
+              <div className="mt-8 space-y-4">
+                {loading ? (
+                  // Show skeletons while loading
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <FeedPostSkeleton key={i} />
+                  ))
+                ) : error ? (
+                  // Show error message
+                  <div className="p-4 rounded-lg bg-red-50 text-red-600">
+                    {error}
+                  </div>
+                ) : posts.length === 0 ? (
+                  // Show empty state
+                  <div className="text-center text-gray-500">
+                    No posts yet. Be the first to post!
+                  </div>
+                ) : (
+                  // Show posts
+                  posts.map((post) => (
+                    <FeedPost
+                      key={post.id}
+                      post={post}
+                      onPostUpdated={loadPosts}
+                    />
+                  ))
+                )}
+              </div>
             </main>
             
-            {/* Sidebar droite */}
-            <RightSidebar className="w-[350px] h-[calc(100vh-72px)] sticky top-[72px]" />
+            <RightSidebar className="w-[274px] shrink-0" />
           </div>
         </div>
       </div>
+
+      <CreatePostDialog
+        open={showCreatePost}
+        onClose={() => setShowCreatePost(false)}
+        onSubmit={handleCreatePost}
+      />
     </AuthGuard>
   );
 }
