@@ -4,19 +4,17 @@ import { useState, useCallback } from 'react';
 import { Music, Video, Trash2 } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
-import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 interface CreatePostDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  onPostCreated?: () => void;
+  onSubmit: (formData: FormData) => Promise<void>;
 }
 
-export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: CreatePostDialogProps) {
+export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('audio');
   const [postText, setPostText] = useState('');
   const [title, setTitle] = useState('');
@@ -44,306 +42,204 @@ export default function CreatePostDialog({ isOpen, onClose, onPostCreated }: Cre
     setSelectedFile(file);
   }, [activeTab]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedFile || !title.trim()) {
       setError('Please fill in all required fields');
       return;
     }
 
-    const supabase = createClient();
-
     try {
       setIsSubmitting(true);
-      setError(null);
       setCurrentStep('upload');
 
-      // 1. Upload media to Cloudinary
-      console.log('Starting upload to Cloudinary...');
-      const result = await uploadToCloudinary(selectedFile, activeTab);
-      console.log('Cloudinary upload result:', result);
-
-      if (!result?.url) {
-        throw new Error('Upload failed: No URL received from Cloudinary');
+      // Upload media to Cloudinary
+      const mediaUrl = await uploadToCloudinary(selectedFile, activeTab);
+      if (!mediaUrl) {
+        throw new Error('Failed to upload media');
       }
 
       setCurrentStep('creating');
 
-      // 2. Create the media entry
-      console.log('Creating media entry with data:', {
-        media_type: activeTab,
-        media_url: result.url,
-        media_public_id: result.publicId,
-        duration: result.duration,
-        title: title.trim(),
-        description: postText.trim() || null,
-        user_id: user.id
-      });
+      // Create FormData
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', postText);
+      formData.append('mediaUrl', mediaUrl);
+      formData.append('mediaType', activeTab);
 
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('medias')
-        .insert({
-          media_type: activeTab,
-          media_url: result.url,
-          media_public_id: result.publicId,
-          duration: result.duration || null,
-          title: title.trim(),
-          description: postText.trim() || null,
-          user_id: user.id
-        })
-        .select('id, media_type, media_url')
-        .single();
+      // Submit the post
+      await onSubmit(formData);
 
-      if (mediaError) {
-        console.error('Media creation error:', mediaError);
-        console.error('Media error details:', {
-          message: mediaError.message,
-          details: mediaError.details,
-          hint: mediaError.hint
-        });
-        throw new Error(`Failed to create media: ${mediaError.message}`);
-      }
-
-      if (!mediaData) {
-        console.error('No media data returned after insert');
-        throw new Error('Failed to create media: No data returned');
-      }
-
-      console.log('Media created successfully:', mediaData);
-
-      // 3. Create the post
-      console.log('Creating post entry...');
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          content: postText.trim() || null,
-          user_id: user.id
-        })
-        .select('id')
-        .single();
-
-      if (postError) {
-        console.error('Post creation error:', postError);
-        throw postError;
-      }
-
-      // 4. Link post and media
-      console.log('Linking post and media...');
-      const { error: linkError } = await supabase
-        .from('posts_medias')
-        .insert({
-          post_id: postData.id,
-          media_id: mediaData.id,
-          position: 1 // First position since it's a single media
-        });
-
-      if (linkError) {
-        console.error('Post-media linking error:', linkError);
-        throw linkError;
-      }
-
-      console.log('Post created successfully');
-      toast({
-        title: "Post created successfully",
-        description: "Your post has been published.",
-      });
-
-      onPostCreated?.();
-      onClose();
-      setSelectedFile(null);
+      // Reset form
       setTitle('');
       setPostText('');
+      setSelectedFile(null);
       setError(null);
+      
+      // Close dialog
+      onClose();
     } catch (error) {
       console.error('Error creating post:', error);
-      setError(error instanceof Error ? error.message : "An error occurred while creating the post.");
+      setError('Failed to create post. Please try again.');
     } finally {
-      setCurrentStep(null);
       setIsSubmitting(false);
+      setCurrentStep(null);
     }
-  }, [user, selectedFile, title, postText, activeTab, uploadToCloudinary, onPostCreated, onClose]);
-
-  const handleTabChange = (newTab: MediaType) => {
-    setActiveTab(newTab);
-    setSelectedFile(null);
-    setError(null);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] max-h-[80vh] flex flex-col">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create a post</DialogTitle>
+          <DialogTitle>Create New Post</DialogTitle>
         </DialogHeader>
 
-        {(isUploading || isSubmitting) ? (
-          <div className="flex flex-col items-center justify-center py-8 px-4">
-            <div className="w-full max-w-sm space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {currentStep === 'upload' && "Uploading media..."}
-                  {currentStep === 'creating' && "Creating post..."}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {currentStep === 'upload' && "Please wait while we process your file"}
-                  {currentStep === 'creating' && "Almost done! Finalizing your post..."}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Progress</span>
-                  <span>
-                    {currentStep === 'upload' ? `${progress}%` : '100%'}
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 rounded-full"
-                    style={{ 
-                      width: currentStep === 'upload' ? `${progress}%` : '100%'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span>
-                  {currentStep === 'upload' && "Uploading..."}
-                  {currentStep === 'creating' && "Creating your post..."}
-                </span>
-              </div>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Media Type Selection */}
+          <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setActiveTab('audio')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'audio'
+                  ? 'bg-white shadow text-primary'
+                  : 'text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              <Music className="w-5 h-5" />
+              <span>Audio</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('video')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'video'
+                  ? 'bg-white shadow text-primary'
+                  : 'text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              <Video className="w-5 h-5" />
+              <span>Video</span>
+            </button>
           </div>
-        ) : (
-          <div className="space-y-4">
+
+          {/* Title Input */}
+          <div className="space-y-2">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              placeholder="Enter a title for your post"
+            />
+          </div>
+
+          {/* Description Input */}
+          <div className="space-y-2">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description (optional)
+            </label>
             <textarea
-              className="w-full min-h-[100px] resize-none text-[15px] placeholder-gray-500 focus:outline-none"
-              placeholder="What would you like to share?"
+              id="description"
               value={postText}
               onChange={(e) => setPostText(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              rows={3}
+              placeholder="Add a description to your post"
             />
+          </div>
 
-            <div className="flex gap-4 border-b pb-4">
-              <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  activeTab === 'audio'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                onClick={() => handleTabChange('audio')}
-                type="button"
+          {/* File Upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Upload {activeTab === 'audio' ? 'Audio' : 'Video'}
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
+                onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                className="hidden"
+                id="media-upload"
+              />
+              <label
+                htmlFor="media-upload"
+                className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
               >
-                <Music className="h-5 w-5" />
-                <span>Audio</span>
-              </button>
-              <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  activeTab === 'video'
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                onClick={() => handleTabChange('video')}
-                type="button"
-              >
-                <Video className="h-5 w-5" />
-                <span>Video</span>
-              </button>
-            </div>
-
-            <div>
-              {!selectedFile ? (
-                <div className="mt-1 flex justify-center px-4 py-3 border border-gray-300 border-dashed rounded-md bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                  <div className="space-y-1 text-center">
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer font-medium text-indigo-600 hover:text-indigo-500">
-                        <span>Upload a file</span>
-                        <input
-                          type="file"
-                          className="sr-only"
-                          onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-                          accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
-                          disabled={isSubmitting || isUploading}
-                        />
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {activeTab === 'audio' ? 'Audio' : 'Video'} files only
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-gray-200 rounded-md">
-                        {activeTab === 'audio' ? (
-                          <Music className="h-4 w-4 text-gray-600" />
-                        ) : (
-                          <Video className="h-4 w-4 text-gray-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {selectedFile.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
+                {selectedFile ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">{selectedFile.name}</span>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setSelectedFile(null);
-                        setTitle('');
                       }}
-                      className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                      disabled={isSubmitting || isUploading}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <Trash2 className="h-4 w-4 text-gray-600" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-
-                  <div>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white"
-                      placeholder="Give your media a title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span className="block sm:inline">{error}</span>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 mt-4">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                disabled={isSubmitting || isUploading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || isUploading || !selectedFile || !title.trim()}
-              >
-                {isSubmitting || isUploading ? 'Publishing...' : 'Publish'}
-              </Button>
+                ) : (
+                  <span className="text-sm text-gray-600">
+                    Click to upload or drag and drop
+                  </span>
+                )}
+              </label>
             </div>
           </div>
-        )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Uploading... {progress}%
+              </p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !selectedFile || !title.trim()}
+            >
+              {isSubmitting ? (
+                <>
+                  {currentStep === 'upload' ? 'Uploading...' : 'Creating Post...'}
+                </>
+              ) : (
+                'Create Post'
+              )}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

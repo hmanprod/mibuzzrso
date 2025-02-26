@@ -10,37 +10,27 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/use-toast';
 
-// interface Comment {
-//   id: string;
-//   timestamp: number;
-//   content: string;
-//   author: Profile;
-//   position?: { x: number; y: number };
-// }
-
-interface FeedPostProps extends Post {
+interface ExtendedPost extends Post {
   profile: Profile;
   media: Media[];
   likes: number;
   is_liked: boolean;
 }
 
-export default function FeedPost({
-  id,
-  profile,
-  content,
-  media,
-  likes,
-  is_liked,
-}: FeedPostProps) {
+interface FeedPostProps {
+  post: ExtendedPost;
+  onPostUpdated: () => Promise<void>;
+}
+
+export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
   const { user } = useAuth();
-  const [liked, setLiked] = useState(is_liked);
-  const [likesCount, setLikesCount] = useState(likes);
+  const [liked, setLiked] = useState(post.is_liked);
+  const [likesCount, setLikesCount] = useState(post.likes);
   const [showComments, setShowComments] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Get the first media item (for now we'll just handle single media)
-  const mediaItem = media[0];
+  const mediaItem = post.media[0];
 
   const toggleLike = async () => {
     if (!user) {
@@ -54,32 +44,24 @@ export default function FeedPost({
 
     try {
       setLoading(true);
-      
       const supabase = createClient();
-      
-      if (liked) {
-        // Unlike
-        const { error } = await supabase
-          .from('post_likes')
-          .delete()
-          .eq('post_id', id)
-          .eq('user_id', user.id);
-          
-        if (error) throw error;
-        
-        setLikesCount(prev => prev - 1);
-      } else {
-        // Like
-        const { error } = await supabase
-          .from('post_likes')
-          .insert({ post_id: id, user_id: user.id });
-          
-        if (error) throw error;
-        
-        setLikesCount(prev => prev + 1);
-      }
-      
+
+      // Toggle like in the database
+      const { error } = await supabase
+        .from('post_likes')
+        .upsert(
+          { post_id: post.id, user_id: user.id, liked: !liked },
+          { onConflict: 'post_id,user_id' }
+        );
+
+      if (error) throw error;
+
+      // Update local state
       setLiked(!liked);
+      setLikesCount(prev => liked ? prev - 1 : prev + 1);
+      
+      // Notify parent to refresh posts
+      await onPostUpdated();
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
@@ -103,15 +85,15 @@ export default function FeedPost({
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Avatar
-            src={profile?.avatar_url || null}
-            stageName={profile?.stage_name}
+            src={post.profile?.avatar_url || null}
+            stageName={post.profile?.stage_name}
             size={40}
             className="rounded-full"
           />
 
           <div>
-            <h3 className="font-medium text-[#2D2D2D]">{profile.stage_name}</h3>
-            <p className="text-sm text-gray-500">@{profile.id}</p>
+            <h3 className="font-medium text-[#2D2D2D]">{post.profile.stage_name}</h3>
+            <p className="text-sm text-gray-500">@{post.profile.id}</p>
           </div>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -147,8 +129,8 @@ export default function FeedPost({
 
       {/* Title and description */}
       <div className="px-4 pb-4">
-        {content && (
-          <p className="text-gray-600">{content}</p>
+        {post.content && (
+          <p className="text-gray-600">{post.content}</p>
         )}
       </div>
 

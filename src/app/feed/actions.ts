@@ -56,48 +56,56 @@ export async function getPosts() {
 
 export async function createPost(formData: FormData) {
   const supabase = await createClient()
+  
+  const title = formData.get('title') as string
   const content = formData.get('content') as string
-  const mediaFiles = formData.getAll('media') as File[]
+  const mediaUrl = formData.get('mediaUrl') as string
+  const mediaType = formData.get('mediaType') as 'audio' | 'video'
 
   try {
-    // First, create the post
-    const { data: post, error: postError } = await supabase
+    // Create media entry
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('medias')
+      .insert({
+        media_type: mediaType,
+        media_url: mediaUrl,
+        title: title.trim(),
+        description: content.trim() || null,
+      })
+      .select('id')
+      .single()
+
+    if (mediaError) {
+      console.error('Error creating media:', mediaError)
+      return { error: 'Failed to create media entry' }
+    }
+
+    // Create post entry
+    const { data: postData, error: postError } = await supabase
       .from('posts')
-      .insert([{ content }])
-      .select()
+      .insert({
+        content: content.trim() || null,
+      })
+      .select('id')
       .single()
 
     if (postError) {
+      console.error('Error creating post:', postError)
       return { error: 'Failed to create post' }
     }
 
-    if (mediaFiles.length > 0) {
-      // Handle media upload and linking to post
-      const mediaUploads = await Promise.all(
-        mediaFiles.map(async (file) => {
-          const { data, error } = await supabase.storage
-            .from('media')
-            .upload(`posts/${post.id}/${file.name}`, file)
+    // Link post and media
+    const { error: linkError } = await supabase
+      .from('posts_medias')
+      .insert({
+        post_id: postData.id,
+        media_id: mediaData.id,
+        position: 1
+      })
 
-          if (error) {
-            throw error
-          }
-
-          return data.path
-        })
-      )
-
-      // Create media records and link them to the post
-      const { error: mediaError } = await supabase.from('posts_medias').insert(
-        mediaUploads.map(path => ({
-          post_id: post.id,
-          media_id: path
-        }))
-      )
-
-      if (mediaError) {
-        return { error: 'Failed to upload media' }
-      }
+    if (linkError) {
+      console.error('Error linking post and media:', linkError)
+      return { error: 'Failed to link post and media' }
     }
 
     return { success: true }
