@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, MessageSquare, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
 import type { Profile } from '@/types/database';
+import { useSession } from '@/components/providers/SessionProvider';
 
 interface NavbarProps {
   onOpenCreatePost?: () => void;
@@ -19,33 +19,11 @@ export default function Navbar({ className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const supabase = createClientComponentClient();
+  const { profile } = useSession();
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        if (data) {
-          setProfile(data);
-        }
-      }
-    };
-
-    loadProfile();
-  }, [supabase]);
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      router.push('/auth/login');
-    }
+      router.push('/auth/logout');
   };
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useSession } from '@/components/providers/SessionProvider';
 import { Profile } from '@/types/database';
 import {
   Dialog,
@@ -105,9 +105,8 @@ const ALL_COUNTRIES: Option[] = [
 ];
 
 export function OnboardingModal() {
-  const { updateProfile, isProfileComplete, profile } = useOnboarding();
-  const [isModalOpen, setIsModalOpen] = useState(!isProfileComplete);
-  const [isLoading, setIsLoading] = useState(false);
+  const { profile, updateProfile, isLoading: sessionLoading } = useSession();
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: profile?.stage_name || '',
     musical_interests: profile?.musical_interests || [],
@@ -125,22 +124,23 @@ export function OnboardingModal() {
         country: profile.country || '',
         label: profile.label || '',
       });
+
+      // Check if profile is complete to control modal visibility
+      const requiredFields: (keyof Profile)[] = ['stage_name', 'talents', 'musical_interests', 'country'];
+      const isComplete = requiredFields.every(field => Boolean(profile[field]));
+      if (isComplete) {
+        setIsModalOpen(false);
+      }
     }
   }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     try {
-      const { error } = await updateProfile(formData);
-      if (error) {
-        throw error;
-      }
+      await updateProfile(formData);
+      setIsModalOpen(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
-    } finally {
-      setIsLoading(false);
-      setIsModalOpen(false);
     }
   };
 
@@ -239,8 +239,8 @@ export function OnboardingModal() {
           </div>
 
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" disabled={sessionLoading}>
+              {sessionLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Chargement...
