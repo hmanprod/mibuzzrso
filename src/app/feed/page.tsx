@@ -51,21 +51,9 @@ export default function Home() {
     }
   };
 
-  const handleCreatePost = async (formData: FormData) => {
-    try {
-      const result = await createPost(formData);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      // Reload posts after successful creation
+  const handleCreatePost = async () => {
       await loadPosts();
       setShowCreatePost(false);
-    } catch (err) {
-      console.error('❌ Error creating post:', err);
-      // Handle error in the UI as needed
-    }
   };
 
   return (

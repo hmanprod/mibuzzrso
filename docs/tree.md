@@ -49,11 +49,21 @@ src/components/
 ├── onboarding/
 │   └── OnboardingModal.tsx   # Modal de flux d'intégration
 ├── providers/
-│   └── Providers.tsx         # Wrapper des providers (Auth, etc.)
+│   ├── Providers.tsx        # Wrapper des providers globaux
+│   └── SessionProvider.tsx   # Provider de gestion de session
 ├── ui/
 │   ├── Avatar.tsx           # Composant avatar
 │   ├── badge.tsx            # Composant badge
-│   └── button.tsx           # Composant bouton réutilisable
+│   ├── button.tsx           # Composant bouton réutilisable
+│   ├── command.tsx          # Composant de commande
+│   ├── dialog.tsx           # Composant de dialogue modal
+│   ├── input.tsx            # Composant de champ de saisie
+│   ├── multi-select.tsx     # Composant de sélection multiple
+│   ├── popover.tsx          # Composant de popover
+│   ├── select.tsx           # Composant de sélection
+│   ├── toast.tsx            # Composant de notification toast
+│   ├── toaster.tsx          # Gestionnaire de toasts
+│   └── use-toast.ts         # Hook de gestion des toasts
 ├── Feed.tsx                 # Composant de fil d'actualité principal
 ├── Navbar.tsx               # Barre de navigation
 ├── RightSidebar.tsx        # Composant de barre latérale droite
@@ -125,16 +135,6 @@ Les routes suivantes nécessitent l'AuthGuard :
 - `/profile/edit` : Page d'édition du profil
 
 ### Routes Publiques
-Les routes suivantes sont accessibles sans authentification :
-- `/auth/login` : Connexion
-- `/auth/register` : Inscription
-- `/auth/logout` : Déconnexion
-- `/auth/verify-email` : Vérification email
-- `/auth/reset-password` : Réinitialisation du mot de passe
-
-## 🔐 Gestion des Routes
-
-### Routes Publiques
 ```typescript
 const PUBLIC_ROUTES = [
   '/auth/login',
@@ -143,7 +143,7 @@ const PUBLIC_ROUTES = [
   '/auth/verify-email',
   '/auth/reset-password',
   '/auth/callback/google',
-  '/auth/confirm/routes'
+  '/auth/confirm'
 ];
 ```
 Ces routes sont accessibles sans authentification. Elles sont gérées par le composant `AuthGuard`.

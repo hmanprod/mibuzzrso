@@ -7,7 +7,6 @@ import { Search, Bell, MessageSquare, User, Settings, HelpCircle, LogOut } from 
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
-import type { Profile } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
 
 interface NavbarProps {

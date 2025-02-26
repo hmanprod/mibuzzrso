@@ -4,10 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import AuthLayout from '@/components/auth/AuthLayout';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function VerifyEmailPage() {
-  const { resendConfirmationEmail } = useAuth();
   const [isResending, setIsResending] = useState(false);
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -18,20 +16,20 @@ export default function VerifyEmailPage() {
     setResendSuccess(false);
     setIsResending(true);
 
-    try {
-      const { error } = await resendConfirmationEmail();
+    // try {
+    //   const { error } = await resendConfirmationEmail();
       
-      if (error) {
-        setResendError("Impossible d'envoyer l'email. Veuillez réessayer plus tard.");
-      } else {
-        setResendSuccess(true);
-      }
-    } catch (err) {
-      console.error('Error resending email:', err);
-      setResendError("Une erreur s'est produite. Veuillez réessayer plus tard.");
-    } finally {
-      setIsResending(false);
-    }
+    //   if (error) {
+    //     setResendError("Impossible d'envoyer l'email. Veuillez réessayer plus tard.");
+    //   } else {
+    //     setResendSuccess(true);
+    //   }
+    // } catch (err) {
+    //   console.error('Error resending email:', err);
+    //   setResendError("Une erreur s'est produite. Veuillez réessayer plus tard.");
+    // } finally {
+    //   setIsResending(false);
+    // }
   };
 
   return (

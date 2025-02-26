@@ -116,7 +116,6 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
         mediaItem.media_type === 'audio' ? (
           <AudioPlayer
             audioUrl={mediaItem.media_url}
-            waveformData={[]} // TODO: Add waveform data to Media type
             comments={[]} // TODO: Implement comments
           />
         ) : (

@@ -3,12 +3,11 @@
 import { useState, useCallback, useRef } from 'react';
 import { Music, Video, Trash2, Upload, Loader2 } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
-import { MediaType, Media, Post, PostMedia } from '@/types/database';
+import { MediaType } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
-import { cloudName } from '@/config/cloudinary';
 
 interface CreatePostDialogProps {
   open: boolean;
