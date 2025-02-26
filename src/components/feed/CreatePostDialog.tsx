@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Music, Video, Trash2 } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
-import { MediaType } from '@/types/database';
+import { MediaType} from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -65,7 +65,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
       const formData = new FormData();
       formData.append('title', title);
       formData.append('content', postText);
-      formData.append('mediaUrl', mediaUrl);
+      formData.append('mediaUrl', mediaUrl.url); 
       formData.append('mediaType', activeTab);
 
       // Submit the post

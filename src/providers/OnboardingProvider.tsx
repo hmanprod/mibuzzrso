@@ -3,10 +3,12 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { Profile } from '@/types/database';
 
 interface OnboardingContextType {
-  isProfileComplete: boolean;
-  isModalOpen: boolean;
+  profile: Profile | null;
   loading: boolean;
-  updateProfile: (data: Partial<Profile>) => Promise<{ error: unknown }>;
+  error: string | null;
+  isModalOpen: boolean;
+  isProfileComplete: boolean;
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error: unknown }>;
   closeModal: () => void;
   checkProfileCompleteness: () => Promise<void>;
 }
