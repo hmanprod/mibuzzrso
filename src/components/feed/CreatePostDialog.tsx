@@ -8,6 +8,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
+import { cloudName } from '@/config/cloudinary';
 
 interface CreatePostDialogProps {
   open: boolean;

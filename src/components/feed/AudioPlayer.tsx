@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
+import { getWaveformUrl } from '@/utils/cloudinary';
 
 interface AudioPlayerProps {
   audioUrl: string;
-  waveformData: number[]; // Données de la forme d'onde
   comments: {
     id: string;
     timestamp: number;
@@ -20,15 +20,17 @@ interface AudioPlayerProps {
   }[];
 }
 
-export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioPlayerProps) {
+export default function AudioPlayer({ audioUrl, comments }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
+  const waveformUrl = getWaveformUrl(audioUrl);
 
   useEffect(() => {
+    
     if (audioRef.current) {
       audioRef.current.addEventListener('loadedmetadata', () => {
         setDuration(audioRef.current?.duration || 0);
@@ -120,89 +122,65 @@ export default function AudioPlayer({ audioUrl, waveformData, comments }: AudioP
               <Volume2 className="w-6 h-6" onClick={toggleMute} />
             )}
           </button>
-          {/* <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-24"
-          /> */}
         </div>
       </div>
 
-      {/* Forme d'onde */}
+      {/* Waveform */}
       <div
         ref={waveformRef}
-        className="h-24 bg-gray-50 rounded-[18px] relative cursor-pointer"
+        className="h-20 bg-gray-50 rounded-[18px] relative cursor-pointer overflow-hidden"
         onClick={handleWaveformClick}
       >
-        {/* Rendu de la forme d'onde */}
-        <div className="absolute inset-0 flex items-center px-4">
-          {waveformData.map((height, index) => (
-            <div
-              key={index}
-              className="flex-1 mx-[1px]"
-              style={{ height: `${height}%` }}
-            >
-              <div
-                className={`w-full h-full rounded-sm ${
-                  (index / waveformData.length) <= (currentTime / duration)
-                    ? 'bg-primary'
-                    : 'bg-gray-300'
-                }`}
-              />
-            </div>
-          ))}
+        {/* Progress overlay */}
+        <div 
+          className="absolute inset-0 bg-primary/10 pointer-events-none"
+          style={{ width: `${((currentTime + 0.2) / duration) * 100}%` }}
+        />
+        
+        {/* Waveform image */}
+        <div className="absolute inset-0">
+          <Image
+            src={waveformUrl}
+            alt="Audio waveform"
+            fill
+            className="audio-cover"
+            unoptimized
+          />
         </div>
-
-        {/* Marqueurs de commentaires */}
-        {comments.map((comment) => {
-          const position = (comment.timestamp / duration) * 100;
-          return (
-            <div
-              key={comment.id}
-              className="absolute top-0 w-1 h-full bg-primary opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
-              style={{ left: `${position}%` }}
-              title={comment.content}
-            />
-          );
-        })}
       </div>
 
-      {/* Zone de commentaires */}
-      <div className="space-y-2">
-        {comments.map((comment) => (
-          <div
-            key={comment.id}
-            className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-            onClick={() => {
-              if (audioRef.current) {
-                audioRef.current.currentTime = comment.timestamp;
-                setCurrentTime(comment.timestamp);
-              }
-            }}
-          >
-            <Image
-              src={comment.author.avatar_url || '/images/default-avatar.png'}
-              alt={`${comment.author.stage_name}'s avatar`}
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-sm">{comment.author.stage_name}</span>
-                <span className="text-xs text-gray-500">
-                  {formatTime(comment.timestamp)}
-                </span>
+      {/* Comments section */}
+      {comments.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-gray-900">Comments</h3>
+          <div className="space-y-1">
+            {comments.map((comment) => (
+              <div key={comment.id} className="flex items-start gap-2">
+                {comment.author.avatar_url && (
+                  <Image
+                    src={comment.author.avatar_url}
+                    alt={comment.author.stage_name || comment.author.username}
+                    width={24}
+                    height={24}
+                    className="rounded-full"
+                  />
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {comment.author.stage_name || comment.author.username}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatTime(comment.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">{comment.content}</p>
+                </div>
               </div>
-              <p className="text-sm text-gray-600">{comment.content}</p>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
