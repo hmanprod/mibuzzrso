@@ -10,7 +10,7 @@ import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import type { Post, Media, Profile } from '@/types/database';
-import { getPosts, createPost } from './actions';
+import { getPosts } from './actions';
 
 interface ExtendedPost extends Post {
   profile: Profile;

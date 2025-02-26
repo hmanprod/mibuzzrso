@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Music, Video, Trash2 } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Music, Video, Trash2, Upload, Loader2 } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
-import { MediaType} from '@/types/database';
+import { MediaType, Media, Post, PostMedia } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
 
 interface CreatePostDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit?: () => void;
 }
 
 export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogProps) {
@@ -22,8 +23,11 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'creating' | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useSession();
+  const supabase = createClient();
   const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((file: File | null) => {
@@ -42,6 +46,29 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
     setSelectedFile(file);
   }, [activeTab]);
 
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  }, [handleFileSelect]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedFile || !title.trim()) {
@@ -54,22 +81,51 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
       setCurrentStep('upload');
 
       // Upload media to Cloudinary
-      const mediaUrl = await uploadToCloudinary(selectedFile, activeTab);
-      if (!mediaUrl) {
+      const mediaUpload = await uploadToCloudinary(selectedFile, activeTab);
+      if (!mediaUpload) {
         throw new Error('Failed to upload media');
       }
 
       setCurrentStep('creating');
 
-      // Create FormData
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', postText);
-      formData.append('mediaUrl', mediaUrl.url); 
-      formData.append('mediaType', activeTab);
+      // 1. Create media record
+      const { data: mediaData, error: mediaError } = await supabase
+        .from('medias')
+        .insert({
+          media_type: activeTab,
+          media_url: mediaUpload.url,
+          media_public_id: mediaUpload.publicId,
+          title: title.trim(),
+          duration: mediaUpload.duration ? Number(mediaUpload.duration.toFixed(2)) : null,
+          user_id: user.id
+        })
+        .select()
+        .single();
 
-      // Submit the post
-      await onSubmit(formData);
+      if (mediaError) throw mediaError;
+
+      // 2. Create post record
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .insert({
+          content: postText.trim() || null,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (postError) throw postError;
+
+      // 3. Link post and media
+      const { error: linkError } = await supabase
+        .from('posts_medias')
+        .insert({
+          post_id: postData.id,
+          media_id: mediaData.id,
+          position: 1 // First position since it's a new post
+        });
+
+      if (linkError) throw linkError;
 
       // Reset form
       setTitle('');
@@ -77,8 +133,9 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
       setSelectedFile(null);
       setError(null);
       
-      // Close dialog
+      // Close dialog and notify parent
       onClose();
+      onSubmit?.();
     } catch (error) {
       console.error('Error creating post:', error);
       setError('Failed to create post. Please try again.');
@@ -95,151 +152,164 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
           <DialogTitle>Create New Post</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Media Type Selection */}
-          <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setActiveTab('audio')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'audio'
-                  ? 'bg-white shadow text-primary'
-                  : 'text-gray-600 hover:bg-white/50'
-              }`}
-            >
-              <Music className="w-5 h-5" />
-              <span>Audio</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('video')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'video'
-                  ? 'bg-white shadow text-primary'
-                  : 'text-gray-600 hover:bg-white/50'
-              }`}
-            >
-              <Video className="w-5 h-5" />
-              <span>Video</span>
-            </button>
-          </div>
-
-          {/* Title Input */}
-          <div className="space-y-2">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              placeholder="Enter a title for your post"
-            />
-          </div>
-
-          {/* Description Input */}
-          <div className="space-y-2">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description (optional)
-            </label>
-            <textarea
-              id="description"
-              value={postText}
-              onChange={(e) => setPostText(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              rows={3}
-              placeholder="Add a description to your post"
-            />
-          </div>
-
-          {/* File Upload */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Upload {activeTab === 'audio' ? 'Audio' : 'Video'}
-            </label>
+        {isSubmitting ? (
+          <div className="py-12 flex flex-col items-center justify-center space-y-4">
             <div className="relative">
-              <input
-                type="file"
-                accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
-                onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-                className="hidden"
-                id="media-upload"
-              />
-              <label
-                htmlFor="media-upload"
-                className="flex items-center justify-center w-full p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
-              >
-                {selectedFile ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">{selectedFile.name}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectedFile(null);
-                      }}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-600">
-                    Click to upload or drag and drop
-                  </span>
-                )}
-              </label>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          {/* Upload Progress */}
-          {isUploading && (
-            <div className="space-y-2">
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${progress}%` }}
+              <div className="w-16 h-16 rounded-full border-4 border-primary/20">
+                <div 
+                  className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin absolute top-0 left-0"
                 />
               </div>
-              <p className="text-sm text-gray-600 text-center">
-                Uploading... {progress}%
-              </p>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                {currentStep === 'upload' ? (
+                  <Upload className="w-6 h-6 text-primary animate-pulse" />
+                ) : (
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                )}
+              </div>
             </div>
-          )}
-
-          {/* Submit Button */}
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !selectedFile || !title.trim()}
-            >
-              {isSubmitting ? (
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium text-gray-900">
+                {currentStep === 'upload' ? 'Uploading your media...' : 'Creating your post...'}
+              </p>
+              {currentStep === 'upload' && (
                 <>
-                  {currentStep === 'upload' ? 'Uploading...' : 'Creating Post...'}
+                  <p className="text-sm text-gray-500">
+                    {progress}% complete
+                  </p>
+                  <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </>
-              ) : (
-                'Create Post'
               )}
-            </Button>
+            </div>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Content Field */}
+            <div className="space-y-4">
+              <textarea
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                placeholder="What's on your mind?"
+                className="w-full min-h-[100px] resize-none focus:outline-none text-lg"
+              />
+            </div>
+
+            {/* Media Type Selection */}
+            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setActiveTab('audio')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md ${
+                  activeTab === 'audio' ? 'bg-primary text-white' : 'bg-white'
+                }`}
+              >
+                <Music className="w-5 h-5" />
+                <span>Audio</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('video')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md ${
+                  activeTab === 'video' ? 'bg-primary text-white' : 'bg-white'
+                }`}
+              >
+                <Video className="w-5 h-5" />
+                <span>Video</span>
+              </button>
+            </div>
+
+            {/* Media Upload and Preview */}
+            <div className="space-y-4">
+              {!selectedFile ? (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`
+                    relative border-2 border-dashed rounded-lg p-6 transition-all duration-200 cursor-pointer
+                    ${isDragging 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-gray-300 hover:border-primary/50'
+                    }
+                  `}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                    accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
+                    className="hidden"
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
+                    <Upload className="w-8 h-8" />
+                    <p className="text-sm font-medium">
+                      Drag and drop your {activeTab} file here, or click to select
+                    </p>
+                    <p className="text-xs">
+                      Supported formats: {activeTab === 'audio' ? 'MP3, WAV, AAC' : 'MP4, WebM, MOV'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder={`${activeTab === 'audio' ? 'Audio' : 'Video'} title`}
+                      className="flex-1 px-3 py-2 border rounded-md mr-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setTitle('');
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Selected file: {selectedFile.name}
+                  </p>
+                  {isUploading && (
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-primary h-2.5 rounded-full"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <p className="text-sm text-red-500">{error}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || (!selectedFile || !title.trim())}
+              >
+                Create Post
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
