@@ -1,25 +1,40 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { OnboardingModal } from '../onboarding/OnboardingModal';
+import { useSession } from '@/components/providers/SessionProvider';
+
+const PUBLIC_ROUTES = [
+  '/auth/login',
+  '/auth/logout',
+  '/auth/register',
+  '/auth/verify-email',
+  '/auth/reset-password',
+  '/auth/callback/google',
+  '/auth/confirm/routes'
+];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isLoading } = useSession();
+
+  const isPublicRoute = PUBLIC_ROUTES.some(route => 
+    pathname.startsWith(route) || pathname === route
+  );
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      // Store the current path for redirect after login
-      if (pathname !== '/auth/login') {
+    const getSession = async () => {
+      if (!user && !isPublicRoute) {
         router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
       }
-    }
-  }, [user, isLoading, router, pathname]);
+    };
 
-  // Show loading spinner while checking auth state
+    getSession();
+  }, [user, router, pathname, isPublicRoute]);
+
+  // Show loading spinner while session is undefined (initial load)
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -28,8 +43,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If not loading and no user, return null (redirect will happen in useEffect)
-  if (!user) {
+  // If no session and not a public route, return null (redirect will happen in useEffect)
+  if (!user && !isPublicRoute) {
     return null;
   }
 

@@ -142,7 +142,8 @@ const PUBLIC_ROUTES = [
   '/auth/register',
   '/auth/verify-email',
   '/auth/reset-password',
-  '/auth/callback/google'
+  '/auth/callback/google',
+  '/auth/confirm/routes'
 ];
 ```
 Ces routes sont accessibles sans authentification. Elles sont gérées par le composant `AuthGuard`.

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
 import { Instagram, Music2, Video, Globe2, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -15,7 +15,7 @@ interface SocialLink {
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile } = useSession();
 
   const [formData, setFormData] = useState({
     first_name: '',

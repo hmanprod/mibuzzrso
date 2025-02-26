@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { Music, Video, Trash2 } from 'lucide-react';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType} from '@/types/database';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -23,7 +23,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'creating' | null>(null);
 
-  const { user } = useAuth();
+  const { user } = useSession();
   const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((file: File | null) => {

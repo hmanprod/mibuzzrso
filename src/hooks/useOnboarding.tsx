@@ -1,20 +1,39 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from './useAuth';
 import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/types/database';
 
+const checkProfileCompleteness = (profile: Profile | null): boolean => {
+  if (!profile) return false;
+  
+  const requiredFields = [
+    'stage_name',
+    'musical_interests',
+    'talents',
+    'country',
+  ];
+
+  return requiredFields.every(field => {
+    const value = profile[field as keyof Profile];
+    if (Array.isArray(value)) {
+      return value && value.length > 0;
+    }
+    return !!value;
+  });
+};
+
 export function useOnboarding() {
-  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
+    if (profile) {
+      setIsProfileComplete(checkProfileCompleteness(profile));
     }
+  }, [profile]);
 
+  useEffect(() => {
     const loadProfile = async () => {
       try {
         setLoading(true);
@@ -22,10 +41,20 @@ export function useOnboarding() {
 
         const supabase = createClient();
         
+        // Get the current session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        console.log('Onboarding session:', session);
+        
+        if (!session?.user) {
+          setLoading(false);
+          return;
+        }
+
         const { data, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', session.user.id)
           .single();
 
         if (profileError) {
@@ -44,36 +73,37 @@ export function useOnboarding() {
     };
 
     loadProfile();
-  }, [user]);
+  }, []);
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) {
-      throw new Error('User must be logged in to update profile');
-    }
-
     try {
       setLoading(true);
       setError(null);
 
       const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        throw new Error('No authenticated user');
+      }
 
       const { data, error: updateError } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .select()
         .single();
 
       if (updateError) {
-        console.error('Error updating profile:', updateError);
-        throw new Error('Failed to update profile');
+        throw updateError;
       }
 
       setProfile(data);
-      return data;
+      return { error: null };
     } catch (err) {
-      console.error('Error in updateProfile:', err);
-      throw err;
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile');
+      return { error: err as Error };
     } finally {
       setLoading(false);
     }
@@ -83,6 +113,7 @@ export function useOnboarding() {
     profile,
     loading,
     error,
+    isProfileComplete,
     updateProfile
   };
 }

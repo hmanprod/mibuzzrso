@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar } from '../ui/Avatar';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
 import { Music, Video } from 'lucide-react';
 
 interface CreatePostBlockProps {
@@ -9,7 +9,7 @@ interface CreatePostBlockProps {
 }
 
 export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
-  const { profile } = useAuth();
+  const { profile } = useSession();
 
   return (
     <div className="bg-white rounded-[18px] p-4 space-y-4">

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, MessageSquare, User, Settings, HelpCircle, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
-import { useAuth } from '@/hooks/useAuth';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
+import type { Profile } from '@/types/database';
 
 interface NavbarProps {
   onOpenCreatePost?: () => void;
@@ -17,8 +18,35 @@ interface NavbarProps {
 export default function Navbar({ className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { signOut, profile } = useAuth();
   const router = useRouter();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (data) {
+          setProfile(data);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [supabase]);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      router.push('/auth/login');
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -32,18 +60,6 @@ export default function Navbar({ className }: NavbarProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const handleSignOut = async () => {
-    try {
-      setIsDropdownOpen(false);
-      router.push('/auth/login');
-      signOut().catch(error => {
-        console.error('Error during sign out:', error);
-      });
-    } catch (error) {
-      console.error('Error during sign out:', error);
-    }
-  };
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -156,10 +172,10 @@ export default function Navbar({ className }: NavbarProps) {
 
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-gray-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Se déconnecter</span>
+                    <span>Déconnexion</span>
                   </button>
                 </div>
               )}

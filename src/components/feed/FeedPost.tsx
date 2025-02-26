@@ -7,7 +7,7 @@ import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
 import type { Post, Media, Profile } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
 
 interface ExtendedPost extends Post {
@@ -23,7 +23,7 @@ interface FeedPostProps {
 }
 
 export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
-  const { user } = useAuth();
+  const { user } = useSession();
   const [liked, setLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
   const [showComments, setShowComments] = useState(false);

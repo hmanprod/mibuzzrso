@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { Profile } from '@/types/database';
 import {
@@ -105,16 +105,28 @@ const ALL_COUNTRIES: Option[] = [
 ];
 
 export function OnboardingModal() {
-  const { updateProfile } = useOnboarding();
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const { updateProfile, isProfileComplete, profile } = useOnboarding();
+  const [isModalOpen, setIsModalOpen] = useState(!isProfileComplete);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
-    stage_name: '',
-    musical_interests: [],
-    talents: [],
-    country: '',
-    label: '',
+    stage_name: profile?.stage_name || '',
+    musical_interests: profile?.musical_interests || [],
+    talents: profile?.talents || [],
+    country: profile?.country || '',
+    label: profile?.label || '',
   });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        stage_name: profile.stage_name || '',
+        musical_interests: profile.musical_interests || [],
+        talents: profile.talents || [],
+        country: profile.country || '',
+        label: profile.label || '',
+      });
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -150,7 +162,7 @@ export function OnboardingModal() {
             </label>
             <Input
               id="stageName"
-              value={formData.stage_name || ''}
+              value={formData.stage_name || profile?.stage_name || ''}
               onChange={(e) => setFormData({ ...formData, stage_name: e.target.value })}
               placeholder="Nom d'artiste"
               required
@@ -163,7 +175,7 @@ export function OnboardingModal() {
             </label>
             <Input
               id="label"
-              value={formData.label || ''}
+              value={formData.label || profile?.label || ''}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
               placeholder="Nom de votre label"
             />

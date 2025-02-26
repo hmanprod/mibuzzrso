@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers/Providers";
+import { createClient } from '@/lib/supabase/server';
+import { SessionProvider } from '@/components/providers/SessionProvider';
+import { Toaster } from '@/components/ui/toaster';
 import { AuthDebug } from '@/components/debug/AuthDebug';
 
 const roboto = Roboto({
@@ -38,18 +40,24 @@ export const metadata: Metadata = {
   manifest: '/images/favicon/site.webmanifest',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  
+
   return (
     <html lang="fr">
       <body className={`${roboto.variable} font-sans antialiased bg-[#FAFAFA] min-h-screen`}>
-        <Providers>
+        <SessionProvider initialUser={session?.user ?? null}>
           {children} {/* Contenu de l'application */}
+          <Toaster />
           {process.env.NODE_ENV === 'development' && <AuthDebug />}
-        </Providers>
+        </SessionProvider>
       </body>
     </html>
   );

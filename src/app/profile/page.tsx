@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Camera, Music, Video, UsersRound, Plus, Settings } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -24,7 +24,7 @@ const tabs: Tab[] = [
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('activity');
-  const { user, profile } = useAuth();
+  const { user, profile } = useSession();
   const router = useRouter();
 
   return (
