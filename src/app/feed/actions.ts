@@ -168,6 +168,7 @@ export async function getCommentsByMediaId(mediaId: string) {
         content: comment.content,
         timestamp: comment.player_time || 0,
         created_at: comment.created_at,
+        parent_comment_id: comment.parent_comment_id,
         author: {
           id: profile.id || comment.user_id,
           stage_name: profile.stage_name || '',
@@ -184,7 +185,7 @@ export async function getCommentsByMediaId(mediaId: string) {
   }
 }
 
-export async function addComment(mediaId: string, content: string, playerTime?: number) {
+export async function addComment(mediaId: string, content: string, playerTime?: number, parentCommentId?: string) {
   const supabase = await createClient()
 
   try {
@@ -202,7 +203,8 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
         content,
         player_time: playerTime,
         user_id: user.id,
-        media_id: mediaId
+        media_id: mediaId,
+        parent_comment_id: parentCommentId || null
       })
 
     if (commentError) {
@@ -213,6 +215,113 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
     return { success: true }
   } catch (error) {
     console.error('Error in addComment:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function likeComment(commentId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Check if the user has already liked this comment
+    const { data: existingLike, error: likeCheckError } = await supabase
+      .from('interactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('comment_id', commentId)
+      .eq('type', 'comment_like')
+      .maybeSingle()
+
+    if (likeCheckError) {
+      console.error('Error checking existing like:', likeCheckError)
+      return { error: 'Failed to check existing like' }
+    }
+
+    // If the user has already liked this comment, remove the like
+    if (existingLike) {
+      const { error: unlikeError } = await supabase
+        .from('interactions')
+        .delete()
+        .eq('id', existingLike.id)
+
+      if (unlikeError) {
+        console.error('Error removing like:', unlikeError)
+        return { error: 'Failed to unlike comment' }
+      }
+
+      return { success: true, liked: false }
+    }
+
+    // Otherwise, add a new like
+    const { error: likeError } = await supabase
+      .from('interactions')
+      .insert({
+        type: 'comment_like',
+        user_id: user.id,
+        comment_id: commentId,
+        post_id: null
+      })
+
+    if (likeError) {
+      console.error('Error adding like:', likeError)
+      return { error: 'Failed to like comment' }
+    }
+
+    return { success: true, liked: true }
+  } catch (error) {
+    console.error('Error in likeComment:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function getCommentLikes(commentId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get the current user to check if they've liked the comment
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    // Count total likes for this comment
+    const { count, error: countError } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('comment_id', commentId)
+      .eq('type', 'comment_like')
+
+    if (countError) {
+      console.error('Error counting likes:', countError)
+      return { error: 'Failed to count likes' }
+    }
+
+    // Check if the current user has liked this comment
+    let isLiked = false
+    if (user) {
+      const { data: userLike, error: userLikeError } = await supabase
+        .from('interactions')
+        .select('*')
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .eq('type', 'comment_like')
+        .maybeSingle()
+
+      if (!userLikeError && userLike) {
+        isLiked = true
+      }
+    }
+
+    return { 
+      count: count || 0, 
+      isLiked 
+    }
+  } catch (error) {
+    console.error('Error in getCommentLikes:', error)
     return { error: 'An unexpected error occurred' }
   }
 }
