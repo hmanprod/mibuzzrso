@@ -6,7 +6,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useParams } from 'next/navigation';
 import { Profile } from '@/types/database';
 import ProfileComponent from '@/components/profile/Profile';
-import { getUserProfile } from '@/app/profile/actions';
+import { getUserProfile } from '@/app/profile/actions/profile';
 
 interface UserStats {
   totalReads: number;

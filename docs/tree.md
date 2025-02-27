@@ -31,6 +31,108 @@ src/app/
 └── page.tsx                   # Page d'accueil (redirection vers /feed)
 ```
 
+# 📋 Liste des Composants et Actions
+
+## Composants d'Interface Utilisateur (`src/components/ui`)
+
+| Composant | Description | Actions |
+|-----------|-------------|---------|
+| `Avatar.tsx` | Affiche l'avatar d'un utilisateur | Affiche l'image de profil avec fallback |
+| `TimeAgo.tsx` | Affiche le temps écoulé | Formate et affiche le temps écoulé depuis une date |
+| `badge.tsx` | Badge pour étiquettes | Affiche des badges stylisés |
+| `button.tsx` | Bouton personnalisé | Gère les interactions utilisateur (clic) |
+| `dialog.tsx` | Fenêtre modale | Affiche une boîte de dialogue modale |
+| `input.tsx` | Champ de saisie | Capture les entrées utilisateur |
+| `loading.tsx` | Indicateur de chargement | Affiche un état de chargement |
+| `multi-select.tsx` | Sélection multiple | Permet de sélectionner plusieurs options |
+| `not-found.tsx` | Page non trouvée | Affiche un message d'erreur 404 |
+| `select.tsx` | Menu déroulant | Permet de sélectionner une option |
+| `toast.tsx` | Notification toast | Affiche des notifications temporaires |
+
+## Composants d'Authentification (`src/components/auth`)
+
+| Composant | Description | Actions |
+|-----------|-------------|---------|
+| `AuthGuard.tsx` | Protection des routes | Vérifie si l'utilisateur est authentifié |
+| `AuthLayout.tsx` | Layout pour pages d'auth | Structure les pages d'authentification |
+| `SocialButton.tsx` | Bouton de connexion sociale | Permet la connexion via réseaux sociaux |
+
+## Composants de Flux (`src/components/feed`)
+
+| Composant | Description | Actions |
+|-----------|-------------|---------|
+| `FeedPost.tsx` | Publication dans le flux | Affiche une publication avec médias et interactions |
+| | | Permet de liker une publication |
+| | | Affiche/masque les commentaires |
+| | | Partage une publication |
+| `AudioPlayer.tsx` | Lecteur audio | Lecture/pause de l'audio |
+| | | Affichage de la forme d'onde |
+| | | Contrôle du volume |
+| | | Navigation dans la piste |
+| | | Comptage des lectures |
+| `VideoPlayer.tsx` | Lecteur vidéo | Lecture/pause de la vidéo |
+| | | Contrôle du volume |
+| | | Mode plein écran |
+| | | Navigation dans la vidéo |
+| | | Comptage des lectures |
+| `CommentSection.tsx` | Section commentaires | Affichage des commentaires |
+| | | Ajout de nouveaux commentaires |
+| | | Réponse aux commentaires |
+| | | Like des commentaires |
+| | | Navigation vers un timestamp spécifique |
+| `CreatePostBlock.tsx` | Bloc de création de post | Interface pour créer un nouveau post |
+| `CreatePostDialog.tsx` | Modal de création de post | Formulaire complet pour créer un post |
+| `FeedPostSkeleton.tsx` | Placeholder de chargement | Affiche un état de chargement pour les posts |
+
+## Composants de Profil (`src/components/profile`)
+
+| Composant | Description | Actions |
+|-----------|-------------|---------|
+| `Profile.tsx` | Affichage de profil | Affiche les informations du profil |
+| | | Affiche les posts de l'utilisateur |
+| | | Filtrage par type de média (audio/vidéo) |
+| | | Modification de l'avatar/photo de couverture |
+| `AvatarUploadModal.tsx` | Modal d'upload d'avatar | Permet de télécharger et recadrer l'avatar |
+| `CoverPhotoUploadModal.tsx` | Modal d'upload de couverture | Permet de télécharger et recadrer la photo de couverture |
+| `ProfileSkeleton.tsx` | Placeholder de chargement | Affiche un état de chargement pour le profil |
+| `AddItemModal.tsx` | Modal d'ajout d'éléments | Permet d'ajouter des talents, genres, etc. |
+
+## Composants d'Onboarding (`src/components/onboarding`)
+
+| Composant | Description | Actions |
+|-----------|-------------|---------|
+| `OnboardingModal.tsx` | Modal d'intégration | Guide l'utilisateur lors de sa première connexion |
+
+## Actions Serveur (`src/app/feed/actions`)
+
+### Actions d'Interaction (`interaction.ts`)
+
+| Action | Description |
+|--------|-------------|
+| `getCommentsByMediaId` | Récupère les commentaires pour un média |
+| `addComment` | Ajoute un commentaire à un média |
+| `likeComment` | Like/unlike un commentaire |
+| `getCommentLikes` | Récupère les likes d'un commentaire |
+| `togglePostLike` | Like/unlike une publication |
+| `markMediaAsRead` | Marque un média comme lu/écouté |
+| `getMediaReadsCount` | Récupère le nombre de lectures d'un média |
+
+### Actions de Publication (`post.ts`)
+
+| Action | Description |
+|--------|-------------|
+| `getPosts` | Récupère les publications pour le flux |
+| `getProfilePosts` | Récupère les publications d'un profil spécifique |
+
+## Intégrations Externes
+
+| Service | Utilisation |
+|---------|-------------|
+| `Supabase` | Base de données et authentification |
+| `Cloudinary` | Stockage et traitement des médias (images, audio, vidéo) |
+| `TailwindCSS` | Styling des composants |
+| `NextJS` | Framework React avec rendu côté serveur |
+
 ## Structure des composants
 
 ```

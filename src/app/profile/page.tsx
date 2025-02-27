@@ -5,7 +5,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useSession } from '@/components/providers/SessionProvider';
 import ProfileComponent from '@/components/profile/Profile';
 import { useEffect, useState } from 'react';
-import { getUserProfile } from '@/app/profile/actions';
+import { getUserProfile } from '@/app/profile/actions/profile';
 import { Profile } from '@/types/database';
 
 export default function ProfilePage() {

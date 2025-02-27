@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     country text,
     gender text,
     phone text,
+    label text,
     musical_interests jsonb DEFAULT '{}'::jsonb,
     talents jsonb DEFAULT '{}'::jsonb,
     social_links jsonb DEFAULT '{}'::jsonb,

@@ -11,6 +11,7 @@ import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import type { Post, Media, Profile } from '@/types/database';
 import { getPosts } from './actions/post';
+import { getTopInteractingUsers } from '@/app/profile/actions/profile';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -22,11 +23,13 @@ interface ExtendedPost extends Post {
 export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [posts, setPosts] = useState<ExtendedPost[]>([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadPosts();
+    loadTopUsers();
   }, []);
 
   const loadPosts = async () => {
@@ -48,6 +51,17 @@ export default function Home() {
       setError('Failed to load posts. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTopUsers = async () => {
+    try {
+      const { data, error } = await getTopInteractingUsers();
+      if (!error && data) {
+        setTopUsers(data.slice(0, 3)); // Prendre les 3 premiers utilisateurs
+      }
+    } catch (err) {
+      console.error('Error loading top users:', err);
     }
   };
 
@@ -97,7 +111,7 @@ export default function Home() {
               </div>
             </main>
             
-            <RightSidebar className="w-[274px] shrink-0" />
+            <RightSidebar className="w-[274px] shrink-0" suggestedUsers={topUsers} />
           </div>
         </div>
       </div>

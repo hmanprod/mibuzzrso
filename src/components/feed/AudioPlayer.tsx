@@ -50,7 +50,12 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
         setDuration(audioRef.current?.duration || 0);
       });
     }
-  }, [audioRef]);
+
+    if (!/\.wav$/i.test(audioUrl)) {
+      audioUrl = audioUrl.replace('.mp3', '.wav');
+    }
+
+  }, [audioRef, audioUrl]);
 
   // Fetch the number of reads for this media
   const fetchReadsCount = useCallback(async () => {

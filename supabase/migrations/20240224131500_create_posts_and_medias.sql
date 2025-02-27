@@ -1,6 +1,6 @@
 -- Create enum types
 CREATE TYPE media_type AS ENUM ('audio', 'video');
-CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read');
+CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read', 'comment');
 
 -- Enable RLS
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;

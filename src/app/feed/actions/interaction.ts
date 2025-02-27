@@ -81,7 +81,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
     }
 
     // Add the comment
-    const { error: commentError } = await supabase
+    const { data: commentData, error: commentError } = await supabase
       .from('comments')
       .insert({
         content,
@@ -90,10 +90,26 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
         media_id: mediaId,
         parent_comment_id: parentCommentId || null
       })
+      .select('id')
+      .single()
 
     if (commentError) {
       console.error('Error adding comment:', commentError)
       return { error: 'Failed to add comment' }
+    }
+
+    // Add an interaction of type 'comment'
+    const { error: interactionError } = await supabase
+      .from('interactions')
+      .insert({
+        type: 'comment',
+        user_id: user.id,
+        media_id: mediaId
+      })
+
+    if (interactionError) {
+      console.error('Error adding comment interaction:', interactionError)
+      // We don't return an error here as the comment was successfully created
     }
 
     return { success: true }

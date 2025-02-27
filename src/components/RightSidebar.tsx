@@ -1,45 +1,18 @@
 'use client';
 
-import { Plus } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
-import Image from 'next/image';
+import SuggestedUsers from './SuggestedUsers';
 
 interface RightSidebarProps {
   className?: string;
+  suggestedUsers?: any[];
 }
 
-export default function RightSidebar({ className }: RightSidebarProps) {
-  const suggestions = [
-    { id: 1, name: 'Jordan Adeli', followers: '14.2K', avatar_url: 'https://images.unsplash.com/photo-1520785643438-5bf77931f493?w=100&h=100&fit=crop' },
-    { id: 2, name: 'GENMARIE', followers: '26.5K', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop' },
-    { id: 3, name: 'Onigumi84', followers: '9K', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop' }
-  ];
-
+export default function RightSidebar({ className, suggestedUsers = [] }: RightSidebarProps) {
   return (
     <aside className={twMerge("bg-[#F9F9F9] p-3", className)}>
       <div className="space-y-3">
-        <div className="bg-white rounded-[18px] p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-lg text-[#2D2D2D]">Suggestions à suivre</h3>
-          </div>
-          <div className="space-y-4">
-            {suggestions.map(user => (
-              <div key={user.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Image src={user.avatar_url} alt={user.name} className="w-[30px] h-[30px] rounded-full object-cover" width={30} height={30}/>
-                  <div>
-                    <p className="font-medium text-base text-[#2D2D2D]">{user.name}</p>
-                    <p className="text-sm text-[#666666]">{user.followers} Abonnés</p>
-                  </div>
-                </div>
-                <button className="flex items-center gap-2 text-[#FA4D4D] hover:text-[#E63F3F] transition-colors">
-                  <Plus className="w-5 h-5" />
-                  <span>Suivre</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <SuggestedUsers users={suggestedUsers} />
       </div>
     </aside>
   );

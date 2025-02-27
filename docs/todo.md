@@ -4,6 +4,12 @@
 Check the existing RLS policies for the profiles table to ensure that only authenticated users can view their profiles.
 Create a policy that restricts access to the profiles table, allowing only users who are logged in to see their own profile data.
 
+### Merge Comments and Interactions Tables:
+- Refactor database schema to merge the Comments and Interactions tables
+- Update all related queries and functions to use the new unified table structure
+- Ensure backward compatibility or create migration scripts for existing data
+- Update API endpoints and frontend components to work with the new structure
+
 ### Review Other Tables:
 Check other tables in the database for similar RLS requirements and update them as necessary.
 
