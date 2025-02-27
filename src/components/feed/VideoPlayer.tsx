@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { formatTime } from '@/lib/utils';
-import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions';
+import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
 
 interface VideoPlayerProps {
@@ -48,7 +48,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   // Track if we've already counted this session
   const hasTrackedThisSession = useRef(false);
 
-  const handleMarkAsRead = async () => {
+  const handleMarkAsRead = useCallback(async () => {
     if (!user || !mediaId) return;
     
     try {
@@ -64,11 +64,27 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
     } catch (error) {
       console.error('Error marking media as read:', error);
     }
-  };
+  }, [user, mediaId]);
+
+  const fetchReadsCount = useCallback(async () => {
+    if (!mediaId) return;
+    
+    try {
+      const { count, error } = await getMediaReadsCount(mediaId);
+      if (error) {
+        console.error('Error fetching reads count:', error);
+        return;
+      }
+      
+      setReadsCount(count);
+    } catch (error) {
+      console.error('Error fetching reads count:', error);
+    }
+  }, [mediaId]);
 
   useEffect(() => {
     fetchReadsCount();
-  }, [mediaId]);
+  }, [fetchReadsCount]);
 
   useEffect(() => {
     const markAsReadAfterPlaying = async () => {
@@ -84,23 +100,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
     };
     
     markAsReadAfterPlaying();
-  }, [currentTime, user, mediaId]);
-
-  const fetchReadsCount = async () => {
-    if (!mediaId) return;
-    
-    try {
-      const { count, error } = await getMediaReadsCount(mediaId);
-      if (error) {
-        console.error('Error fetching reads count:', error);
-        return;
-      }
-      
-      setReadsCount(count);
-    } catch (error) {
-      console.error('Error fetching reads count:', error);
-    }
-  };
+  }, [currentTime, user, mediaId, handleMarkAsRead]);
 
   useEffect(() => {
     if (videoRef.current) {

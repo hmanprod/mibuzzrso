@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { getWaveformUrl } from '@/lib/cloudinary';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '@/lib/utils';
-import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions';
+import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
 
 interface AudioPlayerProps {
@@ -53,7 +53,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
   }, [audioRef]);
 
   // Fetch the number of reads for this media
-  const fetchReadsCount = async () => {
+  const fetchReadsCount = useCallback(async () => {
     if (!mediaId) return;
     
     try {
@@ -67,17 +67,17 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     } catch (error) {
       console.error('Error fetching reads count:', error);
     }
-  };
+  }, [mediaId]);
 
   // Fetch reads count on mount
   useEffect(() => {
     fetchReadsCount();
-  }, [mediaId, fetchReadsCount]);
+  }, [fetchReadsCount]);
 
   // Track if we've already counted this session
   const hasTrackedThisSession = useRef(false);
 
-  const handleMarkAsRead = async () => {
+  const handleMarkAsRead = useCallback(async () => {
     if (!user || !mediaId) return;
     
     try {
@@ -93,7 +93,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     } catch (error) {
       console.error('Error marking media as read:', error);
     }
-  };
+  }, [user, mediaId]);
 
   // Mark media as read when it's played for at least 5 seconds
   useEffect(() => {
@@ -110,7 +110,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     };
     
     markAsReadAfterPlaying();
-  }, [currentTime, user, mediaId]);
+  }, [currentTime, user, mediaId, handleMarkAsRead]);
 
   const togglePlay = () => {
     if (audioRef.current) {

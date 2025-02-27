@@ -7,7 +7,7 @@ import { Camera, Music, Plus, Settings, Video } from 'lucide-react';
 import { Media, Post, Profile as ProfileType } from '@/types/database';
 import { NotFound } from '../ui/not-found';
 import CreatePostBlock from '../feed/CreatePostBlock';
-import { getProfilePosts } from '@/app/feed/actions';
+import { getProfilePosts } from '@/app/feed/actions/post';
 import { 
   getTalentLabel, 
   getGenreLabel, 

@@ -10,7 +10,7 @@ import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
-import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions';
+import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions/interaction';
 
 interface ExtendedPost extends Post {
   profile: Profile;
