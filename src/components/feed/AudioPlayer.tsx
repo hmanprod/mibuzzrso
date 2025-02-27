@@ -41,6 +41,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
   const [readsCount, setReadsCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
+  const processedAudioUrlRef = useRef<string>(audioUrl);
   const waveformUrl = getWaveformUrl(audioUrl);
 
   useEffect(() => {
@@ -52,7 +53,9 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     }
 
     if (!/\.wav$/i.test(audioUrl)) {
-      audioUrl = audioUrl.replace('.mp3', '.wav');
+      processedAudioUrlRef.current = audioUrl.replace('.mp3', '.wav');
+    } else {
+      processedAudioUrlRef.current = audioUrl;
     }
 
   }, [audioRef, audioUrl]);
@@ -181,7 +184,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     <div className="bg-white rounded-[18px] p-4 space-y-4">
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={processedAudioUrlRef.current}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}
       />

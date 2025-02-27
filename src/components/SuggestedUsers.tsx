@@ -5,7 +5,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 interface SuggestedUsersProps {
-  users: any[];
+  users: User[];
+}
+
+interface User {
+  user_id: string;
+  avatar_url?: string | null;
+  stage_name?: string;
+  full_name?: string;
+  interaction_score?: number;
 }
 
 export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {

@@ -5,18 +5,22 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+interface TopUser {
+  user_id: string;
+  avatar_url?: string | null;
+  stage_name?: string | null;
+  full_name?: string | null;
+  label?: string | null;
+  interaction_score: number;
+}
+
 export default async function TopProfilesPage() {
-  const { data: topUsers, error } = await getTopInteractingUsers()
+  const { data: topUsers } = await getTopInteractingUsers()
 
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-6">Top 10 Users by Interaction Score</h1>
       
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <p>Error loading top users: {error.message}</p>
-        </div>
-      )}
 
       {!topUsers || topUsers.length === 0 ? (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
@@ -24,7 +28,7 @@ export default async function TopProfilesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topUsers.map((user, index) => (
+          {topUsers.map((user: TopUser, index: number) => (
             <div 
               key={user.user_id} 
               className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"

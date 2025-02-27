@@ -81,7 +81,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
     }
 
     // Add the comment
-    const { data: commentData, error: commentError } = await supabase
+    const { error: commentError } = await supabase
       .from('comments')
       .insert({
         content,
