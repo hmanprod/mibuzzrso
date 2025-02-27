@@ -1,25 +1,35 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import Image from 'next/image';
+import { formatTime } from '@/lib/utils';
 
 interface VideoPlayerProps {
   videoUrl: string;
+  mediaId?: string;
   comments: {
     id: string;
     timestamp: number;
     content: string;
     position?: { x: number; y: number };
     author: {
+      id: string;
       stage_name: string;
       avatar_url: string | null;
       username: string;
     };
   }[];
+  onCommentAdded?: () => Promise<void>;
+  onTimeUpdate?: (time: number) => void;
 }
 
-export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
+interface VideoPlayerRef {
+  seekToTime: (time: number) => void;
+}
+
+const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
+  ({ videoUrl, comments, onTimeUpdate }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -72,6 +82,9 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
+      if (onTimeUpdate) {
+        onTimeUpdate(videoRef.current.currentTime);
+      }
     }
   };
 
@@ -114,11 +127,12 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
     }
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  // Using the imported formatTime function from utils
+  // const formatTime = (time: number) => {
+  //   const minutes = Math.floor(time / 60);
+  //   const seconds = Math.floor(time % 60);
+  //   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  // };
 
   const handleMouseMove = () => {
     setShowControls(true);
@@ -131,6 +145,27 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
       }
     }, 3000);
   };
+
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    seekToTime: (time: number) => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = time;
+        setCurrentTime(time);
+        
+        // Start playing if not already playing
+        if (!isPlaying) {
+          videoRef.current.play()
+            .then(() => {
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.error('Error playing video:', error);
+            });
+        }
+      }
+    }
+  }));
 
   return (
     <div
@@ -270,4 +305,8 @@ export default function VideoPlayer({ videoUrl, comments }: VideoPlayerProps) {
       </div>
     </div>
   );
-}
+});
+
+VideoPlayer.displayName = 'VideoPlayer';
+
+export default VideoPlayer;

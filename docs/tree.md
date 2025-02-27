@@ -20,9 +20,12 @@ src/app/
 ├── feed/
 │   └── page.tsx               # Page de fil d'actualité
 ├── profile/
+│   ├── [id]/
+│   │   └── page.tsx           # Page de profil d'un utilisateur
 │   ├── edit/
 │   │   └── page.tsx           # Page de modification du profil
-│   └── page.tsx               # Page de profil
+│   ├── AddItemModal.tsx      # Modal pour ajouter des items (talents, genres)
+│   └── Profile.tsx           # Composant d'affichage de profil
 ├── layout.tsx                 # Layout principal de l'application
 ├── globals.css                # Styles globaux
 └── page.tsx                   # Page d'accueil (redirection vers /feed)
@@ -85,6 +88,18 @@ src/lib/
 └── supabase.ts             # Configuration du client Supabase
 ```
 
+## Structure des constantes
+
+```
+src/constants/
+├── options/
+│   ├── countries.ts         # Liste des pays (ALL_COUNTRIES, INDIAN_OCEAN_COUNTRIES)
+│   ├── genres.ts            # Liste des genres musicaux (MUSICAL_INTERESTS)
+│   ├── talents.ts           # Liste des talents (TALENTS)
+│   └── index.ts             # Export centralisé des constantes
+└── routes.ts                # Constantes des routes de l'application
+```
+
 ## 📝 Description des routes
 
 ### Pages Principales
@@ -96,6 +111,21 @@ src/lib/
   - Création de posts (audio/vidéo)
   - Sidebar gauche avec navigation
   - Sidebar droite avec suggestions
+  - Protégée par AuthGuard
+
+### Pages de Profil
+- `/profile/[id]` : Page de profil utilisateur
+  - Affiche les informations du profil (nom, bio, label, etc.)
+  - Affiche les intérêts musicaux et talents
+  - Affiche les liens sociaux
+  - Affiche les posts de l'utilisateur
+  - Protégée par AuthGuard
+
+- `/profile/edit` : Page d'édition du profil
+  - Modification des informations personnelles
+  - Upload de photo de profil et de couverture
+  - Gestion des intérêts musicaux et talents
+  - Gestion des liens sociaux
   - Protégée par AuthGuard
 
 ### Pages d'Authentification
@@ -128,10 +158,30 @@ src/lib/
   - Intègre le modal d'onboarding si nécessaire
   - Utilisé directement dans les pages protégées
 
+- `AddItemModal` : Composant modal réutilisable pour la sélection d'items
+  - Utilisé pour ajouter des talents et des genres musicaux
+  - Interface utilisateur intuitive avec MultiSelect
+  - Remplace les prompts natifs du navigateur
+  - Permet la sélection multiple d'items
+
+### Constantes et Options
+- `TALENTS` : Liste des talents disponibles
+  - Utilisé dans les formulaires de profil et l'onboarding
+  - Structure: `{ label: string, value: string }[]`
+
+- `MUSICAL_INTERESTS` : Liste des genres musicaux
+  - Utilisé dans les formulaires de profil et l'onboarding
+  - Structure: `{ label: string, value: string }[]`
+
+- `ALL_COUNTRIES` et `INDIAN_OCEAN_COUNTRIES` : Listes des pays
+  - Utilisées dans les sélecteurs de pays
+  - Les pays de l'Océan Indien sont mis en avant
+  - Structure: `{ label: string, value: string }[]`
+
 ### Routes Protégées
 Les routes suivantes nécessitent l'AuthGuard :
 - `/feed` : Page principale du fil d'actualité
-- `/profile` : Page de profil utilisateur
+- `/profile/[id]` : Page de profil utilisateur
 - `/profile/edit` : Page d'édition du profil
 
 ### Routes Publiques

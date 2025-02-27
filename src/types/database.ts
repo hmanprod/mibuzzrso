@@ -6,6 +6,7 @@ export interface Media {
   updated_at: string;
   media_type: MediaType;
   media_url: string;
+  media_cover_url: string;
   media_public_id: string;
   duration?: number;
   title?: string;
@@ -43,6 +44,7 @@ export interface Profile {
   bio: string | null;
   label: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
   musical_interests: string[] | null;
   talents: string[] | null;
   social_links: {
@@ -54,4 +56,14 @@ export interface Profile {
     youtube?: string;
     website?: string;
   } | null;
+}
+
+export interface Comment {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  content: string;
+  player_time?: number;
+  user_id: string;
+  media_id: string;
 }

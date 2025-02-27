@@ -11,98 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MultiSelect, type Option } from "@/components/ui/multi-select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-const MUSICAL_ACTIVITIES: Option[] = [
-  { label: 'DJ', value: 'dj' },
-  { label: 'Producteur', value: 'producer' },
-  { label: 'Beatmaker', value: 'beatmaker' },
-  { label: 'Chanteur', value: 'singer' },
-  { label: 'Rappeur', value: 'rapper' },
-  { label: 'Musicien', value: 'musician' },
-  { label: 'Groupe', value: 'bands' },
-  { label: 'Ingénieur Son', value: 'sound_engineer' },
-  { label: 'Programmateur musical', value: 'curator' },
-  { label: 'Manageur', value: 'manager' },
-];
-
-const GENRES: Option[] = [
-  { label: 'Afro', value: 'afro' },
-  { label: 'Hip-Hop', value: 'hip_hop' },
-  { label: 'R&B', value: 'r_and_b' },
-  { label: 'Pop', value: 'pop' },
-  { label: 'Rock', value: 'rock' },
-  { label: 'Électronique', value: 'electronic' },
-  { label: 'Jazz', value: 'jazz' },
-  { label: 'Classique', value: 'classical' },
-];
-
-// Pays de l'océan Indien en premier
-const INDIAN_OCEAN_COUNTRIES: Option[] = [
-  { label: 'Madagascar', value: 'madagascar' },
-  { label: 'Comores', value: 'comoros' },
-  { label: 'La Réunion', value: 'reunion' },
-  { label: 'Maurice', value: 'mauritius' },
-  { label: 'Mayotte', value: 'mayotte' },
-];
-
-// Liste complète des pays
-const ALL_COUNTRIES: Option[] = [
-  ...INDIAN_OCEAN_COUNTRIES,
-  { label: 'Afrique du Sud', value: 'south_africa' },
-  { label: 'Algérie', value: 'algeria' },
-  { label: 'Angola', value: 'angola' },
-  { label: 'Bénin', value: 'benin' },
-  { label: 'Botswana', value: 'botswana' },
-  { label: 'Burkina Faso', value: 'burkina_faso' },
-  { label: 'Burundi', value: 'burundi' },
-  { label: 'Cameroun', value: 'cameroon' },
-  { label: 'Cap-Vert', value: 'cape_verde' },
-  { label: 'Congo', value: 'congo' },
-  { label: 'Côte d\'Ivoire', value: 'ivory_coast' },
-  { label: 'Djibouti', value: 'djibouti' },
-  { label: 'Égypte', value: 'egypt' },
-  { label: 'Érythrée', value: 'eritrea' },
-  { label: 'Éthiopie', value: 'ethiopia' },
-  { label: 'Gabon', value: 'gabon' },
-  { label: 'Gambie', value: 'gambia' },
-  { label: 'Ghana', value: 'ghana' },
-  { label: 'Guinée', value: 'guinea' },
-  { label: 'Guinée-Bissau', value: 'guinea_bissau' },
-  { label: 'Guinée équatoriale', value: 'equatorial_guinea' },
-  { label: 'Kenya', value: 'kenya' },
-  { label: 'Lesotho', value: 'lesotho' },
-  { label: 'Libéria', value: 'liberia' },
-  { label: 'Libye', value: 'libya' },
-  { label: 'Malawi', value: 'malawi' },
-  { label: 'Mali', value: 'mali' },
-  { label: 'Maroc', value: 'morocco' },
-  { label: 'Mauritanie', value: 'mauritania' },
-  { label: 'Mozambique', value: 'mozambique' },
-  { label: 'Namibie', value: 'namibia' },
-  { label: 'Niger', value: 'niger' },
-  { label: 'Nigeria', value: 'nigeria' },
-  { label: 'Ouganda', value: 'uganda' },
-  { label: 'République centrafricaine', value: 'central_african_republic' },
-  { label: 'République démocratique du Congo', value: 'democratic_republic_of_the_congo' },
-  { label: 'Rwanda', value: 'rwanda' },
-  { label: 'Sao Tomé-et-Principe', value: 'sao_tome_and_principe' },
-  { label: 'Sénégal', value: 'senegal' },
-  { label: 'Seychelles', value: 'seychelles' },
-  { label: 'Sierra Leone', value: 'sierra_leone' },
-  { label: 'Somalie', value: 'somalia' },
-  { label: 'Soudan', value: 'sudan' },
-  { label: 'Soudan du Sud', value: 'south_sudan' },
-  { label: 'Swaziland', value: 'swaziland' },
-  { label: 'Tanzanie', value: 'tanzania' },
-  { label: 'Tchad', value: 'chad' },
-  { label: 'Togo', value: 'togo' },
-  { label: 'Tunisie', value: 'tunisia' },
-  { label: 'Zambie', value: 'zambia' },
-  { label: 'Zimbabwe', value: 'zimbabwe' },
-];
+import { 
+  TALENTS, 
+  MUSICAL_INTERESTS, 
+  INDIAN_OCEAN_COUNTRIES, 
+  ALL_COUNTRIES 
+} from '@/constants/options';
 
 export function OnboardingModal() {
   const { profile, updateProfile, isLoading: sessionLoading } = useSession();
@@ -186,7 +103,7 @@ export function OnboardingModal() {
               Vous êtes
             </label>
             <MultiSelect
-              options={MUSICAL_ACTIVITIES}
+              options={TALENTS}
               selected={formData.talents || []}
               onChange={(values) => setFormData({ ...formData, talents: values })}
               placeholder="Choisir une ou plusieurs activités"
@@ -198,7 +115,7 @@ export function OnboardingModal() {
               Vos genres musicaux
             </label>
             <MultiSelect
-              options={GENRES}
+              options={MUSICAL_INTERESTS}
               selected={formData.musical_interests || []}
               onChange={(values) => setFormData({ ...formData, musical_interests: values })}
               placeholder="Choisir un ou plusieurs genres"

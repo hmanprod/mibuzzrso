@@ -31,7 +31,7 @@ export function SessionProvider({
   initialUser: User | null;
 }) {
 
-  console.log('🔄 Initial user:', initialUser);
+//   console.log('🔄 Initial user:', initialUser);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +49,7 @@ export function SessionProvider({
 
   useEffect(() => {
     const fetchProfile = async () => {
-        console.log('🔄 Fetching profile for user:', user);
+        // console.log('🔄 Fetching profile for user:', user);
       if (!user) {
         setProfile(null);
         setIsLoading(false);
@@ -97,7 +97,7 @@ export function SessionProvider({
       const { error } = await supabase
         .from('profiles')
         .update(profileData)
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 
@@ -105,7 +105,7 @@ export function SessionProvider({
       const { data: updatedProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (fetchError) throw fetchError;

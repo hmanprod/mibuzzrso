@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { Avatar } from '../ui/Avatar';
-import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Heart, MessageCircle, MoreHorizontal, Share2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import type { Media, Post, Profile } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
-import type { Post, Media, Profile } from '@/types/database';
-import { createClient } from '@/lib/supabase/client';
+import CommentSection from './CommentSection';
+import { Avatar } from '../ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
+import { getCommentsByMediaId } from '@/app/feed/actions';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -22,12 +25,36 @@ interface FeedPostProps {
   onPostUpdated: () => Promise<void>;
 }
 
+interface Comment {
+  id: string;
+  content: string;
+  timestamp: number;
+  created_at: string;
+  author: {
+    id: string;
+    stage_name: string;
+    avatar_url: string | null;
+    username: string;
+  };
+}
+
 export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
   const { user } = useSession();
   const [liked, setLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
-  const [showComments, setShowComments] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  
+  // Define proper types for the refs
+  interface MediaPlayerRef {
+    seekToTime: (time: number) => void;
+  }
+  
+  const audioPlayerRef = useRef<MediaPlayerRef>(null);
+  const videoPlayerRef = useRef<MediaPlayerRef>(null);
 
   // Get the first media item (for now we'll just handle single media)
   const mediaItem = post.media[0];
@@ -35,8 +62,8 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
   const toggleLike = async () => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please log in to like posts",
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour aimer les publications",
         variant: "destructive"
       });
       return;
@@ -65,8 +92,8 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
-        title: "Error",
-        description: "Failed to update like status",
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut du like",
         variant: "destructive"
       });
     } finally {
@@ -75,8 +102,60 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
   };
 
   const handleShare = () => {
-    // TODO: Implement proper sharing
-    navigator.clipboard.writeText(window.location.href);
+    // TODO: Implement share functionality
+    toast({
+      title: "Bientôt disponible",
+      description: "La fonctionnalité de partage sera disponible prochainement",
+    });
+  };
+
+  const fetchComments = useCallback(async () => {
+    if (!mediaItem) return;
+
+    try {
+      const { comments: fetchedComments, error } = await getCommentsByMediaId(mediaItem.id);
+      
+      if (error) {
+        console.error('Error fetching comments:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les commentaires",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Ensure fetchedComments is not undefined before setting state
+      setComments(fetchedComments || []);
+      setCommentsCount(fetchedComments?.length || 0);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les commentaires",
+        variant: "destructive"
+      });
+    }
+  }, [mediaItem]);
+
+  // Fetch comments when component mounts
+  useEffect(() => {
+    if (mediaItem) {
+      fetchComments();
+    }
+  }, [mediaItem, fetchComments]);
+
+  
+
+  // Function to seek to a specific time in the media player
+  const seekToTime = (time: number) => {
+    setCurrentPlaybackTime(time);
+    
+    if (mediaItem?.media_type === 'audio' && audioPlayerRef.current) {
+      audioPlayerRef.current.seekToTime(time);
+    } else if (mediaItem?.media_type === 'video' && videoPlayerRef.current) {
+      videoPlayerRef.current.seekToTime(time);
+    }
   };
 
   return (
@@ -84,17 +163,21 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
       {/* Post header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar
-            src={post.profile?.avatar_url || null}
-            stageName={post.profile?.stage_name}
-            size={40}
-            className="rounded-full"
-          />
+          <Link href={`/profile/${post.profile.id}`}>
+            <Avatar
+              src={post.profile?.avatar_url || null}
+              stageName={post.profile?.stage_name}
+              size={40}
+              className="rounded-full hover:opacity-90 transition-opacity"
+            />
+          </Link>
 
-          <div>
-            <h3 className="font-medium text-[#2D2D2D]">{post.profile.stage_name}</h3>
-            <p className="text-sm text-gray-500">@{post.profile.id}</p>
-          </div>
+          <Link href={`/profile/${post.profile.id}`} className="hover:opacity-80 transition-opacity">
+            <div>
+              <h3 className="font-medium text-[#2D2D2D]">{post.profile.stage_name}</h3>
+              <p className="text-sm text-gray-500">@{post.profile.id}</p>
+            </div>
+          </Link>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
           <MoreHorizontal className="w-6 h-6" />
@@ -116,12 +199,20 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
         mediaItem.media_type === 'audio' ? (
           <AudioPlayer
             audioUrl={mediaItem.media_url}
-            comments={[]} // TODO: Implement comments
+            mediaId={mediaItem.id}
+            comments={comments}
+            onCommentAdded={fetchComments}
+            onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
+            ref={audioPlayerRef}
           />
         ) : (
           <VideoPlayer 
-          videoUrl={mediaItem.media_url} 
-          comments={[]} // TODO: Implement comments
+            videoUrl={mediaItem.media_url} 
+            mediaId={mediaItem.id}
+            comments={comments}
+            onCommentAdded={fetchComments}
+            onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
+            ref={videoPlayerRef}
           />
         )
       )}
@@ -148,7 +239,7 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
           onClick={() => setShowComments(!showComments)}
         >
           <MessageCircle className="w-6 h-6" />
-          <span>0</span>
+          <span>{commentsCount}</span>
         </button>
         <button 
           className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
@@ -158,11 +249,15 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
         </button>
       </div>
 
-      {/* Comments section - TODO: Implement */}
+      {/* Comments section */}
       {showComments && (
-        <div className="border-t border-gray-100 p-4">
-          <p className="text-gray-500 text-center">Comments coming soon</p>
-        </div>
+        <CommentSection 
+          mediaId={mediaItem.id}
+          comments={comments}
+          currentPlaybackTime={currentPlaybackTime}
+          onCommentAdded={fetchComments}
+          onSeekToTime={seekToTime}
+        />
       )}
     </article>
   );

@@ -1,5 +1,10 @@
+'use client';
+
 import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
+import { useSession } from '@/components/providers/SessionProvider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -7,6 +12,19 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children, className }: AuthLayoutProps) {
+  const { user } = useSession();
+  const router = useRouter();
+
+  useEffect(()=>{
+    const getUser = ()=> {
+      if(!user){
+        router.push('/feed');
+      }
+    }
+
+    getUser();
+  }, [user, router]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className={twMerge("w-full max-w-[400px] bg-white rounded-[18px] p-10", className)}>

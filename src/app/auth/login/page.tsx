@@ -7,10 +7,12 @@ import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { login, signInWithGoogle } from './actions';
 
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   async function handleGoogleSignIn() {
     setIsLoading(true);

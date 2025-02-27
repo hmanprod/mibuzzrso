@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
-import { getWaveformUrl } from '@/utils/cloudinary';
+import { getWaveformUrl } from '@/lib/cloudinary';
+import { Avatar } from '../ui/Avatar';
+import { formatTime } from '@/lib/utils';
+
 
 interface AudioPlayerProps {
   audioUrl: string;
+  mediaId: string;
   comments: {
     id: string;
     timestamp: number;
@@ -18,9 +22,16 @@ interface AudioPlayerProps {
       username: string;
     };
   }[];
+  onCommentAdded?: () => Promise<void>;
+  onTimeUpdate?: (time: number) => void;
 }
 
-export default function AudioPlayer({ audioUrl, comments }: AudioPlayerProps) {
+interface AudioPlayerRef {
+  seekToTime: (time: number) => void;
+}
+
+const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
+  ({ audioUrl, comments, onTimeUpdate }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -51,7 +62,11 @@ export default function AudioPlayer({ audioUrl, comments }: AudioPlayerProps) {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const newTime = audioRef.current.currentTime;
+      setCurrentTime(newTime);
+      if (onTimeUpdate) {
+        onTimeUpdate(newTime);
+      }
     }
   };
 
@@ -73,11 +88,26 @@ export default function AudioPlayer({ audioUrl, comments }: AudioPlayerProps) {
     }
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    seekToTime: (time: number) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = time;
+        setCurrentTime(time);
+        
+        // Start playing if not already playing
+        if (!isPlaying) {
+          audioRef.current.play()
+            .then(() => {
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.error('Error playing audio:', error);
+            });
+        }
+      }
+    }
+  }));
 
   return (
     <div className="bg-white rounded-[18px] p-4 space-y-4">
@@ -125,62 +155,85 @@ export default function AudioPlayer({ audioUrl, comments }: AudioPlayerProps) {
         </div>
       </div>
 
-      {/* Waveform */}
-      <div
-        ref={waveformRef}
-        className="h-20 bg-gray-50 rounded-[18px] relative cursor-pointer overflow-hidden"
+      {/* Waveform with comment markers */}
+      <div 
+        ref={waveformRef} 
+        className="relative h-24 bg-gray-100 rounded-lg cursor-pointer overflow-hidden"
         onClick={handleWaveformClick}
       >
-        {/* Progress overlay */}
-        <div 
-          className="absolute inset-0 bg-primary/10 pointer-events-none"
-          style={{ width: `${((currentTime + 0.2) / duration) * 100}%` }}
-        />
-        
         {/* Waveform image */}
         <div className="absolute inset-0">
           <Image
             src={waveformUrl}
             alt="Audio waveform"
             fill
-            className="audio-cover"
-            unoptimized
+            style={{ objectFit: 'fill' }}
           />
         </div>
-      </div>
-
-      {/* Comments section */}
-      {comments.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-900">Comments</h3>
-          <div className="space-y-1">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex items-start gap-2">
-                {comment.author.avatar_url && (
-                  <Image
-                    src={comment.author.avatar_url}
-                    alt={comment.author.stage_name || comment.author.username}
-                    width={24}
-                    height={24}
-                    className="rounded-full"
+        
+        {/* Progress overlay */}
+        <div 
+          className="absolute top-0 bottom-0 left-0 bg-blue-500 opacity-30"
+          style={{ width: `${(currentTime / duration) * 100}%` }}
+        />
+        
+        {/* Comment markers */}
+        {comments.map((comment) => (
+          <div 
+            key={comment.id}
+            className="absolute group"
+            style={{ left: `${(comment.timestamp / duration) * 100}%`, bottom: 0 }}
+          >
+            <div
+              className="w-1 h-4 bg-red-500 transform -translate-x-1/2 cursor-pointer hover:h-6 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (audioRef.current) {
+                  audioRef.current.currentTime = comment.timestamp;
+                  setCurrentTime(comment.timestamp);
+                }
+              }}
+            />
+            {/* Floating tooltip - positioned relative to the viewport to avoid positioning issues */}
+            <div className="fixed transform -translate-x-1/2 hidden group-hover:block bg-white rounded-lg shadow-lg p-2 w-48 z-10"
+                 style={{ 
+                   left: `calc(${(comment.timestamp / duration) * 100}% + var(--marker-offset, 0px))`, 
+                   bottom: 'calc(var(--waveform-bottom, 100px) + 20px)'
+                 }}
+                 ref={(el) => {
+                   if (el) {
+                     // Calculate the offset to keep the tooltip within the viewport
+                     const parentRect = el.parentElement?.getBoundingClientRect();
+                     if (parentRect) {
+                       el.style.setProperty('--marker-offset', `${parentRect.left}px`);
+                       el.style.setProperty('--waveform-bottom', `${window.innerHeight - parentRect.bottom}px`);
+                     }
+                   }
+                 }}
+            >
+              <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    src={comment.author.avatar_url || null}
+                    stageName={comment.author.stage_name || null}
+                    size={20}
                   />
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900">
-                      {comment.author.stage_name || comment.author.username}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {formatTime(comment.timestamp)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{comment.content}</p>
+                  <span className="text-sm font-medium">{comment.author.stage_name || comment.author.username}</span>
                 </div>
+                <p className="text-sm text-gray-600">
+                  {comment.content.length > 50 
+                    ? `${comment.content.substring(0, 50)}...` 
+                    : comment.content}
+                </p>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
-}
+});
+
+AudioPlayer.displayName = 'AudioPlayer';
+
+export default AudioPlayer;

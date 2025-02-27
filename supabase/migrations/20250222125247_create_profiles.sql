@@ -10,7 +10,9 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid NOT NULL,
     bio text,
+    stage_name text,
     avatar_url text,
+    cover_url text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now(),
     first_name text,
@@ -18,7 +20,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     country text,
     gender text,
     phone text,
-    stage_name text,
     musical_interests jsonb DEFAULT '{}'::jsonb,
     talents jsonb DEFAULT '{}'::jsonb,
     social_links jsonb DEFAULT '{}'::jsonb,

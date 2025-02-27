@@ -43,6 +43,46 @@ Voir le design de bandlab.com at /docs/examples/add-feed.png
 - Mêmes options de métadonnées que l'audio
 - Choix de la visibilité (public, privé, abonnés)
 
+### US-FEED-4: Interface de création de post
+**En tant qu'** utilisateur connecté  
+**Je veux** avoir une interface intuitive pour créer des posts  
+**Afin de** partager facilement du contenu audio ou vidéo avec du texte
+
+**Critères d'acceptation :**
+- Interface modale (dialog) pour la création de post
+- Champs requis :
+  - Titre du média
+  - Fichier média (audio ou vidéo)
+- Champs optionnels :
+  - Texte du post (description)
+- Validation des types de fichiers :
+  - Audio : formats audio standards
+  - Vidéo : formats vidéo standards
+- Indicateur de progression pendant l'upload
+- Gestion des erreurs avec messages explicites
+- Support du glisser-déposer pour les fichiers
+- Possibilité d'annuler la création
+
+### US-FEED-5: Upload et traitement des médias
+**En tant qu'** utilisateur connecté  
+**Je veux** que mes médias soient correctement traités et stockés  
+**Afin de** garantir une bonne qualité de lecture pour mes followers
+
+**Critères d'acceptation :**
+- Upload sécurisé vers Cloudinary
+- Barre de progression pendant l'upload
+- Stockage des métadonnées dans Supabase :
+  - URL du média
+  - ID public Cloudinary
+  - Durée du média
+  - Type de média (audio/vidéo)
+- Création automatique des relations :
+  - Enregistrement du média
+  - Création du post
+  - Liaison post-média
+- Feedback visuel des étapes de traitement
+- Gestion des erreurs à chaque étape
+
 ## 🎵 Lecture de contenu
 
 ### US-FEED-3: Lecteur audio avancé

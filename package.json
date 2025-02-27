@@ -34,7 +34,8 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "timeago.js": "^4.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

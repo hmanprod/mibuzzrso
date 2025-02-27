@@ -25,6 +25,8 @@ Une application web avec la même disposition que BandLab, comprenant :
 
 ## 🎨 Palette de Couleurs
 
+- Primaire : `#E94135`
+
 ### Fonds
 - Principal (body) : `#FFFFFF` ou `#FAFAFA`
 - Sidebar gauche : transparent ou `rgba(255,255,255,0.5)`
@@ -34,10 +36,10 @@ Une application web avec la même disposition que BandLab, comprenant :
 ### Textes
 - Principal : `#333333` ou `#2D2D2D`
 - Secondaire : `#666666` ou `#777777`
-- Liens et éléments interactifs : `#FA4D4D`
+- Liens et éléments interactifs : `#E94135`
 
 ### Accents et Boutons
-- Fond des boutons d'action : `#FA4D4D`
+- Fond des boutons d'action : `#E94135`
 - Texte des boutons : `#FFFFFF`
 - Hover : `#E63F3F`
 - Icônes : `#888888` ou `#666666`
@@ -58,7 +60,7 @@ Une application web avec la même disposition que BandLab, comprenant :
   - Padding : 8px 16px
   - Hover : Changement de couleur du texte
 - Bouton "Create" :
-  - Fond : `#FA4D4D`
+  - Fond : `#E94135`
   - Border-radius : 4px
   - Padding : 8px 16px
 
@@ -84,7 +86,7 @@ Une application web avec la même disposition que BandLab, comprenant :
 - Fond : `#F9F9F9`
 - Éléments :
   - Liste de suggestions
-  - Boutons "Follow" : `#FA4D4D`
+  - Boutons "Follow" : `#E94135`
 
 ## 📱 Responsive Design
 
@@ -104,14 +106,14 @@ Une application web avec la même disposition que BandLab, comprenant :
 - Border : none
 - Border-radius : 4px
 - Couleurs :
-  - Principal : `#FA4D4D` (fond), `#FFFFFF` (texte)
+  - Principal : `#E94135` (fond), `#FFFFFF` (texte)
   - Secondaire : `#F2F2F2` (fond), `#333333` (texte)
 
 ### Champs de Saisie
 - Border : `1px solid #CCCCCC`
 - Border-radius : 4px
 - Padding : 8px 12px
-- Focus : `1px solid #FA4D4D`
+- Focus : `1px solid #E94135`
 
 ## 📏 Espacement
 
