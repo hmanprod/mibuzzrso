@@ -6,21 +6,23 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useParams } from 'next/navigation';
 import { Profile } from '@/types/database';
 import ProfileComponent from '@/components/profile/Profile';
-import { PulsingLoading } from '@/components/ui/loading';
 import { getUserProfile } from '@/app/profile/actions';
 
-
+interface UserStats {
+  totalReads: number;
+}
 
 export default function ProfilePage() {
   
   const params = useParams();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userStats, setUserStats] = useState<UserStats>({totalReads: 0});
 
   useEffect(() => {
     async function fetchUserProfile() {
       try {
-        const { profile, error } = await getUserProfile(params.id as string);
+        const { profile, totalReads, error } = await getUserProfile(params.id as string);
 
         if (error) {
           console.error('Error fetching profile:', error);
@@ -28,6 +30,7 @@ export default function ProfilePage() {
         }
 
         setUserProfile(profile);
+        setUserStats({totalReads: totalReads || 0});
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -40,14 +43,11 @@ export default function ProfilePage() {
     }
   }, [params.id]);
 
-  if (loading) {
-    return <PulsingLoading />;
-  }
 
   return (
     <AuthGuard>
       <Navbar />
-      <ProfileComponent userProfile={userProfile} />
+      <ProfileComponent userProfile={userProfile} userStats={userStats}  isLoading={loading} />
     </AuthGuard>
   );
 }

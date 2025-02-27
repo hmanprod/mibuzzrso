@@ -150,9 +150,36 @@ export default function CommentSection({
     }
 
     try {
-      const { liked, error } = await likeComment(commentId);
+      // Optimistic update - immediately update UI before server response
+      setCommentLikes(prev => {
+        const currentLikes = prev[commentId]?.count || 0;
+        const currentLiked = prev[commentId]?.isLiked || false;
+        return {
+          ...prev,
+          [commentId]: {
+            count: currentLiked ? currentLikes - 1 : currentLikes + 1,
+            isLiked: !currentLiked
+          }
+        };
+      });
+
+      // Then make the actual API call
+      const { error } = await likeComment(commentId);
       
       if (error) {
+        // Revert the optimistic update if there was an error
+        setCommentLikes(prev => {
+          const currentLikes = prev[commentId]?.count || 0;
+          const currentLiked = prev[commentId]?.isLiked || false;
+          return {
+            ...prev,
+            [commentId]: {
+              count: currentLiked ? currentLikes + 1 : currentLikes - 1,
+              isLiked: !currentLiked
+            }
+          };
+        });
+
         toast({
           title: "Error",
           description: "Error liking comment",
@@ -161,21 +188,22 @@ export default function CommentSection({
         return;
       }
 
-      // Update the local state
+      // If no error, the optimistic update was correct, no need to update state again
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      
+      // Revert the optimistic update if there was an error
       setCommentLikes(prev => {
         const currentLikes = prev[commentId]?.count || 0;
-        // Ensure liked is treated as a boolean (false if undefined)
-        const isLikedValue = liked === true;
+        const currentLiked = prev[commentId]?.isLiked || false;
         return {
           ...prev,
           [commentId]: {
-            count: isLikedValue ? currentLikes + 1 : currentLikes - 1,
-            isLiked: isLikedValue
+            count: currentLiked ? currentLikes + 1 : currentLikes - 1,
+            isLiked: !currentLiked
           }
         };
       });
-    } catch (error) {
-      console.error('Error liking comment:', error);
     }
   };
 
@@ -238,7 +266,7 @@ export default function CommentSection({
             <div className="flex items-center gap-4 mt-1">
               <button 
                 onClick={() => handleLikeComment(comment.id)}
-                className={`flex items-center gap-1 text-xs ${likes.isLiked ? 'text-blue-500' : 'text-gray-500'} hover:text-blue-600`}
+                className={`flex items-center gap-1 text-xs ${likes.isLiked ? 'text-primary' : 'text-gray-500'} hover:text-primary`}
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>{likes.count > 0 ? likes.count : ''}</span>
@@ -249,7 +277,7 @@ export default function CommentSection({
                   // Focus on the input field
                   document.getElementById('comment-input')?.focus();
                 }}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-primary"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Reply</span>
@@ -299,12 +327,12 @@ export default function CommentSection({
             value={commentText} 
             onChange={(e) => setCommentText(e.target.value)} 
             placeholder={replyingTo ? "Repondre à un commentaire..." : "Ajouter un commentaire"} 
-            className="w-full p-2 pl-4 text-sm text-gray-700 rounded-lg shadow-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            className="w-full p-2 pl-4 text-sm text-gray-700 rounded-lg shadow-sm focus:ring-1 focus:ring-primary focus:outline-none"
           />
           <button 
             type="submit" 
             disabled={isSubmittingComment} 
-            className={`text-blue-500 hover:text-blue-700 transition-colors ${isSubmittingComment ? 'opacity-50' : ''}`}
+            className={`text-primary hover:text-primary transition-colors ${isSubmittingComment ? 'opacity-50' : ''}`}
           >
             <Send className="w-6 h-6" />
           </button>

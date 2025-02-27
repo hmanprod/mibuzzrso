@@ -18,6 +18,10 @@ export async function getPosts() {
   const supabase = await createClient()
 
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id
+
     const { data: postsData, error: postsError } = await supabase
       .from('posts')
       .select(`
@@ -39,12 +43,41 @@ export async function getPosts() {
     }
 
     // Transform the data to match our ExtendedPost interface
-    const transformedPosts: ExtendedPost[] = postsData.map(post => ({
-      ...post,
-      profile: post.profile || null,
-      media: post.media?.map((pm: PostMedia) => pm.media) || [],
-      likes: 0,
-      is_liked: false
+    const transformedPosts: ExtendedPost[] = await Promise.all(postsData.map(async post => {
+      // Get like count for this post
+      const { count: likesCount, error: likesError } = await supabase
+        .from('interactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', post.id)
+        .eq('type', 'like')
+
+      if (likesError) {
+        console.error('Error counting likes for post', post.id, ':', likesError)
+      }
+
+      // Check if the current user has liked this post
+      let isLiked = false
+      if (userId) {
+        const { data: userLike, error: userLikeError } = await supabase
+          .from('interactions')
+          .select('*')
+          .eq('post_id', post.id)
+          .eq('user_id', userId)
+          .eq('type', 'like')
+          .single()
+
+        if (!userLikeError && userLike) {
+          isLiked = true
+        }
+      }
+
+      return {
+        ...post,
+        profile: post.profile || null,
+        media: post.media?.map((pm: PostMedia) => pm.media) || [],
+        likes: likesCount || 0,
+        is_liked: isLiked
+      }
     }))
 
     return { posts: transformedPosts }
@@ -58,6 +91,10 @@ export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'v
   const supabase = await createClient()
 
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id
+
     let postsData;
     let postsError;
 
@@ -104,12 +141,41 @@ export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'v
     }
 
     // Transform the data to match our ExtendedPost interface
-    const transformedPosts: ExtendedPost[] = postsData.map(post => ({
-      ...post,
-      profile: post.profile || null,
-      media: post.media?.map((pm: PostMedia) => pm.media) || [],
-      likes: 0,
-      is_liked: false
+    const transformedPosts: ExtendedPost[] = await Promise.all(postsData.map(async post => {
+      // Get like count for this post
+      const { count: likesCount, error: likesError } = await supabase
+        .from('interactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', post.id)
+        .eq('type', 'like')
+
+      if (likesError) {
+        console.error('Error counting likes for post', post.id, ':', likesError)
+      }
+
+      // Check if the current user has liked this post
+      let isLiked = false
+      if (userId) {
+        const { data: userLike, error: userLikeError } = await supabase
+          .from('interactions')
+          .select('*')
+          .eq('post_id', post.id)
+          .eq('user_id', userId)
+          .eq('type', 'like')
+          .single()
+
+        if (!userLikeError && userLike) {
+          isLiked = true
+        }
+      }
+
+      return {
+        ...post,
+        profile: post.profile || null,
+        media: post.media?.map((pm: PostMedia) => pm.media) || [],
+        likes: likesCount || 0,
+        is_liked: isLiked
+      }
     }))
 
     return { posts: transformedPosts }
@@ -323,5 +389,153 @@ export async function getCommentLikes(commentId: string) {
   } catch (error) {
     console.error('Error in getCommentLikes:', error)
     return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function togglePostLike(postId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Check if the user has already liked this post
+    const { data: existingLike, error: likeCheckError } = await supabase
+      .from('interactions')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .eq('type', 'like')
+      .single()
+
+    if (likeCheckError && likeCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing like:', likeCheckError)
+      return { error: 'Failed to check existing like' }
+    }
+
+    let liked: boolean = false
+
+    if (existingLike) {
+      // If the user has already liked this post, remove the like
+      const { error: deleteError } = await supabase
+        .from('interactions')
+        .delete()
+        .eq('id', existingLike.id)
+
+      if (deleteError) {
+        console.error('Error removing like:', deleteError)
+        return { error: 'Failed to unlike post' }
+      }
+
+      liked = false
+    } else {
+      // Otherwise, add a new like
+      const { error: insertError } = await supabase
+        .from('interactions')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          type: 'like'
+        })
+
+      if (insertError) {
+        console.error('Error adding like:', insertError)
+        return { error: 'Failed to like post' }
+      }
+
+      liked = true
+    }
+
+    // Count total likes for this post
+    const { count, error: countError } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId)
+      .eq('type', 'like')
+
+    if (countError) {
+      console.error('Error counting likes:', countError)
+      return { error: 'Failed to count likes' }
+    }
+
+    return { 
+      success: true, 
+      liked: liked as boolean,
+      likesCount: count || 0
+    }
+  } catch (error) {
+    console.error('Error in togglePostLike:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function markMediaAsRead(mediaId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Validate mediaId
+    if (!mediaId) {
+      console.error('Invalid media ID provided')
+      return { error: 'Invalid media ID' }
+    }
+
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Always add a new read interaction
+    const { error: insertError } = await supabase
+      .from('interactions')
+      .insert({
+        user_id: user.id,
+        media_id: mediaId,
+        type: 'read'
+      })
+
+    if (insertError) {
+      console.error('Error marking media as read:', insertError)
+      return { error: 'Failed to mark media as read' }
+    }
+
+    return { error: null, success: true }
+  } catch (error) {
+    console.error('Error in markMediaAsRead:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function getMediaReadsCount(mediaId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Validate mediaId
+    if (!mediaId) {
+      console.error('Invalid media ID provided')
+      return { error: 'Invalid media ID', count: 0 }
+    }
+
+    // Count the number of read interactions for this media
+    const { count, error } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('media_id', mediaId)
+      .eq('type', 'read')
+
+    if (error) {
+      console.error('Error counting reads:', error)
+      return { error: 'Failed to count reads', count: 0 }
+    }
+
+    return { error: null, count: count || 0 }
+  } catch (error) {
+    console.error('Error in getMediaReadsCount:', error)
+    return { error: 'An unexpected error occurred', count: 0 }
   }
 }

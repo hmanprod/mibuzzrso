@@ -1,4 +1,5 @@
 export type MediaType = 'audio' | 'video';
+export type InteractionType = 'like' | 'share' | 'save' | 'comment_like' | 'read';
 
 export interface Media {
   id: string;

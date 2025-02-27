@@ -1,6 +1,6 @@
 -- Create enum types
 CREATE TYPE media_type AS ENUM ('audio', 'video');
-CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like');
+CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read');
 
 -- Enable RLS
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
@@ -65,10 +65,12 @@ CREATE TABLE interactions (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
     comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    media_id UUID REFERENCES medias(id) ON DELETE CASCADE,
     
     CONSTRAINT unique_interaction CHECK (
-        (post_id IS NOT NULL AND comment_id IS NULL) OR 
-        (post_id IS NULL AND comment_id IS NOT NULL)
+        (post_id IS NOT NULL AND comment_id IS NULL AND media_id IS NULL) OR 
+        (post_id IS NULL AND comment_id IS NOT NULL AND media_id IS NULL) OR
+        (post_id IS NULL AND comment_id IS NULL AND media_id IS NOT NULL)
     )
 );
 
@@ -81,6 +83,10 @@ CREATE UNIQUE INDEX idx_unique_user_comment_interaction
 ON interactions (user_id, comment_id, type) 
 WHERE comment_id IS NOT NULL;
 
+CREATE UNIQUE INDEX idx_unique_user_media_interaction 
+ON interactions (user_id, media_id, type) 
+WHERE media_id IS NOT NULL AND type != 'read';
+
 -- Create indexes
 CREATE INDEX idx_medias_user_id ON medias(user_id);
 CREATE INDEX idx_posts_user_id ON posts(user_id);
@@ -92,6 +98,7 @@ CREATE INDEX idx_comments_parent_id ON comments(parent_comment_id);
 CREATE INDEX idx_interactions_user_id ON interactions(user_id);
 CREATE INDEX idx_interactions_post_id ON interactions(post_id);
 CREATE INDEX idx_interactions_comment_id ON interactions(comment_id);
+CREATE INDEX idx_interactions_media_id ON interactions(media_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

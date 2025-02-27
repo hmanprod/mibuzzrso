@@ -91,7 +91,6 @@ export default function Home() {
                     <FeedPost
                       key={post.id}
                       post={post}
-                      onPostUpdated={loadPosts}
                     />
                   ))
                 )}

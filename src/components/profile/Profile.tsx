@@ -23,9 +23,12 @@ import { Avatar } from '../ui/Avatar';
 import { AvatarUploadModal } from './AvatarUploadModal';
 import { CoverPhotoUploadModal } from './CoverPhotoUploadModal';
 import { useSession } from '@/components/providers/SessionProvider';
+import ProfileSkeleton from './ProfileSkeleton';
 
 interface ProfileProps {
     userProfile?: ProfileType | null;
+    userStats?: { totalReads: number };
+    isLoading?: boolean;
 }
 
 interface Tab {
@@ -48,7 +51,7 @@ const tabs: Tab[] = [
     // { id: 'groups', label: 'Groupes', icon: <UsersRound className="w-4 h-4" /> },
 ];
 
-export default function Profile({ userProfile }: ProfileProps) {
+export default function Profile({ userProfile, userStats, isLoading }: ProfileProps) {
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [posts, setPosts] = useState<ExtendedPost[]>([]);
     const [loading, setLoading] = useState(true);
@@ -103,6 +106,10 @@ export default function Profile({ userProfile }: ProfileProps) {
     }, [loadPosts, userProfile?.id]);
     
       
+
+    if (isLoading) {
+        return <ProfileSkeleton />;
+    }
 
     if (!userProfile) {
         return <NotFound 
@@ -227,7 +234,7 @@ export default function Profile({ userProfile }: ProfileProps) {
                   <div className="text-sm text-gray-600">Suivi</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold">0</div>
+                  <div className="text-xl font-bold">{userStats?.totalReads || 0}</div>
                   <div className="text-sm text-gray-600">Lecture</div>
                 </div>
               </div>
@@ -348,7 +355,6 @@ export default function Profile({ userProfile }: ProfileProps) {
                             <FeedPost
                             key={post.id}
                             post={post}
-                            onPostUpdated={loadPosts}
                             />
                         ))
                     )}

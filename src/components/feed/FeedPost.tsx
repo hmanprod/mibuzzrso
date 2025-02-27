@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Share2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import type { Media, Post, Profile } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -11,7 +10,7 @@ import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
-import { getCommentsByMediaId } from '@/app/feed/actions';
+import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -22,7 +21,6 @@ interface ExtendedPost extends Post {
 
 interface FeedPostProps {
   post: ExtendedPost;
-  onPostUpdated: () => Promise<void>;
 }
 
 interface Comment {
@@ -38,7 +36,7 @@ interface Comment {
   };
 }
 
-export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
+export default function FeedPost({ post }: FeedPostProps) {
   const { user } = useSession();
   const [liked, setLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
@@ -71,24 +69,19 @@ export default function FeedPost({ post, onPostUpdated }: FeedPostProps) {
 
     try {
       setLoading(true);
-      const supabase = createClient();
+      
+      // Use the server action instead of direct Supabase access
+      const { error, liked, likesCount } = await togglePostLike(post.id);
 
-      // Toggle like in the database
-      const { error } = await supabase
-        .from('post_likes')
-        .upsert(
-          { post_id: post.id, user_id: user.id, liked: !liked },
-          { onConflict: 'post_id,user_id' }
-        );
-
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       // Update local state
-      setLiked(!liked);
-      setLikesCount(prev => liked ? prev - 1 : prev + 1);
+      setLiked(liked ?? false);
+      if (likesCount !== undefined) {
+        setLikesCount(likesCount);
+      }
       
-      // Notify parent to refresh posts
-      await onPostUpdated();
+      // No need to refresh all posts after a like action
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({

@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { getWaveformUrl } from '@/lib/cloudinary';
 import { Avatar } from '../ui/Avatar';
 import { formatTime } from '@/lib/utils';
-
+import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions';
+import { useSession } from '@/components/providers/SessionProvider';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -31,11 +32,13 @@ interface AudioPlayerRef {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
-  ({ audioUrl, comments, onTimeUpdate }, ref) => {
+  ({ audioUrl, mediaId, comments, onTimeUpdate }, ref) => {
+  const { user } = useSession();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [readsCount, setReadsCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
   const waveformUrl = getWaveformUrl(audioUrl);
@@ -47,7 +50,67 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
         setDuration(audioRef.current?.duration || 0);
       });
     }
-  }, []);
+  }, [audioRef]);
+
+  // Fetch the number of reads for this media
+  const fetchReadsCount = async () => {
+    if (!mediaId) return;
+    
+    try {
+      const { count, error } = await getMediaReadsCount(mediaId);
+      if (error) {
+        console.error('Error fetching reads count:', error);
+        return;
+      }
+      
+      setReadsCount(count);
+    } catch (error) {
+      console.error('Error fetching reads count:', error);
+    }
+  };
+
+  // Fetch reads count on mount
+  useEffect(() => {
+    fetchReadsCount();
+  }, [mediaId, fetchReadsCount]);
+
+  // Track if we've already counted this session
+  const hasTrackedThisSession = useRef(false);
+
+  const handleMarkAsRead = async () => {
+    if (!user || !mediaId) return;
+    
+    try {
+      const { error } = await markMediaAsRead(mediaId);
+      
+      if (error) {
+        console.error('Error marking media as read:', error);
+        return;
+      }
+      
+      // Update the reads count locally after marking as read
+      setReadsCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error marking media as read:', error);
+    }
+  };
+
+  // Mark media as read when it's played for at least 5 seconds
+  useEffect(() => {
+    const markAsReadAfterPlaying = async () => {
+      // Only mark as read once per session when the user has played at least 5 seconds
+      if (currentTime >= 5 && user && mediaId && !hasTrackedThisSession.current) {
+        try {
+          hasTrackedThisSession.current = true;
+          await handleMarkAsRead();
+        } catch (error) {
+          console.error('Error marking media as read:', error);
+        }
+      }
+    };
+    
+    markAsReadAfterPlaying();
+  }, [currentTime, user, mediaId]);
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -152,6 +215,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
               <Volume2 className="w-6 h-6" onClick={toggleMute} />
             )}
           </button>
+          <span className="text-sm text-gray-600">{readsCount} lectures</span>
         </div>
       </div>
 

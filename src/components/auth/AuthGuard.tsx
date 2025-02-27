@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { OnboardingModal } from '../onboarding/OnboardingModal';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -18,30 +18,31 @@ const PUBLIC_ROUTES = [
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useSession();
+  const { user, isLoading } = useSession();
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
 
   const isPublicRoute = PUBLIC_ROUTES.some(route => 
     pathname.startsWith(route) || pathname === route
   );
 
   useEffect(() => {
-    const getSession = async () => {
+    // Only proceed with authentication check when session loading is complete
+    if (!isLoading) {
       if (!user && !isPublicRoute) {
         router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
       }
-    };
+      setIsLocalLoading(false);
+    }
+  }, [user, router, pathname, isPublicRoute, isLoading]);
 
-    getSession();
-  }, [user, router, pathname, isPublicRoute]);
-
-  // Show loading spinner while session is undefined (initial load)
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-  //     </div>
-  //   );
-  // }
+  // Show loading spinner while session is loading or local loading state is true
+  if (isLoading || isLocalLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // If no session and not a public route, return null (redirect will happen in useEffect)
   if (!user && !isPublicRoute) {

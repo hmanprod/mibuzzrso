@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { formatTime } from '@/lib/utils';
+import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions';
+import { useSession } from '@/components/providers/SessionProvider';
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -29,7 +31,8 @@ interface VideoPlayerRef {
 }
 
 const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
-  ({ videoUrl, comments, onTimeUpdate }, ref) => {
+  ({ videoUrl, mediaId, comments, onTimeUpdate }, ref) => {
+  const { user } = useSession();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -37,9 +40,67 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [readsCount, setReadsCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track if we've already counted this session
+  const hasTrackedThisSession = useRef(false);
+
+  const handleMarkAsRead = async () => {
+    if (!user || !mediaId) return;
+    
+    try {
+      const { error } = await markMediaAsRead(mediaId);
+      
+      if (error) {
+        console.error('Error marking media as read:', error);
+        return;
+      }
+      
+      // Update the reads count locally after marking as read
+      setReadsCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error marking media as read:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReadsCount();
+  }, [mediaId]);
+
+  useEffect(() => {
+    const markAsReadAfterPlaying = async () => {
+      // Only mark as read once per session when the user has played at least 5 seconds
+      if (currentTime >= 5 && user && mediaId && !hasTrackedThisSession.current) {
+        try {
+          hasTrackedThisSession.current = true;
+          await handleMarkAsRead();
+        } catch (error) {
+          console.error('Error marking media as read:', error);
+        }
+      }
+    };
+    
+    markAsReadAfterPlaying();
+  }, [currentTime, user, mediaId]);
+
+  const fetchReadsCount = async () => {
+    if (!mediaId) return;
+    
+    try {
+      const { count, error } = await getMediaReadsCount(mediaId);
+      if (error) {
+        console.error('Error fetching reads count:', error);
+        return;
+      }
+      
+      setReadsCount(count);
+    } catch (error) {
+      console.error('Error fetching reads count:', error);
+    }
+  };
 
   useEffect(() => {
     if (videoRef.current) {
@@ -66,7 +127,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
         document.removeEventListener('msfullscreenchange', handleFullscreenChange);
       };
     }
-  }, []);
+  }, [controlsTimeoutRef]);
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -126,13 +187,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
       console.error('Error toggling fullscreen:', error);
     }
   };
-
-  // Using the imported formatTime function from utils
-  // const formatTime = (time: number) => {
-  //   const minutes = Math.floor(time / 60);
-  //   const seconds = Math.floor(time % 60);
-  //   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  // };
 
   const handleMouseMove = () => {
     setShowControls(true);
@@ -300,6 +354,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
                 <Maximize className="w-6 h-6" />
               )}
             </button>
+            <div className="flex items-center gap-2">
+              <Eye className="w-6 h-6 text-white" />
+              <span className="text-sm text-white">{readsCount} lectures</span>
+            </div>
           </div>
         </div>
       </div>
