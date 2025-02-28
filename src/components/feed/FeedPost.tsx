@@ -139,8 +139,6 @@ export default function FeedPost({ post }: FeedPostProps) {
     }
   }, [mediaItem, fetchComments]);
 
-  
-
   // Function to seek to a specific time in the media player
   const seekToTime = (time: number) => {
     setCurrentPlaybackTime(time);
@@ -151,6 +149,8 @@ export default function FeedPost({ post }: FeedPostProps) {
       videoPlayerRef.current.seekToTime(time);
     }
   };
+
+  console.log('Post:', post);
 
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-8">

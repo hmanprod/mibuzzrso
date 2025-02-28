@@ -46,6 +46,12 @@ export async function getPosts(page: number = 1, limit: number = 5) {
       return { posts: [] };
     }
 
+    // Afficher dans la console les posts sans profil
+    const postsSansProfil = postsData.filter(post => !post.profiles || post.profiles.length === 0);
+    if (postsSansProfil.length > 0) {
+      console.warn('Posts sans profil:', postsSansProfil);
+    }
+
     // Assurer l'unicité des posts par id
     const uniquePosts = Array.from(
       new Map(postsData.map(post => [post.id, post])).values()
@@ -87,9 +93,11 @@ export async function getPosts(page: number = 1, limit: number = 5) {
         // On retire la propriété "profiles" en excès et on garde uniquement la première
         const { profiles, ...postWithoutProfiles } = post;
 
+        const profileObj: Profile = Array.isArray(profiles) ? profiles[0] : profiles;
+
         return {
           ...postWithoutProfiles, // id, created_at, updated_at, content, user_id, etc.
-          profile: profiles![0],
+          profile: profileObj,
           // Ici, on précise que post.media est un tableau d'objets de forme { media: Media[] } 
           media: ((post.media as { media: Media[] }[] | undefined)
                     ?.reduce((acc: Media[], item) => acc.concat(item.media), [] as Media[])
