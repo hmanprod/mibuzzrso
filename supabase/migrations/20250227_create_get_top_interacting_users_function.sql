@@ -1,4 +1,4 @@
--- Create a function to get top interacting users with weighted scores
+-- Create a function to get top interacting post owners
 CREATE OR REPLACE FUNCTION get_top_interacting_users(limit_count integer DEFAULT 10)
 RETURNS TABLE (
   user_id uuid,
@@ -11,7 +11,7 @@ RETURNS TABLE (
 BEGIN
   RETURN QUERY
   SELECT 
-    i.user_id,
+    p.id AS user_id,  -- On garde bien p.id comme identifiant unique de l'utilisateur
     p.stage_name,
     CASE 
       WHEN p.first_name IS NOT NULL AND p.last_name IS NOT NULL THEN p.first_name || ' ' || p.last_name
@@ -35,9 +35,11 @@ BEGIN
   FROM 
     interactions i
   JOIN 
-    profiles p ON i.user_id = p.id
+    posts po ON i.post_id = po.id  -- Associe l'interaction au post concerné
+  JOIN 
+    profiles p ON po.user_id = p.id  -- Récupère l'auteur du post
   GROUP BY 
-    i.user_id, p.stage_name, p.first_name, p.last_name, p.avatar_url, p.label
+    p.id, p.stage_name, p.first_name, p.last_name, p.avatar_url, p.label
   ORDER BY 
     interaction_score DESC
   LIMIT limit_count;

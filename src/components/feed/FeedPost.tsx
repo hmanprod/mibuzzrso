@@ -8,9 +8,9 @@ import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
 import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
-import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
 import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions/interaction';
+import { cn } from '@/lib/utils';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -37,10 +37,9 @@ interface Comment {
 }
 
 export default function FeedPost({ post }: FeedPostProps) {
-  const { user } = useSession();
-  const [liked, setLiked] = useState(post.is_liked);
+  const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
-  const [loading, setLoading] = useState(false);
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsCount, setCommentsCount] = useState(0);
@@ -57,40 +56,42 @@ export default function FeedPost({ post }: FeedPostProps) {
   // Get the first media item (for now we'll just handle single media)
   const mediaItem = post.media[0];
 
-  const toggleLike = async () => {
-    if (!user) {
-      toast({
-        title: "Authentification requise",
-        description: "Veuillez vous connecter pour aimer les publications",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleLike = async () => {
+    if (isLikeProcessing) return;
 
     try {
-      setLoading(true);
+      setIsLikeProcessing(true);
       
-      // Use the server action instead of direct Supabase access
-      const { error, liked, likesCount } = await togglePostLike(post.id);
+      // Optimistic update
+      const newIsLiked = !isLiked;
+      setIsLiked(newIsLiked);
+      setLikesCount(prev => newIsLiked ? prev + 1 : prev - 1);
 
-      if (error) throw new Error(error);
+      // Make API call
+      const result = await togglePostLike(post.id);
 
-      // Update local state
-      setLiked(liked ?? false);
-      if (likesCount !== undefined) {
-        setLikesCount(likesCount);
+      if (result.error) {
+        // Revert optimistic update if there's an error
+        setIsLiked(!newIsLiked);
+        setLikesCount(prev => newIsLiked ? prev - 1 : prev + 1);
+        toast({
+          title: "Error",
+          description: "Failed to update like status. Please try again.",
+          variant: "destructive"
+        });
       }
-      
-      // No need to refresh all posts after a like action
     } catch (error) {
-      console.error('Error toggling like:', error);
+      // Revert optimistic update on error
+      setIsLiked(!isLiked);
+      setLikesCount(prev => isLiked ? prev + 1 : prev - 1);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut du like",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
+      console.error(error);
     } finally {
-      setLoading(false);
+      setIsLikeProcessing(false);
     }
   };
 
@@ -152,7 +153,7 @@ export default function FeedPost({ post }: FeedPostProps) {
   };
 
   return (
-    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden">
+    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-8">
       {/* Post header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -193,6 +194,7 @@ export default function FeedPost({ post }: FeedPostProps) {
           <AudioPlayer
             audioUrl={mediaItem.media_url}
             mediaId={mediaItem.id}
+            postId={post.id}
             comments={comments}
             onCommentAdded={fetchComments}
             onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
@@ -202,6 +204,7 @@ export default function FeedPost({ post }: FeedPostProps) {
           <VideoPlayer 
             videoUrl={mediaItem.media_url} 
             mediaId={mediaItem.id}
+            postId={post.id}
             comments={comments}
             onCommentAdded={fetchComments}
             onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
@@ -218,14 +221,19 @@ export default function FeedPost({ post }: FeedPostProps) {
       </div>
 
       {/* Actions */}
-      <div className="p-4 flex items-center gap-6">
-        <button 
-          className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-gray-600'} ${loading ? 'opacity-50' : 'hover:text-red-500'} transition-colors`}
-          onClick={toggleLike}
-          disabled={loading}
+      <div className="p-4 flex items-center gap-4">
+        <button
+          onClick={handleLike}
+          disabled={isLikeProcessing}
+          className="flex items-center gap-2 text-sm"
         >
-          <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} />
-          <span>{likesCount}</span>
+          <Heart
+            className={cn(
+              "w-6 h-6 transition-colors",
+              isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500 hover:stroke-gray-700"
+            )}
+          />
+          <span className="text-gray-500">{likesCount}</span>
         </button>
         <button 
           className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors"
@@ -246,6 +254,7 @@ export default function FeedPost({ post }: FeedPostProps) {
       {showComments && (
         <CommentSection 
           mediaId={mediaItem.id}
+          postId={post.id}
           comments={comments}
           currentPlaybackTime={currentPlaybackTime}
           onCommentAdded={fetchComments}

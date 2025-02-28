@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { twMerge } from 'tailwind-merge';
-import { Flame, Heart, Users, Music, Video } from 'lucide-react';
+import { Flame, Heart, Users, Lightbulb } from 'lucide-react';
 
 interface SidebarProps {
   className?: string;
@@ -13,7 +13,7 @@ export default function Sidebar({ className }: SidebarProps) {
     <aside className={twMerge("bg-transparent backdrop-blur-sm p-6", className)}>
       <nav className="space-y-2">
         <Link
-          href="/"
+          href="/challenges"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
@@ -23,7 +23,7 @@ export default function Sidebar({ className }: SidebarProps) {
         </Link>
 
         <Link
-          href="/"
+          href="/feed/likes"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
           )}
@@ -44,7 +44,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
         <div className="h-[1px] bg-gray-100 my-4" />
 
-        <Link
+        {/* <Link
           href="/"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
@@ -52,7 +52,7 @@ export default function Sidebar({ className }: SidebarProps) {
         >
           <Music className="w-6 h-6" />
           <span className="font-medium">Musique</span>
-        </Link>
+        </Link> */}
 
         {/* <Link
           href="/"
@@ -74,7 +74,7 @@ export default function Sidebar({ className }: SidebarProps) {
           <span className="font-medium">Playlists aimées</span>
         </Link> */}
 
-        <Link
+        {/* <Link
           href="/"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
@@ -82,6 +82,16 @@ export default function Sidebar({ className }: SidebarProps) {
         >
           <Video className="w-6 h-6" />
           <span className="font-medium">Vidéos</span>
+        </Link> */}
+
+<Link
+          href="/feedbacks"
+          className={twMerge(
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
+          )}
+        >
+          <Lightbulb className="w-6 h-6" />
+          <span className="font-medium">Feedback & Idees</span>
         </Link>
       </nav>
     </aside>

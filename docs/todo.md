@@ -1,5 +1,8 @@
 ## Database Tasks
 
+### Optimiser les requetes
+GetPost 2 requetes au lieu d'une
+
 ### Update Row Level Security (RLS):
 Check the existing RLS policies for the profiles table to ensure that only authenticated users can view their profiles.
 Create a policy that restricts access to the profiles table, allowing only users who are logged in to see their own profile data.

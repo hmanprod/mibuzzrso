@@ -69,7 +69,7 @@ export async function getCommentsByMediaId(mediaId: string) {
   }
 }
 
-export async function addComment(mediaId: string, content: string, playerTime?: number, parentCommentId?: string) {
+export async function addComment(mediaId: string, content: string, playerTime?: number, parentCommentId?: string, postId?: string) {
   const supabase = await createClient()
 
   try {
@@ -104,6 +104,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
       .insert({
         type: 'comment',
         user_id: user.id,
+        post_id: postId,
         media_id: mediaId
       })
 
@@ -119,7 +120,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
   }
 }
 
-export async function likeComment(commentId: string) {
+export async function likeComment(commentId: string, postId: string) {
   const supabase = await createClient()
 
   try {
@@ -166,7 +167,7 @@ export async function likeComment(commentId: string) {
         type: 'comment_like',
         user_id: user.id,
         comment_id: commentId,
-        post_id: null
+        post_id: postId
       })
 
     if (likeError) {
@@ -307,7 +308,7 @@ export async function togglePostLike(postId: string) {
   }
 }
 
-export async function markMediaAsRead(mediaId: string) {
+export async function markMediaAsRead(mediaId: string, postId: string) {
   const supabase = await createClient()
 
   try {
@@ -330,6 +331,7 @@ export async function markMediaAsRead(mediaId: string) {
       .insert({
         user_id: user.id,
         media_id: mediaId,
+        post_id: postId,
         type: 'read'
       })
 

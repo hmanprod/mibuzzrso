@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, MessageSquare, User, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Search, Bell, MessageSquare, User, Settings, LogOut } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
@@ -63,9 +63,12 @@ export default function Navbar({ className }: NavbarProps) {
             >
               Fil d&apos;actualité
             </Link>
-            <button className="text-[#666666] text-[14px] hover:text-[#2D2D2D] transition-colors rounded-[18px] px-4 py-2">
+            <Link 
+              href="/musics"
+              className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2"
+            >
               Bibliothèque
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -132,17 +135,6 @@ export default function Navbar({ className }: NavbarProps) {
                   >
                     <Settings className="w-4 h-4" />
                     <span>Mes paramètres</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      router.push('/support');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    <span>Support</span>
                   </button>
 
                   <div className="h-[1px] bg-gray-100 my-1" />

@@ -5,13 +5,16 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { getWaveformUrl } from '@/lib/cloudinary';
 import { Avatar } from '../ui/Avatar';
+import { LaudineAnimation } from '../ui/LaudineAnimation';
 import { formatTime } from '@/lib/utils';
 import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
+import { useMediaControl } from '../providers/MediaControlProvider';
 
 interface AudioPlayerProps {
   audioUrl: string;
   mediaId: string;
+  postId: string;
   comments: {
     id: string;
     timestamp: number;
@@ -32,13 +35,15 @@ interface AudioPlayerRef {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
-  ({ audioUrl, mediaId, comments, onTimeUpdate }, ref) => {
+  ({ audioUrl, mediaId, postId, comments, onTimeUpdate }, ref) => {
   const { user } = useSession();
+  const { register, unregister, play } = useMediaControl();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [readsCount, setReadsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
   const processedAudioUrlRef = useRef<string>(audioUrl);
@@ -89,7 +94,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     if (!user || !mediaId) return;
     
     try {
-      const { error } = await markMediaAsRead(mediaId);
+      const { error } = await markMediaAsRead(mediaId, postId);
       
       if (error) {
         console.error('Error marking media as read:', error);
@@ -101,7 +106,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     } catch (error) {
       console.error('Error marking media as read:', error);
     }
-  }, [user, mediaId]);
+  }, [user, mediaId, postId]);
 
   // Mark media as read when it's played for at least 5 seconds
   useEffect(() => {
@@ -120,14 +125,38 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     markAsReadAfterPlaying();
   }, [currentTime, user, mediaId, handleMarkAsRead]);
 
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
+  // Register this player with the media controller
+  useEffect(() => {
+    if (!mediaId) return;
+    
+    const pause = () => {
+      if (audioRef.current) {
         audioRef.current.pause();
-      } else {
-        audioRef.current.play();
+        setIsPlaying(false);
       }
-      setIsPlaying(!isPlaying);
+    };
+
+    register(mediaId, pause);
+    return () => unregister(mediaId);
+  }, [mediaId, register, unregister]);
+
+  const togglePlay = async () => {
+    if (!audioRef.current || !mediaId) return;
+
+    try {
+      setIsLoading(true);
+      if (isPlaying) {
+        await audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        play(mediaId); // Notify the controller that we're playing
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,12 +222,17 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
       <div className="flex items-center gap-4">
         <button
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors"
+          className="w-10 h-10 flex items-center justify-center bg-primary rounded-full hover:bg-primary/90 transition-colors"
+          disabled={isLoading}
         >
-          {isPlaying ? (
-            <Pause className="w-8 h-8" onClick={togglePlay} />
+          {isLoading ? (
+            <div className="w-6 h-6">
+              <LaudineAnimation />
+            </div>
+          ) : isPlaying ? (
+            <Pause className="w-5 h-5 text-white" />
           ) : (
-            <Play className="w-8 h-8" onClick={togglePlay} />
+            <Play className="w-5 h-5 text-white" />
           )}
         </button>
 

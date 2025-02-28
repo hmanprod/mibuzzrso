@@ -26,6 +26,7 @@ interface Comment {
 
 interface CommentSectionProps {
   mediaId: string;
+  postId: string;
   comments: Comment[];
   currentPlaybackTime: number;
   onCommentAdded: () => Promise<void>;
@@ -33,8 +34,9 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ 
-  mediaId, 
-  comments, 
+  mediaId,
+  postId,
+  comments,
   currentPlaybackTime,
   onCommentAdded,
   onSeekToTime
@@ -104,7 +106,8 @@ export default function CommentSection({
         mediaId, 
         content.trim(), 
         replyingTo?.timestamp || currentPlaybackTime,
-        replyingTo?.id
+        replyingTo?.id,
+        postId
       );
 
       if (error) {
@@ -139,7 +142,7 @@ export default function CommentSection({
     }
   };
 
-  const handleLikeComment = async (commentId: string) => {
+  const handleLikeComment = async (commentId: string, postId: string) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -164,7 +167,7 @@ export default function CommentSection({
       });
 
       // Then make the actual API call
-      const { error } = await likeComment(commentId);
+      const { error } = await likeComment(commentId, postId);
       
       if (error) {
         // Revert the optimistic update if there was an error
@@ -265,7 +268,7 @@ export default function CommentSection({
             <p className="text-sm text-gray-600">{comment.content}</p>
             <div className="flex items-center gap-4 mt-1">
               <button 
-                onClick={() => handleLikeComment(comment.id)}
+                onClick={() => handleLikeComment(comment.id, postId)}
                 className={`flex items-center gap-1 text-xs ${likes.isLiked ? 'text-primary' : 'text-gray-500'} hover:text-primary`}
               >
                 <ThumbsUp className="w-4 h-4" />

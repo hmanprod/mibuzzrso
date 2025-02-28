@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import RightSidebar from "@/components/RightSidebar";
@@ -26,44 +26,88 @@ export default function Home() {
   const [topUsers, setTopUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    loadPosts();
-    loadTopUsers();
+  const loadTopUsers = useCallback(async () => {
+    try {
+      const { data, error } = await getTopInteractingUsers();
+      if (!error && data) {
+        setTopUsers(data.slice(0, 3));
+      }
+    } catch (err) {
+      console.error('Error loading top users:', err);
+    }
   }, []);
 
-  const loadPosts = async () => {
-    console.log('🔄 Loading posts...');
+  const loadPosts = useCallback(async (isInitial: boolean = true) => {
+    console.log('🔄 Loading posts...', isInitial ? 'Initial load' : 'Loading more');
     try {
-      setLoading(true);
-      setError(null);
+      if (isInitial) {
+        setLoading(true);
+        setError(null);
+        setPage(1);
+      } else {
+        setLoadingMore(true);
+      }
 
-      const result = await getPosts();
+      const result = await getPosts(isInitial ? 1 : page);
       
       if (result.error) {
         throw new Error(result.error);
       }
 
-      console.log('✨ Posts loaded:', result.posts);
-      setPosts(result.posts || []);
+      const newPosts = result.posts || [];
+      console.log('✨ Posts loaded:', newPosts.length);
+
+      if (isInitial) {
+        setPosts(newPosts);
+      } else {
+        setPosts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const uniqueNewPosts = newPosts.filter(post => !existingIds.has(post.id));
+          return [...prev, ...uniqueNewPosts];
+        });
+      }
+
+      setHasMore(newPosts.length === 5);
+      if (!isInitial && newPosts.length === 5) {
+        setPage(prev => prev + 1);
+      }
     } catch (err) {
       console.error('❌ Error loading posts:', err);
       setError('Failed to load posts. Please try again later.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [page]);
 
-  const loadTopUsers = async () => {
-    try {
-      const { data, error } = await getTopInteractingUsers();
-      if (!error && data) {
-        setTopUsers(data.slice(0, 3)); // Prendre les 3 premiers utilisateurs
-      }
-    } catch (err) {
-      console.error('Error loading top users:', err);
+  useEffect(() => {
+    loadPosts();
+    loadTopUsers();
+  }, [loadPosts, loadTopUsers]);
+
+  
+
+  // Function to handle infinite scroll
+  const handleScroll = useCallback(() => {
+    if (loading || loadingMore || !hasMore) return;
+
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const threshold = document.documentElement.scrollHeight - 800;
+
+    if (scrollPosition > threshold) {
+      loadPosts(false);
     }
-  };
+  }, [loading, loadingMore, hasMore, loadPosts]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   const handleCreatePost = async () => {
       await loadPosts();
@@ -80,38 +124,42 @@ export default function Home() {
           
           <div className="flex flex-1 ml-[274px]">
             {/* Feed central */}
-            <main className="flex-1 max-w-[744px] mx-auto px-8 py-8">
+            <main className="flex-1 max-w-[600px] w-full mx-auto py-4 px-4 sm:px-0">
               <CreatePostBlock onOpen={() => setShowCreatePost(true)} />
               
-              <div className="mt-8 space-y-4">
-                {loading ? (
-                  // Show skeletons while loading
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <FeedPostSkeleton key={i} />
-                  ))
-                ) : error ? (
-                  // Show error message
-                  <div className="p-4 rounded-lg bg-red-50 text-red-600">
-                    {error}
-                  </div>
-                ) : posts.length === 0 ? (
-                  // Show empty state
-                  <div className="text-center text-gray-500">
-                    No posts yet. Be the first to post!
-                  </div>
-                ) : (
-                  // Show posts
-                  posts.map((post) => (
+              {error && (
+                <div className="bg-red-50 text-red-500 p-4 rounded-lg mt-4">
+                  {error}
+                </div>
+              )}
+
+              {loading && !posts.length ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <FeedPostSkeleton key={i} />
+                ))
+              ) : (
+                <>
+                  {posts.map((post) => (
                     <FeedPost
                       key={post.id}
                       post={post}
                     />
-                  ))
-                )}
-              </div>
+                  ))}
+                  
+                  {loadingMore && (
+                    <FeedPostSkeleton />
+                  )}
+
+                  {!hasMore && posts.length > 0 && (
+                    <div className="text-center text-gray-500 mt-8">
+                      No more posts to load
+                    </div>
+                  )}
+                </>
+              )}
             </main>
             
-            <RightSidebar className="w-[274px] shrink-0" suggestedUsers={topUsers} />
+            <RightSidebar className="w-[350px] py-8" suggestedUsers={topUsers} />
           </div>
         </div>
       </div>

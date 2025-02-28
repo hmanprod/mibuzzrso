@@ -11,7 +11,7 @@ export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
   const { profile } = useSession();
 
   return (
-    <div className="bg-white rounded-[18px] p-4 space-y-4">
+    <div className="bg-white rounded-[18px] p-4 space-y-4 mt-8">
       {/* Zone de saisie */}
       <div className="flex items-center gap-3">
         <Avatar

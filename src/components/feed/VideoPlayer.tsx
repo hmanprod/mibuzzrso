@@ -9,7 +9,8 @@ import { useSession } from '@/components/providers/SessionProvider';
 
 interface VideoPlayerProps {
   videoUrl: string;
-  mediaId?: string;
+  mediaId: string;
+  postId: string;
   comments: {
     id: string;
     timestamp: number;
@@ -31,7 +32,7 @@ interface VideoPlayerRef {
 }
 
 const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
-  ({ videoUrl, mediaId, comments, onTimeUpdate }, ref) => {
+  ({ videoUrl, mediaId, postId, comments, onTimeUpdate }, ref) => {
   const { user } = useSession();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -52,19 +53,18 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
     if (!user || !mediaId) return;
     
     try {
-      const { error } = await markMediaAsRead(mediaId);
+      const { error } = await markMediaAsRead(mediaId, postId);
       
       if (error) {
         console.error('Error marking media as read:', error);
         return;
       }
       
-      // Update the reads count locally after marking as read
       setReadsCount(prev => prev + 1);
     } catch (error) {
       console.error('Error marking media as read:', error);
     }
-  }, [user, mediaId]);
+  }, [user, mediaId, postId]);
 
   const fetchReadsCount = useCallback(async () => {
     if (!mediaId) return;

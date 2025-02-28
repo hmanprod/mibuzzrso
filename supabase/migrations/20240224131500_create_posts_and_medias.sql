@@ -30,7 +30,7 @@ CREATE TABLE posts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     content TEXT,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE
 );
 
 -- Create posts_medias junction table
