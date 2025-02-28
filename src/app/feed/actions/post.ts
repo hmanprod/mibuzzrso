@@ -115,107 +115,138 @@ export async function getPosts(page: number = 1, limit: number = 5) {
   }
 }
 
-export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'video' | 'all' = 'all') {
+export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'video' | 'all' = 'all', page: number = 1, limit: number = 5) {
   const supabase = await createClient()
 
   try {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser()
-    const userId = user?.id
+    // Récupération de l'utilisateur courant
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    // Calcul de l'offset pour la pagination
+    const offset = (page - 1) * limit;
 
     let postsData;
     let postsError;
 
+    // Récupération des posts avec profils et médias
     if (mediaType === 'all') {
       const result = await supabase
-        .from('posts')
-        .select(`
-          *,
-          users!user_id(
-            profiles(*)
-          ),
-          media:posts_medias(
-            media:medias(*)
-          )
-        `)
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
-      
+      .from('posts')
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        user_id,
+        profiles!user_id(*),
+        media:posts_medias(
+          media:medias(*)
+        )
+      `)
+      .eq('user_id', profileId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
       postsData = result.data;
       postsError = result.error;
-    } else {
+
+    }else{
       const result = await supabase
-        .from('posts')
-        .select(`
-          *,
-          users!user_id(
-            profiles(*)
-          ),
-          media:posts_medias(
-            media:medias(*)
-          )
-        `)
-        .eq('user_id', profileId)
-        .eq('media.media.media_type', mediaType)
-        .order('created_at', { ascending: false });
-      
+      .from('posts')
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        user_id,
+        profiles!user_id(*),
+        media:posts_medias(
+          media:medias(*)
+        )
+      `)
+      .eq('user_id', profileId)
+      .eq('media.media_type', mediaType)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
       postsData = result.data;
       postsError = result.error;
     }
 
     if (postsError) {
-      console.error('Error fetching profile posts:', postsError)
-      return { error: 'Failed to load profile posts' }
+      console.error('Error fetching posts:', postsError);
+      return { error: 'Failed to load posts' };
     }
-
     if (!postsData) {
-      return { posts: [] }
+      return { posts: [] };
     }
 
-    // Transform the data to match our ExtendedPost interface
-    const transformedPosts: ExtendedPost[] = await Promise.all(postsData.map(async post => {
-      // Get like count for this post
-      const { count: likesCount, error: likesError } = await supabase
-        .from('interactions')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', post.id)
-        .eq('type', 'like')
+    // Afficher dans la console les posts sans profil
+    const postsSansProfil = postsData.filter(post => !post.profiles || post.profiles.length === 0);
+    if (postsSansProfil.length > 0) {
+      console.warn('Posts sans profil:', postsSansProfil);
+    }
 
-      if (likesError) {
-        console.error('Error counting likes for post', post.id, ':', likesError)
-      }
+    // Assurer l'unicité des posts par id
+    const uniquePosts = Array.from(
+      new Map(postsData.map(post => [post.id, post])).values()
+    );
 
-      // Check if the current user has liked this post
-      let isLiked = false
-      if (userId) {
-        const { data: userLike, error: userLikeError } = await supabase
+    // Récupération du nombre total de posts pour la pagination
+    const { count: totalPosts } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true });
+
+    // Transformation des posts pour correspondre à ExtendedPost
+    const transformedPosts: ExtendedPost[] = await Promise.all(
+      uniquePosts.map(async post => {
+        // Comptage des likes pour ce post
+        const { count: likesCount, error: likesError } = await supabase
           .from('interactions')
-          .select('*')
+          .select('*', { count: 'exact', head: true })
           .eq('post_id', post.id)
-          .eq('user_id', userId)
-          .eq('type', 'like')
-          .single()
-
-        if (!userLikeError) {
-          isLiked = !!userLike
+          .eq('type', 'like');
+        if (likesError) {
+          console.error('Error counting likes for post', post.id, ':', likesError);
         }
-      }
 
-      // Return the transformed post with all required fields
-      return {
-        ...post, // This spreads all Post fields (id, created_at, updated_at, content, user_id)
-        profile: post.profiles,
-        media: (post.media as { media: Media[] }[] | undefined)
-          ?.reduce((acc: Media[], item) => [...acc, ...item.media], [] as Media[])
-          || [],
-        likes: likesCount || 0,
-        is_liked: isLiked
-      };
-    }))
+        // Vérification si l'utilisateur a liké ce post
+        let isLiked = false;
+        if (userId) {
+          const { data: userLike, error: userLikeError } = await supabase
+            .from('interactions')
+            .select('*')
+            .eq('post_id', post.id)
+            .eq('user_id', userId)
+            .eq('type', 'like')
+            .single();
+          if (!userLikeError) {
+            isLiked = !!userLike;
+          }
+        }
 
-    return { posts: transformedPosts }
+        // On retire la propriété "profiles" en excès et on garde uniquement la première
+        const { profiles, ...postWithoutProfiles } = post;
+
+        const profileObj: Profile = Array.isArray(profiles) ? profiles[0] : profiles;
+
+        return {
+          ...postWithoutProfiles, // id, created_at, updated_at, content, user_id, etc.
+          profile: profileObj,
+          // Ici, on précise que post.media est un tableau d'objets de forme { media: Media[] } 
+          media: ((post.media as { media: Media[] }[] | undefined)
+                    ?.reduce((acc: Media[], item) => acc.concat(item.media), [] as Media[])
+                  ) || [],
+          likes: likesCount || 0,
+          is_liked: isLiked
+        };
+      })
+    );
+
+    return { posts: transformedPosts, pagination: { page, limit, total: totalPosts } };
   } catch (error) {
-    console.error('Error in getProfilePosts:', error)
-    return { error: 'An unexpected error occurred' }
+    console.error('Error in getPosts:', error);
+    return { error: 'An unexpected error occurred' };
   }
 }
