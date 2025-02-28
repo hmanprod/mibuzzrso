@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, UserPlus, Check } from 'lucide-react';
 import type { Media, Post, Profile } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -10,7 +10,9 @@ import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions/interaction';
+import { followUser, isFollowing } from '@/app/profile/actions/follower';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/components/providers/SessionProvider';
 
 interface ExtendedPost extends Post {
   profile: Profile;
@@ -37,6 +39,7 @@ interface Comment {
 }
 
 export default function FeedPost({ post }: FeedPostProps) {
+  const { user } = useSession();
   const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
@@ -44,6 +47,8 @@ export default function FeedPost({ post }: FeedPostProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsCount, setCommentsCount] = useState(0);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [isFollowChecked, setIsFollowChecked] = useState(false);
   
   // Define proper types for the refs
   interface MediaPlayerRef {
@@ -139,6 +144,61 @@ export default function FeedPost({ post }: FeedPostProps) {
     }
   }, [mediaItem, fetchComments]);
 
+  // Check if the current user is following the post author
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!user || !post.profile.id || user.id === post.profile.id) {
+        setIsFollowChecked(true);
+        return;
+      }
+
+      try {
+        const result = await isFollowing(user.id, post.profile.id);
+        setIsFollowed(result.isFollowing || false);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      } finally {
+        setIsFollowChecked(true);
+      }
+    };
+
+    if (user && !isFollowChecked) {
+      checkFollowStatus();
+    }
+  }, [user, post.profile.id, isFollowChecked]);
+
+  // Function to handle following a user
+  const handleFollow = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Vous devez être connecté pour suivre un utilisateur",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Don't allow users to follow themselves
+    if (user.id === post.profile.id) {
+      return;
+    }
+
+    // Optimistic update
+    setIsFollowed(true);
+
+    try {
+      await followUser(user.id, post.profile.id);
+    } catch (error) {
+      console.error('Error following user:', error);
+      setIsFollowed(false);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors du suivi de l'utilisateur",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Function to seek to a specific time in the media player
   const seekToTime = (time: number) => {
     setCurrentPlaybackTime(time);
@@ -166,12 +226,42 @@ export default function FeedPost({ post }: FeedPostProps) {
             />
           </Link>
 
-          <Link href={`/profile/${post.profile.id}`} className="hover:opacity-80 transition-opacity">
-            <div>
-              <h3 className="font-medium text-[#2D2D2D]">{post.profile.stage_name}</h3>
-              <p className="text-sm text-gray-500">@{post.profile.id}</p>
-            </div>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/profile/${post.profile.id}`} className="hover:opacity-80 transition-opacity">
+              <div>
+                <h3 className="font-medium text-[#2D2D2D] flex">
+                  <span>{post.profile.stage_name}</span>
+                  {/* Follow button - only show if not the current user and if follow status has been checked */}
+            {user && user.id !== post.profile.id && isFollowChecked && (
+              <button 
+                onClick={handleFollow}
+                disabled={isFollowed}
+                className={`ml-2 flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
+                  isFollowed 
+                    ? 'bg-gray-100 text-gray-500 cursor-default' 
+                    : 'bg-[#FA4D4D] text-white hover:bg-[#E63F3F]'
+                }`}
+              >
+                {isFollowed ? (
+                  <>
+                    <Check className="w-3 h-3" />
+                    <span>Suivi</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3 h-3" />
+                    <span>Suivre</span>
+                  </>
+                )}
+              </button>
+            )}
+                </h3>
+                <p className="text-sm text-gray-500">@{post.profile.id}</p>
+              </div>
+            </Link>
+            
+            
+          </div>
         </div>
         <button className="text-gray-400 hover:text-gray-600 transition-colors">
           <MoreHorizontal className="w-6 h-6" />
@@ -221,13 +311,14 @@ export default function FeedPost({ post }: FeedPostProps) {
       </div>
 
       {/* Actions */}
-      <div className="p-4 flex items-center gap-4">
-        <button
+      <div className="flex items-center gap-3 px-4 pb-4">
+        {/* Like button */}
+        <button 
+          className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
           onClick={handleLike}
           disabled={isLikeProcessing}
-          className="flex items-center gap-2 text-sm"
         >
-          <Heart
+          <Heart 
             className={cn(
               "w-6 h-6 transition-colors",
               isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500 hover:stroke-gray-700"
