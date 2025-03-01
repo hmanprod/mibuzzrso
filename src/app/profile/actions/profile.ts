@@ -12,6 +12,11 @@ interface ExtendedPost extends Post {
   media: Media[]
   likes: number
   is_liked: boolean
+  is_followed: boolean
+}
+
+interface ExtendedProfile extends Profile {
+  is_followed: boolean
 }
 
 /**
@@ -61,7 +66,7 @@ export async function getUserProfile(profileId: string) {
     // Get the total read count for all media associated with this user
     const { count: totalReads, error: readsError } = await supabase
       .from('interactions')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true})
       .eq('type', 'read')
       .in('media_id', mediaIds)
 
@@ -126,7 +131,8 @@ export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'v
       profile: post.profile || null,
       media: post.media?.map((pm: PostMedia) => pm.media) || [],
       likes: 0,
-      is_liked: false
+      is_liked: false,
+      is_followed: false
     }));
 
     // If filtering by media type, do it here
@@ -174,10 +180,12 @@ export async function updateUserProfile(profileId: string, profileData: Partial<
  */
 export async function getTopInteractingUsers() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
 
   try {
     // Using a raw SQL query to get top users with weighted interaction scores
-    const { data, error } = await supabase.rpc('get_top_interacting_users', {
+    const { data: topUsers, error } = await supabase.rpc('get_top_interacting_users', {
       limit_count: 10
     })
 
@@ -186,7 +194,28 @@ export async function getTopInteractingUsers() {
       return { data: null, error }
     }
 
-    return { data, error: null }
+    // Check if the current user is following each of the top users
+    if (userId && topUsers.length > 0) {
+      // Use Promise.all to wait for all async operations to complete
+      const { data: follows, error } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', userId);
+
+      if (error) {
+        console.error('Error fetching follow statuses:', error);
+      } else {
+        
+        const followedIds = new Set(follows.map(f => f.following_id));
+
+        topUsers.forEach((user: ExtendedProfile) => {
+          // Use user_id instead of id since that's what the SQL function returns
+          user.is_followed = followedIds.has(user.user_id);
+        });
+      }
+    }
+
+    return { data: topUsers, error: null }
   } catch (error) {
     console.error('Error in getTopInteractingUsers:', error)
     return { data: null, error }

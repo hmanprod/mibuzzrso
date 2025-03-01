@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Camera, Music, Plus, Settings, Video } from 'lucide-react';
+import { Camera, Music, Plus, Settings, Video, UserPlus, Check } from 'lucide-react';
 import { Media, Post, Profile as ProfileType } from '@/types/database';
 import { NotFound } from '../ui/not-found';
 import CreatePostBlock from '../feed/CreatePostBlock';
@@ -24,6 +24,8 @@ import { AvatarUploadModal } from './AvatarUploadModal';
 import { CoverPhotoUploadModal } from './CoverPhotoUploadModal';
 import { useSession } from '@/components/providers/SessionProvider';
 import ProfileSkeleton from './ProfileSkeleton';
+import { followUser, isFollowing } from '@/app/profile/actions/follower';
+import { toast } from '@/components/ui/use-toast';
 
 interface ProfileProps {
     userProfile?: ProfileType | null;
@@ -42,6 +44,7 @@ interface ExtendedPost extends Post {
     media: Media[];
     likes: number;
     is_liked: boolean;
+    is_followed: boolean;
 }
   
 const tabs: Tab[] = [
@@ -62,6 +65,8 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
     const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
     const { user } = useSession();
     const isCurrentUser = user && userProfile?.id === user.id;
+    const [isFollowed, setIsFollowed] = useState(false);
+    const [isFollowChecked, setIsFollowChecked] = useState(false);
 
     const handleCreatePost = async () => {
         await loadPosts();
@@ -103,9 +108,62 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
         if (userProfile?.id) {
             loadPosts();
         }
-    }, [loadPosts, userProfile?.id]);
-    
-      
+    }, [userProfile?.id, loadPosts]);
+
+    // Check if the current user is following the profile
+    useEffect(() => {
+        const checkFollowStatus = async () => {
+            if (!user || !userProfile?.id || user.id === userProfile.id) {
+                setIsFollowChecked(true);
+                return;
+            }
+
+            try {
+                const result = await isFollowing(user.id, userProfile.id);
+                setIsFollowed(result.isFollowing || false);
+            } catch (error) {
+                console.error('Error checking follow status:', error);
+            } finally {
+                setIsFollowChecked(true);
+            }
+        };
+
+        if (user && userProfile && !isFollowChecked) {
+            checkFollowStatus();
+        }
+    }, [user, userProfile, isFollowChecked]);
+
+    // Function to handle following a user
+    const handleFollow = async () => {
+        if (!user) {
+            toast({
+                title: "Authentication required",
+                description: "Vous devez être connecté pour suivre un utilisateur",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        // Don't allow users to follow themselves
+        if (user.id === userProfile?.id) {
+            return;
+        }
+
+        // Optimistic update
+        setIsFollowed(true);
+
+        try {
+            await followUser(user.id, userProfile?.id as string);
+        } catch (error) {
+            console.error('Error following user:', error);
+            setIsFollowed(false);
+            toast({
+                title: "Erreur",
+                description: "Une erreur s'est produite lors du suivi de l'utilisateur",
+                variant: "destructive"
+            });
+        }
+    };
 
     if (isLoading) {
         return <ProfileSkeleton />;
@@ -174,7 +232,37 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
               {/* Profile Information */}
               <div className="mt-4">
                 <h1 className="text-2xl font-bold mb-0">{userProfile.stage_name || `${userProfile.first_name} ${userProfile.last_name}`}</h1>
-                <small className="text-gray-600">@{userProfile.id}</small>
+                <div className="flex items-center gap-2">
+                  <small className="text-gray-600">@{userProfile.id}</small>
+                </div>
+
+                <div className='mt-4'>
+                  {/* Follow button - only show if not the current user and if follow status has been checked */}
+                {user && user.id !== userProfile.id && isFollowChecked && (
+                    <button 
+                      onClick={handleFollow}
+                      disabled={isFollowed}
+                      className={`flex items-center gap-1 text-md font-medium rounded-full px-3 py-1 transition-colors ${
+                        isFollowed 
+                          ? 'bg-gray-100 text-gray-500 cursor-default' 
+                          : 'bg-[#FA4D4D] text-white hover:bg-[#E63F3F]'
+                      }`}
+                    >
+                      {isFollowed ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          <span>Suivi</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3 h-3" />
+                          <span>Suivre</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
                 {userProfile.country && (
                   <div className="mt-2">
                     <span className={`py-1 text-sm rounded-full ${COUNTRY_BADGE_COLOR}`}>
@@ -184,23 +272,14 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                 )}
 
                 {userProfile.bio && (
-                  <div className="mt-4 relative">
-                    <svg className="text-gray-300 h-8 w-8 -top-4 -left-2" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                    </svg>
-                    <blockquote className="pl-6 text-gray-700 italic">
+                  <div className="mt-4 relative text-gray-700 italic">
                       {userProfile.bio}
-                    </blockquote>
                   </div>
                 )}
 
 
-                {/* Séparateur */}
-                <div className="h-[1px] bg-gray-100 mt-8" />
-
-
                 {userProfile.social_links && Object.keys(userProfile.social_links).length > 0 && (
-                  <div className="mt-4">
+                  <div className="mt-6wswWwww">
                     <h3 className="font-semibold mb-2">Social Links</h3>
                     <div className="flex flex-wrap gap-3">
                       {Object.entries(userProfile.social_links).map(([platform, url]) => (
@@ -253,13 +332,17 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                       </span>
                     ))
                   ) : (
-                    <button 
-                    onClick={() => router.push('/profile/edit')}
-                    className="bg-gray-50 text-gray-700 px-4 py-2 rounded-full hover:bg-primary/90 flex items-center gap-2 text-sm"
-                    >
-                    <Plus className="w-4 h-4" />
-                    <span>Ajouter un talent</span>
-                    </button>
+                    <>
+                      {user && user.id == userProfile.id && (
+                      <button 
+                      onClick={() => router.push('/profile/edit')}
+                      className="bg-gray-50 text-gray-700 px-4 py-2 rounded-full hover:bg-primary/90 flex items-center gap-2 text-sm"
+                      >
+                      <Plus className="w-4 h-4" />
+                      <span>Ajouter un talent</span>
+                      </button>
+                    )}
+                    </>
                   )}
                 </div>
               </div>
@@ -280,6 +363,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                     ))
                   ) : (
                     <>
+                    {user && user.id == userProfile.id && (
                         <button 
                         onClick={() => router.push('/profile/edit')}
                         className="bg-gray-50 text-gray-700 px-4 py-2 rounded-full hover:bg-primary/90 flex items-center gap-2 text-sm"
@@ -287,6 +371,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                         <Plus className="w-4 h-4" />
                         <span>Ajouter un genre</span>
                         </button>
+                    )}
                     </>
                   )}
                 </div>
@@ -369,6 +454,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
             <div className="w-64">
               <div className="sticky top-4 space-y-4">
                 {/* Bouton Modifier le profil */}
+                {user && user.id == userProfile.id && (
                 <div className="mt-6">
                     <button 
                     onClick={() => router.push('/profile/edit')}
@@ -378,6 +464,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                     <span>Modifier le profil</span>
                     </button>
                 </div>
+                )}
               </div>
             </div>
           </div>

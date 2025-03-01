@@ -18,6 +18,15 @@ interface ExtendedPost extends Post {
   media: Media[];
   likes: number;
   is_liked: boolean;
+  is_followed: boolean;
+}
+
+interface TopUser {
+  user_id: string;
+  avatar_url: string | null;
+  stage_name: string;
+  interaction_score: number;
+  is_followed: boolean;
 }
 
 export default function Home() {
@@ -34,7 +43,19 @@ export default function Home() {
     try {
       const { data, error } = await getTopInteractingUsers();
       if (!error && data) {
-        setTopUsers(data.slice(0, 3));
+        // Transform the data to match the expected format for SuggestedUsers
+        const formattedUsers = data.map((user: TopUser) => ({
+          user_id: user.user_id,
+          avatar_url: user.avatar_url,
+          stage_name: user.stage_name,
+          interaction_score: user.interaction_score,
+          is_followed: user.is_followed
+        }));
+        
+        setTopUsers(formattedUsers.slice(0, 3));
+        console.log('✨ Top users loaded:', formattedUsers.slice(0, 3));
+      } else if (error) {
+        console.error('Error in getTopInteractingUsers response:', error);
       }
     } catch (err) {
       console.error('Error loading top users:', err);
@@ -42,7 +63,7 @@ export default function Home() {
   }, []);
 
   const loadPosts = useCallback(async (isInitial: boolean = true) => {
-    console.log('🔄 Loading posts...', isInitial ? 'Initial load' : 'Loading more');
+    // console.log('🔄 Loading posts...', isInitial ? 'Initial load' : 'Loading more');
     try {
       if (isInitial) {
         setLoading(true);
@@ -59,7 +80,7 @@ export default function Home() {
       }
 
       const newPosts = result.posts || [];
-      console.log('✨ Posts loaded:', newPosts.length);
+      // console.log('✨ Posts loaded:', newPosts.length);
 
       if (isInitial) {
         setPosts(newPosts);

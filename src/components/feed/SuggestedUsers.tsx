@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -18,11 +18,13 @@ interface User {
   stage_name?: string;
   full_name?: string;
   interaction_score?: number;
+  is_followed?: boolean;
 }
 
 export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
   const { user } = useSession();
   const [followingStates, setFollowingStates] = useState<Record<string, { loading: boolean, followed: boolean }>>({});
+
 
   // Si aucun utilisateur n'est passé, ne rien afficher
   if (users.length === 0) {
@@ -97,7 +99,7 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
       </div>
       <div className="space-y-4">
         {suggestedUsers.map(user => {
-          const isFollowing = followingStates[user.user_id]?.followed || false;
+          const isFollowing = user.is_followed || false;
           const isLoading = followingStates[user.user_id]?.loading || false;
 
           return (
@@ -127,11 +129,14 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
                   </p> */}
                 </div>
               </div>
+
+
               <button
-                className={`flex items-center gap-2 transition-colors ${isFollowing
-                    ? 'text-green-600 hover:text-green-700'
-                    : 'text-[#FA4D4D] hover:text-[#E63F3F]'
-                  }`}
+                className={`ml-2 flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
+                  isFollowing
+                    ? 'bg-gray-100 text-gray-500 cursor-default' 
+                    : 'bg-gray-800 text-white hover:bg-[#E63F3F]'
+                }`}
                 onClick={() => !isLoading && !isFollowing && handleFollow(user.user_id)}
                 disabled={isLoading || isFollowing}
               >
@@ -142,12 +147,12 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
                   </>
                 ) : isFollowing ? (
                   <>
-                    <Check className="w-5 h-5" />
+                    <Check className="w-3 h-3" />
                     <span>Suivi</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="w-5 h-5" />
+                    <UserPlus className="w-3 h-3" />
                     <span>Suivre</span>
                   </>
                 )}

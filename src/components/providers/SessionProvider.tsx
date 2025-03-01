@@ -43,9 +43,9 @@ export function SessionProvider({
   }, [initialUser]);
 
   // Effect to monitor user state changes
-  useEffect(() => {
-    console.log('🔄 User state updated:', user);
-  }, [user]);
+  // useEffect(() => {
+  //   console.log('🔄 User state updated:', user);
+  // }, [user]);
 
   useEffect(() => {
     const fetchProfile = async () => {

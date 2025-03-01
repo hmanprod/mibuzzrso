@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Share2, UserPlus, Check } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, Pencil, Trash2 } from 'lucide-react';
 import type { Media, Post, Profile } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -10,15 +10,24 @@ import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions/interaction';
-import { followUser, isFollowing } from '@/app/profile/actions/follower';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
+import DeletePostDialog from './DeletePostDialog';
+import EditPostDialog from './EditPostDialog';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 interface ExtendedPost extends Post {
   profile: Profile;
   media: Media[];
   likes: number;
   is_liked: boolean;
+  is_followed: boolean;
 }
 
 interface FeedPostProps {
@@ -47,9 +56,9 @@ export default function FeedPost({ post }: FeedPostProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsCount, setCommentsCount] = useState(0);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
-  const [isFollowed, setIsFollowed] = useState(false);
-  const [isFollowChecked, setIsFollowChecked] = useState(false);
-  
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
   // Define proper types for the refs
   interface MediaPlayerRef {
     seekToTime: (time: number) => void;
@@ -144,61 +153,6 @@ export default function FeedPost({ post }: FeedPostProps) {
     }
   }, [mediaItem, fetchComments]);
 
-  // Check if the current user is following the post author
-  useEffect(() => {
-    const checkFollowStatus = async () => {
-      if (!user || !post.profile.id || user.id === post.profile.id) {
-        setIsFollowChecked(true);
-        return;
-      }
-
-      try {
-        const result = await isFollowing(user.id, post.profile.id);
-        setIsFollowed(result.isFollowing || false);
-      } catch (error) {
-        console.error('Error checking follow status:', error);
-      } finally {
-        setIsFollowChecked(true);
-      }
-    };
-
-    if (user && !isFollowChecked) {
-      checkFollowStatus();
-    }
-  }, [user, post.profile.id, isFollowChecked]);
-
-  // Function to handle following a user
-  const handleFollow = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Vous devez être connecté pour suivre un utilisateur",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Don't allow users to follow themselves
-    if (user.id === post.profile.id) {
-      return;
-    }
-
-    // Optimistic update
-    setIsFollowed(true);
-
-    try {
-      await followUser(user.id, post.profile.id);
-    } catch (error) {
-      console.error('Error following user:', error);
-      setIsFollowed(false);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors du suivi de l'utilisateur",
-        variant: "destructive"
-      });
-    }
-  };
-
   // Function to seek to a specific time in the media player
   const seekToTime = (time: number) => {
     setCurrentPlaybackTime(time);
@@ -210,62 +164,77 @@ export default function FeedPost({ post }: FeedPostProps) {
     }
   };
 
-  console.log('Post:', post);
+  // Check if the current user is the author of the post
+  const isAuthor = user?.id === post.user_id;
+
+  // Function to handle post deletion
+  const handlePostDeleted = () => {
+    toast({
+      title: "Post deleted",
+      description: "Your post has been deleted successfully."
+    });
+    // You might want to refresh the feed or remove this post from the UI
+    // This depends on how your feed is implemented
+  };
+
+  // Function to handle post update
+  const handlePostUpdated = () => {
+    toast({
+      title: "Post updated",
+      description: "Your post has been updated successfully."
+    });
+    // You might want to refresh the feed to show the updated post
+    // This depends on how your feed is implemented
+  };
 
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-8">
       {/* Post header */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href={`/profile/${post.profile.id}`}>
-            <Avatar
-              src={post.profile?.avatar_url || null}
-              stageName={post.profile?.stage_name}
-              size={40}
-              className="rounded-full hover:opacity-90 transition-opacity"
-            />
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Link href={`/profile/${post.profile.id}`} className="hover:opacity-80 transition-opacity">
-              <div>
-                <h3 className="font-medium text-[#2D2D2D] flex">
-                  <span>{post.profile.stage_name}</span>
-                  {/* Follow button - only show if not the current user and if follow status has been checked */}
-            {user && user.id !== post.profile.id && isFollowChecked && (
-              <button 
-                onClick={handleFollow}
-                disabled={isFollowed}
-                className={`ml-2 flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
-                  isFollowed 
-                    ? 'bg-gray-100 text-gray-500 cursor-default' 
-                    : 'bg-[#FA4D4D] text-white hover:bg-[#E63F3F]'
-                }`}
-              >
-                {isFollowed ? (
-                  <>
-                    <Check className="w-3 h-3" />
-                    <span>Suivi</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-3 h-3" />
-                    <span>Suivre</span>
-                  </>
-                )}
-              </button>
-            )}
+      <div className="flex justify-between items-center p-4">
+        <div className="flex items-center space-x-3">
+          <div>
+            <Link href={`/profile/${post.profile.id}`}>
+              <Avatar
+                src={post.profile.avatar_url}
+                stageName={post.profile.stage_name?.[0] || 'U'}
+                size={20}
+              />
+            </Link>
+          </div>
+          <div>
+            <Link href={`/profile/${post.profile.id}`}>
+              <div className="flex items-center space-x-2">
+                <h3 className="font-semibold text-[#2D2D2D]">
+                  {post.profile.stage_name || 'Unknown Artist'}
                 </h3>
-                <p className="text-sm text-gray-500">@{post.profile.id}</p>
+                <p className="text-sm text-gray-500">@{post.user_id}</p>
               </div>
             </Link>
-            
-            
           </div>
         </div>
-        <button className="text-gray-400 hover:text-gray-600 transition-colors">
-          <MoreHorizontal className="w-6 h-6" />
-        </button>
+        {isAuthor && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                <MoreHorizontal className="w-6 h-6" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Post
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-red-500 focus:text-red-500"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Title and description */}
@@ -350,6 +319,27 @@ export default function FeedPost({ post }: FeedPostProps) {
           currentPlaybackTime={currentPlaybackTime}
           onCommentAdded={fetchComments}
           onSeekToTime={seekToTime}
+        />
+      )}
+
+      {/* Delete Post Dialog */}
+      <DeletePostDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        postId={post.id}
+        onDeleted={handlePostDeleted}
+      />
+
+      {/* Edit Post Dialog */}
+      {mediaItem && (
+        <EditPostDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          postId={post.id}
+          mediaId={mediaItem.id}
+          initialContent={post.content}
+          initialTitle={mediaItem.title || ''}
+          onUpdated={handlePostUpdated}
         />
       )}
     </article>

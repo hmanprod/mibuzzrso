@@ -1,7 +1,7 @@
 'use client';
 
 import { twMerge } from 'tailwind-merge';
-import SuggestedUsers from './SuggestedUsers';
+import SuggestedUsers from './feed/SuggestedUsers';
 
 interface User {
   user_id: string;

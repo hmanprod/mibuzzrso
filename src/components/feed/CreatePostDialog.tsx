@@ -7,7 +7,7 @@ import { MediaType } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@/lib/supabase/client';
+import { createPostWithMedia } from '@/app/feed/actions/post';
 
 interface CreatePostDialogProps {
   open: boolean;
@@ -27,7 +27,6 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useSession();
-  const supabase = createClient();
   const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((file: File | null) => {
@@ -80,7 +79,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
       setIsSubmitting(true);
       setCurrentStep('upload');
 
-      // Upload media to Cloudinary
+      // Upload media to Cloudinary (keep this client-side)
       const mediaUpload = await uploadToCloudinary(selectedFile, activeTab);
       if (!mediaUpload) {
         throw new Error('Failed to upload media');
@@ -88,44 +87,20 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
 
       setCurrentStep('creating');
 
-      // 1. Create media record
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('medias')
-        .insert({
-          media_type: activeTab,
-          media_url: mediaUpload.url,
-          media_public_id: mediaUpload.publicId,
-          title: title.trim(),
-          duration: mediaUpload.duration ? Number(mediaUpload.duration.toFixed(2)) : null,
-          user_id: user.id
-        })
-        .select()
-        .single();
+      // Use the server action to handle database operations
+      const result = await createPostWithMedia({
+        mediaType: activeTab,
+        mediaUrl: mediaUpload.url,
+        mediaPublicId: mediaUpload.publicId,
+        title: title.trim(),
+        duration: mediaUpload.duration ? Number(mediaUpload.duration.toFixed(2)) : null,
+        content: postText.trim() || null,
+        userId: user.id
+      });
 
-      if (mediaError) throw mediaError;
-
-      // 2. Create post record
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          content: postText.trim() || null,
-          user_id: user.id
-        })
-        .select()
-        .single();
-
-      if (postError) throw postError;
-
-      // 3. Link post and media
-      const { error: linkError } = await supabase
-        .from('posts_medias')
-        .insert({
-          post_id: postData.id,
-          media_id: mediaData.id,
-          position: 1 // First position since it's a new post
-        });
-
-      if (linkError) throw linkError;
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create post');
+      }
 
       // Reset form
       setTitle('');
