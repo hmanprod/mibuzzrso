@@ -53,7 +53,7 @@ export default function Home() {
         }));
         
         setTopUsers(formattedUsers.slice(0, 3));
-        console.log('✨ Top users loaded:', formattedUsers.slice(0, 3));
+        // console.log('✨ Top users loaded:', formattedUsers.slice(0, 3));
       } else if (error) {
         console.error('Error in getTopInteractingUsers response:', error);
       }

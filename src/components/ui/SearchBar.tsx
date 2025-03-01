@@ -41,8 +41,8 @@ export default function SearchBar({
   };
 
   const clearSearch = () => {
-    setInputValue('');
-    setSearchTerm('');
+    // setInputValue('');
+    // setSearchTerm('');
     router.push('/feed');
   };
 
