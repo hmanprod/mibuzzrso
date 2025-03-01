@@ -12,6 +12,23 @@ interface ExtendedPost extends Post {
   is_followed: boolean
 }
 
+// Define the interface for search_posts function results
+interface SearchPostResult {
+  post_id: string;
+  post_content: string | null;
+  post_created_at: string;
+  post_updated_at: string;
+  user_id: string;
+  profile_stage_name: string | null;
+  profile_avatar_url: string | null;
+  media_ids: string[];
+  media_titles: string[];
+  media_urls: string[];
+  media_types: string[];
+  likes_count: number;
+  match_source: string;
+}
+
 interface CreatePostData {
   mediaType: 'audio' | 'video';
   mediaUrl: string;
@@ -22,7 +39,7 @@ interface CreatePostData {
   userId: string;
 }
 
-export async function getPosts(page: number = 1, limit: number = 5) {
+export async function getPosts(page: number = 1, limit: number = 5, searchTerm?: string) {
   const supabase = await createClient();
 
   try {
@@ -33,22 +50,137 @@ export async function getPosts(page: number = 1, limit: number = 5) {
     // Calcul de l'offset pour la pagination
     const offset = (page - 1) * limit;
 
+    // If there's a search term, use the PostgreSQL search function
+    if (searchTerm && searchTerm.trim() !== '') {
+      // Call the custom search_posts function
+      const { data: searchResults, error: searchError } = await supabase
+        .rpc('search_posts', {
+          search_term: searchTerm,
+          page_num: page,
+          items_per_page: limit
+        });
+
+      if (searchError) {
+        console.error('Error searching posts:', searchError);
+        return { error: 'Failed to search posts' };
+      }
+
+      if (!searchResults || searchResults.length === 0) {
+        return { posts: [] };
+      }
+
+      // Transform the search results to match the expected format
+      const transformedPosts: ExtendedPost[] = await Promise.all(
+        searchResults.map(async (result: SearchPostResult) => {
+          // Vérification si l'utilisateur a liké ce post
+          let isLiked = false;
+          if (userId) {
+            const { data: likeData, error: likeError } = await supabase
+              .from('interactions')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', result.post_id)
+              .eq('user_id', userId)
+              .eq('type', 'like');
+            
+            if (likeError) {
+              console.error('Error checking if post is liked:', likeError);
+            } else {
+              isLiked = !!likeData && likeData.length > 0;
+            }
+          }
+
+          // Vérification si l'utilisateur suit l'auteur du post
+          let isFollowed = false;
+          if (userId && result.user_id !== userId) {
+            const { data: followData, error: followError } = await supabase
+              .from('follows')
+              .select('*', { count: 'exact', head: true })
+              .eq('follower_id', userId)
+              .eq('following_id', result.user_id);
+            
+            if (followError) {
+              console.error('Error checking if user is followed:', followError);
+            } else {
+              isFollowed = !!followData && followData.length > 0;
+            }
+          }
+
+          // Format media data
+          const media = result.media_ids.map((id, index) => ({
+            id,
+            title: result.media_titles[index] || '',
+            media_url: result.media_urls[index] || '',
+            media_type: result.media_types[index] || 'audio',
+            // Add other required media fields with default values
+            created_at: result.post_created_at,
+            updated_at: result.post_updated_at,
+            media_public_id: '',
+            duration: null,
+            description: null,
+            media_cover_url: null,
+            user_id: result.user_id
+          }));
+
+          return {
+            id: result.post_id,
+            content: result.post_content,
+            created_at: result.post_created_at,
+            updated_at: result.post_updated_at,
+            user_id: result.user_id,
+            profile: {
+              id: result.user_id,
+              stage_name: result.profile_stage_name,
+              avatar_url: result.profile_avatar_url,
+              // Add other required profile fields with default values
+              bio: null,
+              cover_url: null,
+              created_at: result.post_created_at,
+              updated_at: result.post_updated_at,
+              first_name: null,
+              last_name: null,
+              country: null,
+              gender: null,
+              phone: null,
+              label: null,
+              musical_interests: null,
+              talents: null,
+              social_links: null
+            },
+            media,
+            likes: Number(result.likes_count) || 0,
+            is_liked: isLiked,
+            is_followed: isFollowed
+          };
+        })
+      );
+
+      return {
+        posts: transformedPosts,
+        total: transformedPosts.length, // We don't have the exact total from the function
+        page,
+        limit
+      };
+    }
+
+    // If no search term, use the regular query
+    const query =  supabase
+    .from('posts')
+    .select(`
+      id,
+      content,
+      created_at,
+      updated_at,
+      user_id,
+      profiles!user_id(*),
+      media:posts_medias(
+        media:medias(*)
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
     // Récupération des posts avec profils et médias
-    const { data: postsData, error: postsError } = await supabase
-      .from('posts')
-      .select(`
-        id,
-        content,
-        created_at,
-        updated_at,
-        user_id,
-        profiles!user_id(*),
-        media:posts_medias(
-          media:medias(*)
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { data: postsData, error: postsError } = await query;
 
     if (postsError) {
       console.error('Error fetching posts:', postsError);
@@ -90,44 +222,56 @@ export async function getPosts(page: number = 1, limit: number = 5) {
         // Vérification si l'utilisateur a liké ce post
         let isLiked = false;
         if (userId) {
-          const { data: userLike, error: userLikeError } = await supabase
+          const { data: likeData, error: likeError } = await supabase
             .from('interactions')
-            .select('*')
+            .select('*', { count: 'exact', head: true })
             .eq('post_id', post.id)
             .eq('user_id', userId)
-            .eq('type', 'like')
-            .single();
-          if (!userLikeError) {
-            isLiked = !!userLike;
+            .eq('type', 'like');
+          
+          if (likeError) {
+            console.error('Error checking if post is liked:', likeError);
+          } else {
+            isLiked = !!likeData && likeData.length > 0;
           }
         }
 
-        // Vérification si l'utilisateur a follow ce profil
+        // Vérification si l'utilisateur suit l'auteur du post
         let isFollowed = false;
-        if (userId) {
-          const { data: userFollow, error: userFollowError } = await supabase
+        if (userId && post.user_id !== userId) {
+          const { data: followData, error: followError } = await supabase
             .from('follows')
-            .select('*')
+            .select('*', { count: 'exact', head: true })
             .eq('follower_id', userId)
-            .eq('following_id', post.user_id)
-            .single();
-          if (!userFollowError) {
-            isFollowed = !!userFollow;
+            .eq('following_id', post.user_id);
+          
+          if (followError) {
+            console.error('Error checking if user is followed:', followError);
+          } else {
+            isFollowed = !!followData && followData.length > 0;
           }
         }
 
-        // On retire la propriété "profiles" en excès et on garde uniquement la première
-        const { profiles, ...postWithoutProfiles } = post;
+        // Extraction du profil
+        const profile = post.profiles;
 
-        const profileObj: Profile = Array.isArray(profiles) ? profiles[0] : profiles;
+        // Ensure profile is of type Profile
+        const profileData: Profile = Array.isArray(profile) ? profile[0] : profile;
+
+        // Extraction et transformation des médias
+        const media = post.media
+          .map(item => item.media)
+          .flat()
+          .filter(Boolean);
 
         return {
-          ...postWithoutProfiles, // id, created_at, updated_at, content, user_id, etc.
-          profile: profileObj,
-          // Ici, on précise que post.media est un tableau d'objets de forme { media: Media[] } 
-          media: ((post.media as { media: Media[] }[] | undefined)
-                    ?.reduce((acc: Media[], item) => acc.concat(item.media), [] as Media[])
-                  ) || [],
+          id: post.id,
+          content: post.content,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          user_id: post.user_id,
+          profile: profileData,
+          media,
           likes: likesCount || 0,
           is_liked: isLiked,
           is_followed: isFollowed
@@ -135,12 +279,17 @@ export async function getPosts(page: number = 1, limit: number = 5) {
       })
     );
 
-    return { posts: transformedPosts, pagination: { page, limit, total: totalPosts } };
+    return {
+      posts: transformedPosts,
+      total: totalPosts,
+      page,
+      limit
+    };
   } catch (error) {
     console.error('Error in getPosts:', error);
     return { error: 'An unexpected error occurred' };
   }
-} 
+}
 
 export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'video' | 'all' = 'all', page: number = 1, limit: number = 5) {
   const supabase = await createClient()

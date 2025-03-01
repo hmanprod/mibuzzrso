@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Share2, Pencil, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Share2, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
 import type { Media, Post, Profile } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -10,6 +10,7 @@ import CommentSection from './CommentSection';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { getCommentsByMediaId, togglePostLike } from '@/app/feed/actions/interaction';
+import { followUser } from '@/app/profile/actions/follower';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 import DeletePostDialog from './DeletePostDialog';
@@ -58,6 +59,7 @@ export default function FeedPost({ post }: FeedPostProps) {
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Define proper types for the refs
   interface MediaPlayerRef {
@@ -167,6 +169,56 @@ export default function FeedPost({ post }: FeedPostProps) {
   // Check if the current user is the author of the post
   const isAuthor = user?.id === post.user_id;
 
+  // Function to handle following a user
+  const handleFollow = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Vous devez être connecté pour suivre un utilisateur",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isFollowLoading) return;
+
+    // Optimistic update
+    setIsFollowLoading(true);
+    
+    // Create a shallow copy of the post object with updated is_followed value
+    post.is_followed = true;
+
+    try {
+      // Call the API in the background
+      const result = await followUser(user.id, post.user_id);
+
+      if (result.error) {
+        // If there's an error, revert the optimistic update
+        console.error("Error following user:", result.error);
+        post.is_followed = false;
+
+        // Show error toast
+        toast({
+          title: "Erreur",
+          description: result.error,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      // If there's an exception, revert the optimistic update
+      console.error("Error following user:", error);
+      post.is_followed = false;
+
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
   // Function to handle post deletion
   const handlePostDeleted = () => {
     toast({
@@ -197,7 +249,7 @@ export default function FeedPost({ post }: FeedPostProps) {
               <Avatar
                 src={post.profile.avatar_url}
                 stageName={post.profile.stage_name?.[0] || 'U'}
-                size={20}
+                size={40}
               />
             </Link>
           </div>
@@ -210,6 +262,31 @@ export default function FeedPost({ post }: FeedPostProps) {
                 <p className="text-sm text-gray-500">@{post.user_id}</p>
               </div>
             </Link>
+              {!isAuthor && (
+                <button
+                  className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
+                    post.is_followed
+                      ? 'bg-gray-100 text-gray-500 cursor-default' 
+                      : 'bg-gray-800 text-white hover:bg-[#E63F3F]'
+                  }`}
+                  onClick={() => !isFollowLoading && !post.is_followed && handleFollow()}
+                  disabled={isFollowLoading || post.is_followed}
+                >
+                  { post.is_followed ? (
+                    <>
+                      <Check className="w-3 h-3" />
+                      <span>Suivi</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3 h-3" />
+                      <span>Suivre</span>
+                    </>
+                  )}
+                </button>
+              )}
+              
+            
           </div>
         </div>
         {isAuthor && (

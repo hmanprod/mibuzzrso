@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { createClient } from '@/lib/supabase/server';
 import { SessionProvider } from '@/components/providers/SessionProvider';
+import { SearchProvider } from '@/components/providers/SearchProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthDebug } from '@/components/debug/AuthDebug';
 import { MediaControlProvider } from "@/components/providers/MediaControlProvider";
@@ -55,11 +56,13 @@ export default async function RootLayout({
     <html lang="fr">
       <body className={`${roboto.variable} font-sans antialiased bg-[#FAFAFA] min-h-screen`}>
         <SessionProvider initialUser={session?.user ?? null}>
-          <MediaControlProvider>
-            {children} {/* Contenu de l'application */}
-            <Toaster />
-            {process.env.NODE_ENV === 'development' && <AuthDebug />}
-          </MediaControlProvider>
+          <SearchProvider>
+            <MediaControlProvider>
+              {children} {/* Contenu de l'application */}
+              <Toaster />
+              {process.env.NODE_ENV === 'development' && <AuthDebug />}
+            </MediaControlProvider>
+          </SearchProvider>
         </SessionProvider>
       </body>
     </html>

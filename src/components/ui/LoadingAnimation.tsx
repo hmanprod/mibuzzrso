@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 
-interface LaudineAnimationProps {
+interface LoadingAnimationProps {
   className?: string;
 }
 
-export const LaudineAnimation = ({ className }: LaudineAnimationProps) => {
+export const LoadingAnimation = ({ className }: LoadingAnimationProps) => {
   return (
     <div className={cn('relative w-full h-full', className)}>
       <div className="laudine-animation">

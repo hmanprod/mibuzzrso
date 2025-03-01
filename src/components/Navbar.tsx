@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, MessageSquare, User, Settings, LogOut } from 'lucide-react';
+import { Bell, MessageSquare, User, Settings, LogOut, Search } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
 import { useSession } from '@/components/providers/SessionProvider';
+import SearchBar from '@/components/ui/SearchBar';
 
 interface NavbarProps {
   onOpenCreatePost?: () => void;
@@ -19,7 +20,6 @@ export default function Navbar({ className }: NavbarProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { profile } = useSession();
-
 
   const handleSignOut = async () => {
       router.push('/auth/logout');
@@ -74,19 +74,15 @@ export default function Navbar({ className }: NavbarProps) {
 
         {/* Zone centrale : Recherche */}
         <div className="flex-1 max-w-[400px] mx-8 hidden md:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
-            />
-          </div>
+          <SearchBar />
         </div>
 
         {/* Zone droite : Actions et profil */}
         <div className="flex items-center gap-6">
-          <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors md:hidden">
+          <button 
+            onClick={() => router.push('/search/mobile')}
+            className="text-[#666666] hover:text-[#2D2D2D] transition-colors md:hidden"
+          >
             <Search className="w-5 h-5 text-gray-400" />
           </button>
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">

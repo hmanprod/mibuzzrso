@@ -5,7 +5,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { getWaveformUrl } from '@/lib/cloudinary';
 import { Avatar } from '../ui/Avatar';
-import { LaudineAnimation } from '../ui/LaudineAnimation';
+import { LoadingAnimation } from '../ui/LoadingAnimation';
 import { formatTime } from '@/lib/utils';
 import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -227,7 +227,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
         >
           {isLoading ? (
             <div className="w-6 h-6">
-              <LaudineAnimation />
+              <LoadingAnimation />
             </div>
           ) : isPlaying ? (
             <Pause className="w-5 h-5 text-white" />
