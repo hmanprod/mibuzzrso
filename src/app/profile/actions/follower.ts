@@ -147,4 +147,67 @@ export async function isFollowing(followerId: string, followingId: string) {
   }
 }
 
+/**
+ * Get users that a specific user is following (with pagination)
+ */
+export async function getFollowedUsers(userId: string, page: number = 1, limit: number = 10) {
+  const supabase = await createClient()
+  const offset = (page - 1) * limit
 
+  try {
+    // Get the users that the specified user is following
+    const { data: follows, error, count } = await supabase
+      .from('follows')
+      .select('following_id', { count: 'exact' })
+      .eq('follower_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error getting followed users:', error)
+      return { error: 'Failed to get followed users' }
+    }
+
+    if (!follows || follows.length === 0) {
+      return { 
+        users: [], 
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          hasMore: false
+        }
+      }
+    }
+
+    // Get the profile details for each followed user
+    const followingIds = follows.map(follow => follow.following_id);
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, stage_name, avatar_url, bio, talents, musical_interests')
+      .in('id', followingIds);
+
+    if (profilesError) {
+      console.error('Error getting followed profiles:', profilesError)
+      return { error: 'Failed to get followed profiles' }
+    }
+
+    const profilesFinal = profiles.map(profile => ({
+      ...profile,
+      is_followed: true
+    }));
+
+    return { 
+      users: profilesFinal || [], 
+      pagination: {
+        total: count || 0,
+        page,
+        limit,
+        hasMore: count ? offset + limit < count : false
+      }
+    }
+  } catch (error) {
+    console.error('Error in getFollowedUsers:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}

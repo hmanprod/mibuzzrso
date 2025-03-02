@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Bell, MessageSquare, User, Settings, LogOut, Search } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Bell, User, LogOut, Search, ShieldCheck } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
@@ -19,6 +19,7 @@ export default function Navbar({ className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const { profile } = useSession();
 
   const handleSignOut = async () => {
@@ -59,13 +60,19 @@ export default function Navbar({ className }: NavbarProps) {
           <div className="hidden md:flex items-center gap-8">
             <Link 
               href="/feed"
-              className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2"
+              className={twMerge(
+                "text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2",
+                pathname === '/feed' && 'bg-gray-100'
+              )}
             >
               Fil d&apos;actualité
             </Link>
             <Link 
               href="/musics"
-              className="text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2"
+              className={twMerge(
+                "text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2",
+                pathname === '/musics' && 'bg-gray-100'
+              )}
             >
               Bibliothèque
             </Link>
@@ -88,9 +95,9 @@ export default function Navbar({ className }: NavbarProps) {
           <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <Bell className="w-6 h-6" />
           </button>
-          <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
+          {/* <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageSquare className="w-6 h-6" />
-          </button>
+          </button> */}
           {/* <button className="hidden md:flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-[18px] text-[14px] font-semibold transition-colors">
             <Plus className="w-5 h-5" />
             <span>Créer</span>
@@ -121,17 +128,19 @@ export default function Navbar({ className }: NavbarProps) {
                     <User className="w-4 h-4" />
                     <span>Mon profil</span>
                   </button>
-                  
+
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
-                      router.push('/settings');
+                      router.push('/account');
                     }}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
-                    <Settings className="w-4 h-4" />
-                    <span>Mes paramètres</span>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Mon compte</span>
                   </button>
+                  
+
 
                   <div className="h-[1px] bg-gray-100 my-1" />
 

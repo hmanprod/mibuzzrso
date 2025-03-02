@@ -4,11 +4,12 @@ import Image from 'next/image';
 interface AvatarProps {
   src?: string | null;
   stageName?: string | null;
+  fallback?: string;
   size?: number;
   className?: string;
 }
 
-export function Avatar({ src, stageName, size = 40, className }: AvatarProps) {
+export function Avatar({ src, stageName, fallback, size = 40, className }: AvatarProps) {
   if (src) {
     return (
       <Image
@@ -21,8 +22,8 @@ export function Avatar({ src, stageName, size = 40, className }: AvatarProps) {
     );
   }
 
-  // If no image, show first letter of stage name on black background
-  const initial = stageName ? stageName.charAt(0).toUpperCase() : '?';
+  // If no image, show fallback or first letter of stage name on black background
+  const initial = fallback || (stageName ? stageName.charAt(0).toUpperCase() : '?');
 
   return (
     <div
