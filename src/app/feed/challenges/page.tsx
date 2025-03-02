@@ -18,9 +18,9 @@ export default function Challenge() {
         <div className="flex pt-[72px]">
           <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
           
-          <div className="flex flex-1 ml-[274px]">
+          <div className="flex flex-1">
             <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0">
-              <div className="max-w-2xl mx-auto mt-20">
+              <div className="max-w-2xl mx-auto">
                 <div className="text-left space-y-8">
                   <div className="relative w-32 h-32">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform rotate-6 animate-pulse opacity-20"></div>

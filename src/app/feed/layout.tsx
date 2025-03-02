@@ -64,7 +64,7 @@ export default function SearchLayout({
             {children}
             </main>
             
-            <RightSidebar className="w-[350px] py-8" suggestedUsers={topUsers} />
+            <RightSidebar className="w-[350px]" suggestedUsers={topUsers} />
             
           </div>
         </div>

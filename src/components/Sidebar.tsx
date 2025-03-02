@@ -13,10 +13,10 @@ export default function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className={twMerge("bg-transparent backdrop-blur-sm p-6", className)}>
+    <aside className={twMerge("flex flex-col justify-between bg-transparent p-6", className)}>
       <nav className="space-y-2">
         <Link
-          href="/challenges"
+          href="/feed/challenges"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
             pathname === '/challenges' && 'bg-gray-100'
@@ -47,9 +47,9 @@ export default function Sidebar({ className }: SidebarProps) {
           <Users className="w-6 h-6" />
           <span className="font-medium">Abonnements</span>
         </Link>
+      </nav>
 
-        <div className="h-[1px] bg-gray-100 my-4" />
-
+      <nav>
         <Link
           href="/feedbacks"
           className={twMerge(
