@@ -1,4 +1,5 @@
 -- Create enum types
+CREATE TYPE post_type AS ENUM ('post', 'challenge', 'feedback');
 CREATE TYPE media_type AS ENUM ('audio', 'video');
 CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read', 'comment');
 
@@ -29,6 +30,7 @@ CREATE TABLE posts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
+    post_type post_type NOT NULL,
     content TEXT,
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE
 );
