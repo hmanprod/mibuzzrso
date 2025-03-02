@@ -35,7 +35,7 @@ export default function SearchBar({
         onSearch(inputValue);
       } else {
         // Default behavior: navigate to search page
-        router.push(`/search?q=${encodeURIComponent(inputValue)}`);
+        router.push(`/feed/search?q=${encodeURIComponent(inputValue)}`);
       }
     }
   };

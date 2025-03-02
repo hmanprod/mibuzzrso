@@ -1,18 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import type { Profile, Post, Media } from '@/types/database'
+import type { Profile, Media, ExtendedPost } from '@/types/database'
 
 interface PostMedia {
   media: Media
-}
-
-interface ExtendedPost extends Post {
-  profile: Profile
-  media: Media[]
-  likes: number
-  is_liked: boolean
-  is_followed: boolean
 }
 
 interface ExtendedProfile extends Profile {
@@ -138,7 +130,7 @@ export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'v
     // If filtering by media type, do it here
     if (mediaType !== 'all') {
       transformedPosts = transformedPosts.filter(post => 
-        post.media.some(media => media.media_type === mediaType)
+        post.medias.some(media => media.media_type === mediaType)
       );
     }
 

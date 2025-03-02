@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Camera, Music, Plus, Settings, Video, UserPlus, Check } from 'lucide-react';
-import { Media, Post, Profile as ProfileType } from '@/types/database';
+import { ExtendedPost, Profile as ProfileType } from '@/types/database';
 import { NotFound } from '../ui/not-found';
 import CreatePostBlock from '../feed/CreatePostBlock';
 import { getProfilePosts } from '@/app/feed/actions/post';
@@ -37,14 +37,6 @@ interface Tab {
     id: 'all' | 'audio' | 'video';
     label: string;
     icon?: React.ReactNode;
-}
-
-interface ExtendedPost extends Post {
-    profile: ProfileType;
-    media: Media[];
-    likes: number;
-    is_liked: boolean;
-    is_followed: boolean;
 }
   
 const tabs: Tab[] = [

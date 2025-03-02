@@ -1,16 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { getPosts } from '@/app/feed/actions/post';
-import type { Post, Media, Profile } from '@/types/database';
-
-interface ExtendedPost extends Post {
-  profile: Profile;
-  media: Media[];
-  likes: number;
-  is_liked: boolean;
-  is_followed: boolean;
-}
+import { searchPosts } from '@/app/feed/actions/post';
+import type { ExtendedPost } from '@/types/database';
 
 interface SearchContextType {
   searchTerm: string;
@@ -42,7 +34,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const result = await getPosts(1, 20, queryTerm);
+      const result = await searchPosts(1, 20, queryTerm);
       
       if (result.error) {
         setError(result.error);

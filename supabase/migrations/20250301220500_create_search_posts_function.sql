@@ -1,18 +1,16 @@
 -- Create a function to search posts across multiple tables
-CREATE OR REPLACE FUNCTION search_posts(search_term TEXT, page_num INTEGER DEFAULT 1, items_per_page INTEGER DEFAULT 10)
+CREATE OR REPLACE FUNCTION search_posts(search_term TEXT, page_num INTEGER DEFAULT 1, items_per_page INTEGER DEFAULT 10, current_user_id UUID DEFAULT NULL)
 RETURNS TABLE (
-    post_id UUID,
-    post_content TEXT,
-    post_created_at TIMESTAMPTZ,
-    post_updated_at TIMESTAMPTZ,
+    id UUID,
+    content TEXT,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ,
     user_id UUID,
-    profile_stage_name TEXT,
-    profile_avatar_url TEXT,
-    media_ids UUID[],
-    media_titles TEXT[],
-    media_urls TEXT[],
-    media_types TEXT[],
-    likes_count BIGINT,
+    profile JSONB,
+    medias JSONB[],
+    likes BIGINT,
+    is_liked BOOLEAN,
+    is_followed BOOLEAN,
     match_source TEXT
 ) AS $$
 BEGIN
@@ -79,29 +77,62 @@ BEGIN
     post_media AS (
         SELECT 
             pm.post_id,
-            ARRAY_AGG(m.id) AS media_ids,
-            ARRAY_AGG(m.title) AS media_titles,
-            ARRAY_AGG(m.media_url) AS media_urls,
-            ARRAY_AGG(m.media_type::TEXT) AS media_types
+            ARRAY_AGG(
+                jsonb_build_object(
+                    'id', m.id,
+                    'title', m.title,
+                    'media_url', m.media_url,
+                    'media_type', m.media_type,
+                    'duration', m.duration,
+                    'public_id', m.public_id,
+                    'created_at', m.created_at,
+                    'updated_at', m.updated_at
+                )
+            ) AS medias
         FROM posts_medias pm
         JOIN medias m ON pm.media_id = m.id
         GROUP BY pm.post_id
+    ),
+    
+    -- Check if current user has liked each post
+    user_likes AS (
+        SELECT 
+            i.post_id,
+            TRUE AS is_liked
+        FROM interactions i
+        WHERE 
+            i.type = 'like' 
+            AND i.post_id IS NOT NULL 
+            AND i.user_id = current_user_id
+    ),
+    
+    -- Check if current user follows the post author
+    user_follows AS (
+        SELECT 
+            pm.user_id AS following_id,
+            TRUE AS is_followed
+        FROM follows f
+        JOIN post_matches pm ON f.following_id = pm.user_id
+        WHERE 
+            f.follower_id = current_user_id
     )
     
     -- Final query combining all information
     SELECT 
-        post_matches_distinct.post_id,
-        post_matches_distinct.post_content,
-        post_matches_distinct.post_created_at,
-        post_matches_distinct.post_updated_at,
+        post_matches_distinct.post_id AS id,
+        post_matches_distinct.post_content AS content,
+        post_matches_distinct.post_created_at AS created_at,
+        post_matches_distinct.post_updated_at AS updated_at,
         post_matches_distinct.user_id,
-        pr.stage_name AS profile_stage_name,
-        pr.avatar_url AS profile_avatar_url,
-        COALESCE(pmed.media_ids, '{}'::UUID[]) AS media_ids,
-        COALESCE(pmed.media_titles, '{}'::TEXT[]) AS media_titles,
-        COALESCE(pmed.media_urls, '{}'::TEXT[]) AS media_urls,
-        COALESCE(pmed.media_types, '{}'::TEXT[]) AS media_types,
-        COALESCE(pl.likes_count, 0) AS likes_count,
+        jsonb_build_object(
+            'id', pr.id,
+            'stage_name', pr.stage_name,
+            'avatar_url', pr.avatar_url
+        ) AS profile,
+        COALESCE(pmed.medias, '{}'::JSONB[]) AS medias,
+        COALESCE(pl.likes_count, 0) AS likes,
+        COALESCE(ul.is_liked, FALSE) AS is_liked,
+        COALESCE(uf.is_followed, FALSE) AS is_followed,
         post_matches_distinct.match_source
     FROM (
         SELECT DISTINCT ON (post_matches.post_id) 
@@ -116,6 +147,8 @@ BEGIN
     JOIN profiles pr ON post_matches_distinct.user_id = pr.id
     LEFT JOIN post_likes pl ON post_matches_distinct.post_id = pl.post_id
     LEFT JOIN post_media pmed ON post_matches_distinct.post_id = pmed.post_id
+    LEFT JOIN user_likes ul ON post_matches_distinct.post_id = ul.post_id
+    LEFT JOIN user_follows uf ON post_matches_distinct.user_id = uf.following_id
     ORDER BY post_matches_distinct.post_created_at DESC
     LIMIT items_per_page
     OFFSET (page_num - 1) * items_per_page;
@@ -123,7 +156,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION search_posts(TEXT, INTEGER, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION search_posts(TEXT, INTEGER, INTEGER, UUID) TO authenticated;
 
 -- Comment on function
-COMMENT ON FUNCTION search_posts IS 'Searches for posts across post content, profile stage names, and media titles';
+COMMENT ON FUNCTION search_posts IS 'Searches for posts across post content, profile stage names, and media titles, returning data in the ExtendedPost format';

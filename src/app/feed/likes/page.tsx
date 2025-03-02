@@ -3,13 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import FeedPost from '@/components/feed/FeedPost';
 import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
-import CreatePostDialog from '@/components/feed/CreatePostDialog';
-import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import type { ExtendedPost } from '@/types/database';
-import { getPosts } from './actions/post';
+import { getLikedPosts } from '../actions/post';
 
-export default function Home() {
-  const [showCreatePost, setShowCreatePost] = useState(false);
+export default function Liked() {
   const [posts, setPosts] = useState<ExtendedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +25,7 @@ export default function Home() {
         setLoadingMore(true);
       }
 
-      const result = await getPosts(isInitial ? 1 : page);
+      const result = await getLikedPosts(isInitial ? 1 : page, 5);
       
       if (result.error) {
         throw new Error(result.error);
@@ -36,7 +33,6 @@ export default function Home() {
 
       const newPosts = result.posts || [];
       // console.log('✨ Posts loaded:', newPosts.length);
-      // console.log('✨ Posts loaded:', newPosts);
 
       if (isInitial) {
         setPosts(newPosts);
@@ -85,14 +81,9 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  const handleCreatePost = async () => {
-      await loadPosts();
-      setShowCreatePost(false);
-  };
-
   return (
     <>
-      <CreatePostBlock onOpen={() => setShowCreatePost(true)} />
+      <h1 className="text-2xl font-bold text-gray-800 mb-6 px-4 sm:px-0">Publications Aimees</h1>
       
       {error && (
         <div className="bg-red-50 text-red-500 p-4 rounded-lg mt-4">
@@ -124,11 +115,6 @@ export default function Home() {
           )}
         </>
       )}
-      <CreatePostDialog
-        open={showCreatePost}
-        onClose={() => setShowCreatePost(false)}
-        onSubmit={handleCreatePost}
-      />
     </>
   
   );

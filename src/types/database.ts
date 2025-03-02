@@ -23,12 +23,26 @@ export interface Post {
   user_id: string;
 }
 
+export interface ExtendedPost extends Post {
+  profile: ProfilePublic;
+  medias: Media[];
+  likes: number;
+  is_liked: boolean;
+  is_followed: boolean;
+}
+
 export interface PostMedia {
   id: string;
   created_at: string;
   post_id: string;
   media_id: string;
   position: number;
+}
+
+export interface ProfilePublic {
+  id: string;
+  stage_name: string | null;
+  avatar_url: string | null;
 }
 
 export interface Profile {

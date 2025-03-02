@@ -1,16 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { getPosts } from '@/app/feed/actions/post';
-import type { Post, Media, Profile } from '@/types/database';
-
-interface ExtendedPost extends Post {
-  profile: Profile;
-  media: Media[];
-  likes: number;
-  is_liked: boolean;
-  is_followed: boolean;
-}
+import { searchPosts as searchPostsAction } from '@/app/feed/actions/post';
+import type { ExtendedPost } from '@/types/database';
 
 interface SearchResult {
   posts: ExtendedPost[];
@@ -45,7 +37,7 @@ export function useSearchPosts(): UseSearchPostsReturn {
     setError(null);
 
     try {
-      const result = await getPosts(page, limit, term);
+      const result = await searchPostsAction(page, limit, term);
       
       if (result.error) {
         setError(result.error);

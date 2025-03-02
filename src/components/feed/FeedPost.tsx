@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Share2, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
-import type { Media, Post, Profile } from '@/types/database';
+import type { ExtendedPost } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
 import CommentSection from './CommentSection';
@@ -22,14 +22,6 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-
-interface ExtendedPost extends Post {
-  profile: Profile;
-  media: Media[];
-  likes: number;
-  is_liked: boolean;
-  is_followed: boolean;
-}
 
 interface FeedPostProps {
   post: ExtendedPost;
@@ -70,7 +62,10 @@ export default function FeedPost({ post }: FeedPostProps) {
   const videoPlayerRef = useRef<MediaPlayerRef>(null);
 
   // Get the first media item (for now we'll just handle single media)
-  const mediaItem = post.media[0];
+  const mediaItem = post.medias[0];
+
+  console.log('mediaItem',mediaItem);
+
 
   const handleLike = async () => {
     if (isLikeProcessing) return;
@@ -240,7 +235,7 @@ export default function FeedPost({ post }: FeedPostProps) {
   };
 
   return (
-    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-8">
+    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4">
       {/* Post header */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center space-x-3">
