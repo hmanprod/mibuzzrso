@@ -22,6 +22,7 @@ interface CreatePostData {
 export async function fetchPosts({
   page = 1,
   limit = 10,
+  postType = 'post',
   profileId = null,
   likedOnly = false,
   mediaType = null,
@@ -29,6 +30,7 @@ export async function fetchPosts({
 }: {
   page?: number;
   limit?: number;
+  postType?: 'post' | 'challenge' | 'feedback';
   profileId?: string | null;
   likedOnly?: boolean;
   mediaType?: 'audio' | 'video' | null;
@@ -46,6 +48,7 @@ export async function fetchPosts({
       .rpc('get_posts', {
         p_current_user_id: userId || null,
         p_profile_id: profileId,
+        p_post_type: postType,
         p_liked_only: likedOnly,
         p_media_type: mediaType,
         p_search_term: searchTerm,
@@ -112,15 +115,15 @@ export async function fetchPosts({
   }
 }
 
-export async function getPosts(page: number = 1, limit: number = 5) {
-  return fetchPosts({ page, limit });
+export async function getPosts(page: number = 1, limit: number = 5, postType: 'post' | 'challenge' | 'feedback' = 'post') {
+  return fetchPosts({ page, limit, postType });
 }
 
 export async function getProfilePosts(profileId: string, mediaType: 'audio' | 'video' | 'all' = 'all', page: number = 1, limit: number = 5) {
   const mediaTypeParam = mediaType === 'all' ? null : mediaType;
   const result = await fetchPosts({ 
     page, 
-    limit, 
+    limit,
     profileId, 
     mediaType: mediaTypeParam 
   });

@@ -2,6 +2,7 @@
 CREATE OR REPLACE FUNCTION get_posts(
     p_current_user_id UUID DEFAULT NULL,
     p_profile_id UUID DEFAULT NULL,
+    p_post_type TEXT DEFAULT NULL,
     p_liked_only BOOLEAN DEFAULT FALSE,
     p_media_type TEXT DEFAULT NULL,
     p_search_term TEXT DEFAULT NULL,
@@ -11,6 +12,7 @@ CREATE OR REPLACE FUNCTION get_posts(
 RETURNS TABLE (
     id UUID,
     content TEXT,
+    post_type TEXT,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
     user_id UUID,
@@ -65,6 +67,7 @@ BEGIN
         SELECT 
             p.id,
             p.content,
+            p.post_type::TEXT,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -122,6 +125,7 @@ BEGIN
         JOIN filtered_posts fp ON p.id = fp.post_id
         JOIN profiles pr ON p.user_id = pr.id
         JOIN posts_medias pm ON p.id = pm.post_id
+        WHERE (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
         GROUP BY p.id, pr.id, fp.match_source
         ORDER BY p.created_at DESC
         LIMIT p_limit
@@ -133,6 +137,7 @@ BEGIN
         SELECT 
             p.id,
             p.content,
+            p.post_type::TEXT,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -183,6 +188,7 @@ BEGIN
         JOIN posts_medias pm ON p.id = pm.post_id
         WHERE i.user_id = p_current_user_id
         AND i.type = 'like'
+        AND (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
         LIMIT p_limit
@@ -194,6 +200,7 @@ BEGIN
         SELECT 
             p.id,
             p.content,
+            p.post_type::TEXT,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -253,6 +260,7 @@ BEGIN
         JOIN posts_medias pm ON p.id = pm.post_id
         JOIN medias m ON pm.media_id = m.id
         WHERE p.user_id = p_profile_id
+        AND (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
         AND (p_media_type IS NULL OR m.media_type::TEXT = p_media_type)
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
@@ -265,6 +273,7 @@ BEGIN
         SELECT 
             p.id,
             p.content,
+            p.post_type::TEXT,
             p.created_at,
             p.updated_at,
             p.user_id,
@@ -321,6 +330,7 @@ BEGIN
         FROM posts p
         JOIN profiles pr ON p.user_id = pr.id
         JOIN posts_medias pm ON p.id = pm.post_id
+        WHERE p.post_type = p_post_type::post_type
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
         LIMIT p_limit
@@ -330,7 +340,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION get_posts(UUID, UUID, BOOLEAN, TEXT, TEXT, INTEGER, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_posts(UUID, UUID, TEXT, BOOLEAN, TEXT, TEXT, INTEGER, INTEGER) TO authenticated;
 
 -- Comment on function
 COMMENT ON FUNCTION get_posts IS 'Get posts with various filters: regular feed, profile posts, liked posts, or search results';
