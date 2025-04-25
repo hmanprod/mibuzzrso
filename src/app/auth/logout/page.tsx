@@ -11,20 +11,13 @@ export default function LogoutPage() {
   const router = useRouter();
   const { user } = useSession();
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
+  // Utiliser useEffect pour la redirection
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
-  if (!user) {
-    router.push('/auth/login');
-    return null;
-  }
+    if (!user) {
+      router.push('/auth/login');
+    }
+  }, [user, router]);
 
   const handleLogout = async () => {
     setIsLoading(true);
@@ -45,12 +38,17 @@ export default function LogoutPage() {
     }
   };
 
+  // Ne rien afficher si pas d'utilisateur
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Se déconnecter
+            Déconnexion
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Êtes-vous sûr de vouloir vous déconnecter ?
@@ -62,10 +60,14 @@ export default function LogoutPage() {
             disabled={isLoading}
             className="group relative w-full flex justify-center py-2 px-4"
           >
-            <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-              <LogOut className="h-5 w-5 text-white" aria-hidden="true" />
-            </span>
-            {isLoading ? 'Déconnexion...' : 'Se déconnecter'}
+            {isLoading ? (
+              'Déconnexion en cours...'
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Se déconnecter
+              </>
+            )}
           </Button>
         </div>
       </div>
