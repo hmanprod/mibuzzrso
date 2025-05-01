@@ -16,7 +16,7 @@ CREATE TABLE medias (
     media_public_id TEXT NOT NULL,
     duration DECIMAL(10, 2),  -- Duration in seconds for audio/video
     title TEXT,
-    description TEXT,
+    description TEXT
     media_cover_url TEXT,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     

@@ -1,5 +1,7 @@
 export type MediaType = 'audio' | 'video';
 export type InteractionType = 'like' | 'share' | 'save' | 'comment_like' | 'read';
+export type ChallengeType = 'remix' | 'live_mix';
+export type ChallengeStatus = 'draft' | 'active' | 'completed';
 
 export interface Media {
   id: string;
@@ -62,6 +64,7 @@ export interface Profile {
   cover_url: string | null;
   musical_interests: string[] | null;
   talents: string[] | null;
+  is_admin: boolean | null;
   social_links: {
     instagram?: string;
     facebook?: string;
@@ -81,4 +84,42 @@ export interface Comment {
   player_time?: number;
   user_id: string;
   media_id: string;
+}
+
+export interface MediaChallenge {
+  id: string;
+  url: string;
+  name: string;
+  media_type: MediaType;
+  size?: number;
+}
+
+export interface Challenge {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  description: string;
+  type: ChallengeType;
+  status: ChallengeStatus;
+  start_at: string;
+  end_at: string;
+  winning_prize?: string;
+  participants_count: number;
+  likes: number;
+  is_liked: boolean;
+  is_followed: boolean;
+  user_id: string;
+  creator?: {
+    id: string;
+    profile: ProfilePublic | null;
+  };
+  medias?: {
+    id: string;
+    challenge_id: string;
+    media_id: string;
+    position: number;
+    created_at: string;
+    media: Media;
+  }[];
 }

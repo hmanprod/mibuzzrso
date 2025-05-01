@@ -65,7 +65,6 @@ export default function Home() {
     loadPosts();
   }, [loadPosts]);
 
-  
 
   // Function to handle infinite scroll
   const handleScroll = useCallback(() => {

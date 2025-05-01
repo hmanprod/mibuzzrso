@@ -30,28 +30,15 @@ export function SessionProvider({
   children: React.ReactNode;
   initialUser: User | null;
 }) {
-
-//   console.log('🔄 Initial user:', initialUser);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(initialUser);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
 
-  // Effect to sync with initialUser
+  // Effet pour récupérer le profil si initialUser existe
   useEffect(() => {
-    setUser(initialUser);
-  }, [initialUser]);
-
-  // Effect to monitor user state changes
-  // useEffect(() => {
-  //   console.log('🔄 User state updated:', user);
-  // }, [user]);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-        // console.log('🔄 Fetching profile for user:', user);
-      if (!user) {
-        setProfile(null);
+    async function fetchProfile() {
+      if (!initialUser?.id) {
         setIsLoading(false);
         return;
       }
@@ -60,40 +47,33 @@ export function SessionProvider({
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', initialUser.id)
           .single();
-
-        setUser(user); //Weird Fix that works to get user
 
         if (error) {
           console.error('Error fetching profile:', error);
-          return;
+          setProfile(null);
+        } else {
+          setProfile(data);
         }
-
-        setProfile(data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error in fetchProfile:', error);
+        setProfile(null);
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
+    setUser(initialUser);
     fetchProfile();
-  }, [user, supabase]);
+  }, [initialUser, supabase]);
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
+  // Fonction pour mettre à jour le profil
   const updateProfile = async (profileData: Partial<Profile>) => {
     if (!user) throw new Error('User not authenticated');
-    setIsLoading(true);
-
+    
     try {
+      setIsLoading(true);
       const { error } = await supabase
         .from('profiles')
         .update(profileData)
@@ -101,15 +81,15 @@ export function SessionProvider({
 
       if (error) throw error;
 
-      // Fetch updated profile
-      const { data: updatedProfile, error: fetchError } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (fetchError) throw fetchError;
-      setProfile(updatedProfile);
+      if (data) {
+        setProfile(data);
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;

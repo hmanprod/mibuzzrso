@@ -1,76 +1,64 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Configuration des routes
-const ROUTES = {
-  public: [
-    '/auth/login',
-    '/auth/register',
-    '/auth/confirm',
-    '/testd',
-    '/'
-  ],
-  private: [
-    '/feed',
-    '/profile',
-    '/settings'
-  ],
-  // Routes auth sont spéciales car elles redirigent les utilisateurs connectés
-  auth: ['/auth']
-} as const
+// Routes qui ne nécessitent pas d'authentification
+const publicRoutes = ['/auth', '/testd', '/'];
+
+// Extensions de fichiers à exclure de la vérification d'authentification
+const publicFileExtensions = ['.mp3', '.wav', '.ogg', '.aac'];
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-  const { data: { session } } = await supabase.auth.getSession()
+  const res = NextResponse.next();
 
-  const pathname = req.nextUrl.pathname
+  try {
+    // Créer le client Supabase avec la gestion des cookies
+    const supabase = createMiddlewareClient({ req, res });
 
-  // Vérifie si c'est une route publique
-  const isPublicRoute = ROUTES.public.some(route => 
-    pathname.startsWith(route)
-  )
+    // Rafraîchir la session si nécessaire
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-  // Vérifie si c'est une route privée
-  const isPrivateRoute = ROUTES.private.some(route => 
-    pathname.startsWith(route)
-  )
+    const pathname = req.nextUrl.pathname;
 
-  // Vérifie si c'est une route d'authentification
-  const isAuthRoute = ROUTES.auth.some(route => 
-    pathname.startsWith(route)
-  )
+    // Vérifier si c'est un fichier audio
+    const isAudioFile = publicFileExtensions.some(ext => pathname.endsWith(ext));
+    if (isAudioFile) {
+      return res;
+    }
 
-  // Si c'est une route publique, on laisse passer
-  if (isPublicRoute) {
-    return res
+    // Vérifier si c'est une route publique
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+    if (isPublicRoute) {
+      return res;
+    }
+
+    // Si pas de session et pas sur une route publique, rediriger vers login
+    if (!session && !isPublicRoute) {
+      const redirectUrl = new URL('/auth/login', req.url);
+      redirectUrl.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Si erreur de session, rediriger vers login
+    if (error) {
+      console.error('Session error:', error);
+      const redirectUrl = new URL('/auth/login', req.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Important : Retourner la réponse avec les cookies mis à jour
+    return res;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    const redirectUrl = new URL('/auth/login', req.url);
+    return NextResponse.redirect(redirectUrl);
   }
-
-  // Redirection des utilisateurs non authentifiés vers login pour les routes privées
-  if (!session && isPrivateRoute) {
-    const redirectUrl = new URL('/auth/login', req.url)
-    redirectUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // Redirection des utilisateurs authentifiés hors des pages auth
-  if (session && isAuthRoute) {
-    return NextResponse.redirect(new URL('/feed', req.url))
-  }
-
-  // Pour toutes les autres routes non listées, on exige l'authentification par défaut
-  if (!session) {
-    const redirectUrl = new URL('/auth/login', req.url)
-    redirectUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  return res
 }
 
+// Configuration du matcher pour Next.js
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclure les fichiers statiques et médias
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
-}
+};
