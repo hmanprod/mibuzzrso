@@ -13,13 +13,13 @@ import { Button } from '@/components/ui/button';
 
 type ChallengeType = 'remix' | 'live_mix';
 
-interface FormData {
-  title: string;
-  description: string;
-  type: ChallengeType;
-  endAt: string;
-  winningPrize: string;
-}
+// interface FormData {
+//   title: string;
+//   description: string;
+//   type: ChallengeType;
+//   endAt: string;
+//   winningPrize: string;
+// }
 
 export default function ChallengePage() {
   const { profile, user } = useSession();
@@ -32,12 +32,12 @@ export default function ChallengePage() {
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{
-    url: string;
-    publicId: string;
-    mediaType: 'audio' | 'video';
-    duration?: number;
-  }>>([]);
+  // const [uploadedFiles, setUploadedFiles] = useState<Array<{
+  //   url: string;
+  //   publicId: string;
+  //   mediaType: 'audio' | 'video';
+  //   duration?: number;
+  // }>>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +50,7 @@ export default function ChallengePage() {
     winningPrize: ''
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
+  const { uploadToCloudinary,  progress } = useCloudinaryUpload();
 
   const loadChallenges = useCallback(async (isInitial: boolean = true) => {
     try {

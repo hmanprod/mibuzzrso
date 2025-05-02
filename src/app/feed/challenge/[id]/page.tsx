@@ -3,28 +3,66 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { Heart, MessageCircle, Share2, UserPlus, Check, Music2 } from 'lucide-react';
+import AudioPlayer from '@/components/feed/AudioPlayer';
+import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
 import { getChallenge, getChallengeMedias } from '../../actions/challenges';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import ChallengeAudioPlayer from '@/components/challenge/ChallengeAudioPlayer';
-import ChallengeVideoPlayer from '@/components/challenge/ChallengeVideoPlayer';
+
 
 interface MediaPlayerRef {
   seekToTime: (time: number) => void;
 }
 
+interface ChallengeMedia {
+  id: string;
+  position: number;
+  media: {
+    id: string;
+    media_type: 'audio' | 'video';
+    media_url: string;
+    media_cover_url?: string;
+    media_public_id: string;
+    duration?: number;
+    title?: string;
+    description?: string;
+    user_id: string;
+    created_at: string;
+    updated_at: string;
+  };
+  comments?: Array<{
+    id: string;
+    timestamp: number;
+    content: string;
+    author: {
+      id: string;
+      stage_name: string;
+      avatar_url: string | null;
+      username: string;
+    };
+  }>;
+}
+
 export default function ChallengePage() {
   const params = useParams();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [medias, setMedias] = useState<any[]>([]);
+  const [medias, setMedias] = useState<ChallengeMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
-  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  // Utilisé pour suivre la progression de la lecture
+  useEffect(() => {
+    if (currentPlaybackTime > 0) {
+      // On pourrait utiliser cette valeur pour synchroniser
+      // d'autres éléments de l'interface avec la progression
+      console.log('Playback time:', currentPlaybackTime);
+    }
+  }, [currentPlaybackTime]);
+  const [isFollowLoading] = useState(false);
 
   const audioPlayerRef = useRef<MediaPlayerRef>(null);
   const videoPlayerRef = useRef<MediaPlayerRef>(null);
@@ -50,8 +88,27 @@ export default function ChallengePage() {
 
         if (mediasResult.error) {
           console.error('Error loading medias:', mediasResult.error);
-        } else {
-          setMedias(mediasResult.medias || []);
+        } else if (mediasResult.medias) {
+          // S'assurer que les médias sont bien typés
+          const typedMedias: ChallengeMedia[] = mediasResult.medias.map(media => ({
+            id: media.id,
+            position: media.position,
+            media: {
+              id: media.media.id,
+              media_type: media.media.media_type as 'audio' | 'video',
+              media_url: media.media.media_url,
+              media_cover_url: media.media.media_cover_url,
+              media_public_id: media.media.media_public_id,
+              duration: media.media.duration,
+              title: media.media.title,
+              description: media.media.description,
+              user_id: media.media.user_id,
+              created_at: media.media.created_at,
+              updated_at: media.media.updated_at
+            },
+            comments: media.comments
+          }));
+          setMedias(typedMedias);
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -185,19 +242,19 @@ export default function ChallengePage() {
               mediaId: media.media.id,
               postId: challenge.id,
               comments: media.comments || [],
-              onTimeUpdate: setCurrentPlaybackTime,
+              onTimeUpdate: (time: number) => setCurrentPlaybackTime(time),
             };
             
             return (
               <div key={`${media.id}-${index}`}>
                 {isAudio ? (
-                  <ChallengeAudioPlayer
+                  <AudioPlayer
                     {...commonProps}
                     audioUrl={media.media.media_url}
                     ref={audioPlayerRef}
                   />
                 ) : (
-                  <ChallengeVideoPlayer
+                  <VideoPlayer
                     {...commonProps}
                     videoUrl={media.media.media_url}
                     ref={videoPlayerRef}

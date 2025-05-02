@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { Media } from '@/types/database';
 import { revalidatePath } from 'next/cache'
 
 export interface Challenge {
@@ -17,7 +18,7 @@ export interface Challenge {
   winning_prize?: string;
   visual_url?: string;
   youtube_iframe?: string;
-  medias: any[];
+  medias: Media[];
   created_at: string;
   updated_at: string;
 }
@@ -119,27 +120,127 @@ export async function getChallenge(id: string) {
   }
 }
 
-export async function getChallengeMedias(challengeId: string) {
+interface ChallengeMedia {
+  id: string;
+  position: number;
+  media: {
+    id: string;
+    media_type: 'audio' | 'video';
+    media_url: string;
+    media_cover_url?: string;
+    media_public_id: string;
+    duration?: number;
+    title?: string;
+    description?: string;
+    user_id: string;
+    created_at: string;
+    updated_at: string;
+  };
+  comments?: Array<{
+    id: string;
+    timestamp: number;
+    content: string;
+    author: {
+      id: string;
+      stage_name: string;
+      avatar_url: string | null;
+      username: string;
+    };
+  }>;
+}
+
+interface ChallengeMediasResponse {
+  medias?: ChallengeMedia[];
+  error?: string;
+  details?: {
+    code?: string;
+    message?: string;
+    hint?: string;
+  };
+}
+
+export async function getChallengeMedias(challengeId: string): Promise<ChallengeMediasResponse> {
   const supabase = await createClient();
   console.log('Fetching medias for challenge:', challengeId);
 
   try {
-    const { data: medias, error } = await supabase
+    const { data: rawMedias, error } = await supabase
       .from('challenges_medias')
       .select(`
         id,
         position,
-        media:medias(*)
+        media:medias!inner(
+          id,
+          media_type,
+          media_url,
+          media_cover_url,
+          media_public_id,
+          duration,
+          title,
+          description,
+          user_id,
+          created_at,
+          updated_at
+        ),
+        comments:media_comments(
+          id,
+          timestamp,
+          content,
+          author:profiles!inner(
+            id,
+            stage_name,
+            avatar_url,
+            username
+          )
+        )
       `)
       .eq('challenge_id', challengeId)
       .order('position');
+      
+    // Transformer les données pour avoir le bon format
+    const medias = rawMedias?.map(item => {
+      const mediaData = Array.isArray(item.media) ? item.media[0] : item.media;
+      const commentsData = item.comments?.map(comment => {
+        const authorData = Array.isArray(comment.author) ? comment.author[0] : comment.author;
+        return {
+          id: comment.id,
+          timestamp: comment.timestamp,
+          content: comment.content,
+          author: {
+            id: authorData.id,
+            stage_name: authorData.stage_name,
+            avatar_url: authorData.avatar_url,
+            username: authorData.username
+          }
+        };
+      });
+
+      return {
+        id: item.id,
+        position: item.position,
+        media: {
+          id: mediaData.id,
+          media_type: mediaData.media_type as 'audio' | 'video',
+          media_url: mediaData.media_url,
+          media_cover_url: mediaData.media_cover_url,
+          media_public_id: mediaData.media_public_id,
+          duration: mediaData.duration,
+          title: mediaData.title,
+          description: mediaData.description,
+          user_id: mediaData.user_id,
+          created_at: mediaData.created_at,
+          updated_at: mediaData.updated_at
+        },
+        comments: commentsData
+      };
+    }) as ChallengeMedia[];
 
     if (error) {
       console.error('Error fetching challenge medias:', error);
       return { error: 'Failed to load challenge medias', details: error };
     }
 
-    return { medias };
+    return { medias: medias as ChallengeMedia[] };
   } catch (error) {
     console.error('Error in getChallengeMedias:', error);
     return { error: 'An unexpected error occurred' };
