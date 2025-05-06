@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { getChallenges, Challenge } from "../actions/challenges";
 import { Users, Clock, ArrowRight, Music } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 function daysLeft(end_at: string) {
   const end = new Date(end_at);
@@ -54,9 +56,24 @@ export default function ChallengesPage() {
       </div>
 
       {/* Challenge List */}
-      {loading && <div>Loading...</div>}
+      {loading && (
+        <div className="space-y-4 mb-6">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="rounded-2xl overflow-hidden bg-gray-100 opacity-70">
+              <div className="p-8">
+                <Skeleton height={24} width={180} style={{ marginBottom: 8 }} />
+                <Skeleton height={16} width={260} style={{ marginBottom: 8 }} />
+                <Skeleton height={16} width={120} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {error && <div className="text-red-500">{error}</div>}
       <div className="space-y-6">
+        {!loading && challenges.length === 0 && (
+          <div className="text-center text-gray-500 py-12">Aucun challenge disponible</div>
+        )}
         {challenges.map((challenge) => (
           <div
             key={challenge.id}
