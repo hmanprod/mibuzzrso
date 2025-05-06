@@ -80,29 +80,60 @@ export default function ChallengesPage() {
             className="rounded-2xl shadow bg-white overflow-hidden border border-gray-100 flex flex-col"
           >
             {/* Top pastel icon section */}
-            <div className="relative flex flex-col items-center justify-center bg-orange-50 py-10">
+            <div
+              className="relative min-h-[140px] flex flex-col items-center justify-center"
+              style={challenge.visual_url ? {
+                backgroundImage: `url(${challenge.visual_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              } : { backgroundColor: '#FFF7ED' }}
+            >
               {/* Status badge */}
-              <span className="absolute left-4 top-4 bg-green-100 text-green-700 text-xs font-semibold rounded-lg px-3 py-1">
-                {challenge.status.charAt(0).toUpperCase() + challenge.status.slice(1)}
-              </span>
-              <Music size={48} strokeWidth={1.5} className="text-red-300" />
+              {(() => {
+                let label = '';
+                let badgeClass = '';
+                switch (challenge.status) {
+                  case 'completed':
+                    label = 'Terminé';
+                    badgeClass = 'bg-gray-200 text-gray-700';
+                    break;
+                  case 'active':
+                    label = 'En cours';
+                    badgeClass = 'bg-green-100 text-green-700';
+                    break;
+                  case 'draft':
+                    label = 'Brouillon';
+                    badgeClass = 'bg-yellow-100 text-yellow-700';
+                    break;
+                  default:
+                    label = challenge.status;
+                    badgeClass = 'bg-gray-100 text-gray-500';
+                }
+                return (
+                  <span className={`absolute left-4 top-4 text-xs font-semibold rounded-lg px-3 py-1 ${badgeClass}`}>
+                    {label}
+                  </span>
+                );
+              })()}
+              {!challenge.visual_url && <Music size={48} strokeWidth={1.5} className="text-red-300" />}
             </div>
             {/* Content section */}
             <div className="px-8 py-6 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
                     <span className="font-bold text-md">
                     {challenge.title}
                     </span>
-                    <p className="text-sm text-gray-500">{challenge.description}</p>
+                    <p className="mt-2 text-sm text-gray-500">{challenge.description_short}</p>
                 </div>
                 <button className="rounded-lg bg-gray-50 border border-gray-200 p-2 hover:bg-gray-100 transition" onClick={() => router.push(`/feed/challenge/${challenge.id}`)}>
                   <ArrowRight size={20} />
                 </button>
               </div>
-              <div className="text-gray-700 mb-2">
+              {/* <div className="text-gray-700 mb-2">
                 {challenge.description_short}
-              </div>
+              </div> */}
               <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
                 <div className="flex gap-6">
                   <span className="flex items-center gap-1">
