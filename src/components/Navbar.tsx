@@ -45,7 +45,7 @@ export default function Navbar({ className }: NavbarProps) {
 
   return (
     <nav className={twMerge("h-[60px] bg-white border-b border-[#EAEAEA]", className)}>
-      <div className="h-full mx-auto px-6 flex items-center justify-between">
+      <div className="h-full max-w-[1300px] mx-auto px-6 flex items-center justify-between">
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
           <Link href="/">
@@ -123,7 +123,7 @@ export default function Navbar({ className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/profile');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center  text-[15px] gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <User className="w-4 h-4" />
                     <span>Mon profil</span>
@@ -134,7 +134,7 @@ export default function Navbar({ className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/account');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center  text-[15px] gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Mon compte</span>
@@ -146,7 +146,7 @@ export default function Navbar({ className }: NavbarProps) {
 
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Déconnexion</span>

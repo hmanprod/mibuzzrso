@@ -95,7 +95,7 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
   return (
     <div className="bg-white rounded-[18px] p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium text-lg text-[#2D2D2D]">Suggestions à suivre</h3>
+        <h3 className="font-medium text-md text-[#2D2D2D]">Suggestions à suivre</h3>
       </div>
       <div className="space-y-4">
         {suggestedUsers.map(user => {
@@ -114,14 +114,14 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
                     height={30}
                   />
                 ) : (
-                  <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center bg-indigo-100 text-indigo-500">
+                  <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center bg-orange-100 text-red-500">
                     <span className="text-xs font-bold">
                       {(user.stage_name?.[0] || user.full_name?.[0] || '?').toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div>
-                  <Link href={`/profile/${user.user_id}`} className="font-medium text-base text-[#2D2D2D] hover:text-[#FA4D4D]">
+                  <Link href={`/profile/${user.user_id}`} className="font-medium text-sm text-[#2D2D2D] hover:text-[#FA4D4D]">
                     {user.stage_name || 'Anonymous User'}
                   </Link>
                   {/* <p className="text-sm text-[#666666]">

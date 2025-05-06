@@ -21,6 +21,12 @@ export interface Challenge {
   medias: Media[];
   created_at: string;
   updated_at: string;
+  user_id: string;
+  user?: {
+    id: string;
+    stage_name?: string;
+    avatar_url?: string;
+  };
 }
 
 export async function getChallenges(page: number = 1, limit: number = 5, status: 'active' | 'completed' | 'all' = 'active') {
@@ -29,7 +35,14 @@ export async function getChallenges(page: number = 1, limit: number = 5, status:
   try {
     let query = supabase
       .from('challenges')
-      .select('*')
+      .select(`
+        *,
+        user:profiles!user_id (
+          id,
+          stage_name,
+          avatar_url
+        )
+      `)
       .order('created_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
