@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Share2, UserPlus, Check, Music2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, UserPlus, Check } from 'lucide-react';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
@@ -413,10 +413,6 @@ export default function ChallengePage() {
       <div className="px-4 pb-4">
         <div className="flex items-center justify-between gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-2">
-            {/* <span className="flex items-center gap-1">
-              <Music2 className="w-4 h-4" />
-              {challenge.type.charAt(0).toUpperCase() + challenge.type.slice(1)}
-            </span> */}
             <span>{challenge.participants_count} participants</span>
             {challenge.winning_prize && (
               <span>Récompense: {challenge.winning_prize}</span>

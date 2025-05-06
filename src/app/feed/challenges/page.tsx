@@ -43,7 +43,7 @@ export default function ChallengesPage() {
         {['all', 'active', 'completed'].map(tab => (
             <button
             key={tab}
-            onClick={() => setStatus(tab as any)}
+            onClick={() => setStatus(tab as 'all' | 'active' | 'completed')}
             className={`px-4 py-1 text-sm rounded-xl font-semibold transition border-none focus:outline-none text-base min-w-[60px] h-9 flex items-center justify-center ${status === tab ? 'bg-white text-black shadow-sm' : 'bg-transparent text-gray-500'}`}
             style={{ boxShadow: status === tab ? '0 1px 4px 0 rgba(0,0,0,0.04)' : undefined }}
             >
