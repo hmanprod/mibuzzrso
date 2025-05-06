@@ -29,7 +29,7 @@ export interface Challenge {
   };
 }
 
-export async function getChallenges(page: number = 1, limit: number = 5, status: 'active' | 'completed' | 'all' = 'active') {
+export async function getChallenges(page: number = 1, limit: number = 5, status: 'active' | 'completed' | 'all' = 'all') {
   const supabase = await createClient();
 
   try {

@@ -12,6 +12,9 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import ParticipateModal from '@/components/feed/ParticipateModal';
+import { TimeAgo } from '@/components/ui/TimeAgo';
+import { useSession } from '@/components/providers/SessionProvider';
+
 
 
 interface MediaPlayerRef {
@@ -56,6 +59,7 @@ export default function ChallengePage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  const { profile } = useSession();
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
     if (currentPlaybackTime > 0) {
@@ -281,21 +285,57 @@ export default function ChallengePage() {
 
   return (
     <>
-    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden">
+    {/* Participate section */}
+    {challenge.status === 'active' ? (
+      <div className="bg-white rounded-[18px] p-4 space-y-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={profile?.avatar_url || null}
+            stageName={profile?.stage_name || profile?.email?.[0]}
+            size={40}
+            className="rounded-full"
+          />
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
+          >
+            Je veux participer au challenge
+          </button>
+        </div>
+      </div>
+    ) : challenge.status === 'completed' ? (
+      <div className="bg-white rounded-[18px] p-4 space-y-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={profile?.avatar_url || null}
+            stageName={profile?.stage_name || profile?.email?.[0]}
+            size={40}
+            className="rounded-full"
+          />
+          <button
+            disabled
+            className="flex-1 h-12 px-4 rounded-[18px] bg-gray-100 text-gray-400 text-left cursor-not-allowed"
+          >
+            Le challenge est terminé
+          </button>
+        </div>
+      </div>
+    ) : null}
+    <article className="bg-orange-50 rounded-[18px] shadow-sm overflow-hidden">
       {/* Challenge header */}
-      <div className="flex justify-between items-center p-4">
-        <div className="flex items-center space-x-3">
+      <div className="flex justify-between flex-1 items-center p-4">
+        <div className="flex items-center flex-1 space-x-3">
           <Avatar
             src={challenge.creator?.profile?.avatar_url || ''}
             stageName={(challenge.creator?.profile?.stage_name || 'C')[0]}
             size={40}
           />
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-[#2D2D2D]">
+          <div className="flex items-center flex-1 justify-between space-x-2">
+            <div className="flex flex-col items-start">
+              <h3 className="font-semibold text-sm text-[#2D2D2D]">
                 {challenge.creator?.profile?.stage_name || 'Challenge Creator'}
               </h3>
-              {/* <span className="text-sm text-gray-500">@{challenge.creator?.username || 'creator'}</span> */}
+              <TimeAgo date={challenge.created_at} defaultLanguage="fr" />
             </div>
             <button
               className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
@@ -320,15 +360,7 @@ export default function ChallengePage() {
             </button>
           </div>
         </div>
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          challenge.status === 'active'
-            ? 'bg-green-100 text-green-700'
-            : challenge.status === 'completed'
-            ? 'bg-gray-100 text-gray-700'
-            : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          {challenge.status}
-        </span>
+        
       </div>
 
       {/* Title and description */}
@@ -337,28 +369,11 @@ export default function ChallengePage() {
         <p className="mt-1 text-gray-600">{challenge.description}</p>
       </div>
 
-      {/* Participate section */}
-      {challenge.status === 'active' && (
-        <div className="px-4 pb-4">
-          <div className="flex items-center gap-3">
-            <Avatar
-              src={user?.user_metadata?.avatar_url || null}
-              stageName={user?.user_metadata?.stage_name || user?.email?.[0]}
-              size={40}
-              className="rounded-full"
-            />
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
-            >
-              Je veux participer
-            </button>
-          </div>
-        </div>
-      )}
+      
 
       {/* Media section */}
-   
+      <h3 className="text-md font-semibold text-[#2D2D2D] mx-4 border-b border-gray-200 py-2">Fichier à télecharger</h3>
+
       {/* Section média */}
       {medias.length > 0 && (
         <div className="mb-4 space-y-4">
@@ -378,12 +393,14 @@ export default function ChallengePage() {
                     {...commonProps}
                     audioUrl={media.media.media_url}
                     ref={audioPlayerRef}
+                    downloadable={true}
                   />
                 ) : (
                   <VideoPlayer
                     {...commonProps}
                     videoUrl={media.media.media_url}
                     ref={videoPlayerRef}
+                    downloadable={true}
                   />
                 )}
               </div>
@@ -394,16 +411,18 @@ export default function ChallengePage() {
 
       {/* Challenge info */}
       <div className="px-4 pb-4">
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span className="flex items-center gap-1">
-            <Music2 className="w-4 h-4" />
-            {challenge.type.charAt(0).toUpperCase() + challenge.type.slice(1)}
-          </span>
-          <span>{challenge.participants_count} participants</span>
-          {challenge.winning_prize && (
-            <span>Prize: {challenge.winning_prize}</span>
-          )}
-          <span>Ends {new Date(challenge.end_at).toLocaleDateString()}</span>
+        <div className="flex items-center justify-between gap-4 text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            {/* <span className="flex items-center gap-1">
+              <Music2 className="w-4 h-4" />
+              {challenge.type.charAt(0).toUpperCase() + challenge.type.slice(1)}
+            </span> */}
+            <span>{challenge.participants_count} participants</span>
+            {challenge.winning_prize && (
+              <span>Récompense: {challenge.winning_prize}</span>
+            )}
+          </div>
+          <span className="text-red-500">Date de fin: <b>{new Date(challenge.end_at).toLocaleDateString()}</b></span>
         </div>
       </div>
 

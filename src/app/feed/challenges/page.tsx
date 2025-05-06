@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { getChallenges, Challenge } from "../actions/challenges";
-import { Avatar } from "@/components/ui/Avatar";
-import { User, Users, Clock, ArrowRight, Music } from "lucide-react";
+import { Users, Clock, ArrowRight, Music } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 function daysLeft(end_at: string) {
   const end = new Date(end_at);
   const now = new Date();
   const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  return diff > 0 ? `${diff} days left` : "Ended";
+  return diff > 0 ? `${diff} days left` : "Terminé";
 }
 
 export default function ChallengesPage() {
@@ -17,6 +17,7 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
@@ -35,11 +36,10 @@ export default function ChallengesPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
 
-      <div className="flex justify-between items-center gap-2">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 px-4 sm:px-0">Challenges</h1>
-
+      <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[36px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
+      <div className="flex justify-end items-center gap-2">
         {/* Tabs */}
-        <div className="flex gap-0 mb-8 bg-gray-100 rounded-2xl p-1 w-fit">
+        <div className="flex gap-0 mb-4 bg-gray-100 rounded-2xl p-1 w-fit">
         {['all', 'active', 'completed'].map(tab => (
             <button
             key={tab}
@@ -47,7 +47,7 @@ export default function ChallengesPage() {
             className={`px-4 py-1 text-sm rounded-xl font-semibold transition border-none focus:outline-none text-base min-w-[60px] h-9 flex items-center justify-center ${status === tab ? 'bg-white text-black shadow-sm' : 'bg-transparent text-gray-500'}`}
             style={{ boxShadow: status === tab ? '0 1px 4px 0 rgba(0,0,0,0.04)' : undefined }}
             >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'all' ? 'Tous' : tab === 'active' ? 'En cours' : tab === 'completed' ? 'Terminé' : tab}
             </button>
         ))}
         </div>
@@ -79,7 +79,7 @@ export default function ChallengesPage() {
                     </span>
                     <p className="text-sm text-gray-500">{challenge.description}</p>
                 </div>
-                <button className="rounded-lg bg-gray-50 border border-gray-200 p-2 hover:bg-gray-100 transition">
+                <button className="rounded-lg bg-gray-50 border border-gray-200 p-2 hover:bg-gray-100 transition" onClick={() => router.push(`/feed/challenge/${challenge.id}`)}>
                   <ArrowRight size={20} />
                 </button>
               </div>
@@ -96,8 +96,15 @@ export default function ChallengesPage() {
                   </span>
                 </div>
                 <span className="flex items-center gap-2">
-                  <Avatar src={challenge.user?.avatar_url || undefined} stageName={challenge.user?.stage_name || undefined} size={28} />
-                  <span>by {challenge.user?.stage_name || 'Unknown'}</span>
+                  {/* <Avatar src={challenge.user?.avatar_url || undefined} stageName={challenge.user?.stage_name || undefined} size={28} /> */}
+                  <span>Publié par {challenge.user?.id ? (
+                    <a
+                      href={`/profile/${challenge.user.id}`}
+                      className="text-primary hover:underline"
+                    >
+                      {challenge.user?.stage_name || 'Unknown'}
+                    </a>
+                  ) : 'Unknown'}</span>
                 </span>
               </div>
             </div>
