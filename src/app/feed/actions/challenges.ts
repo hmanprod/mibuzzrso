@@ -181,17 +181,6 @@ export async function getChallengeMedias(challengeId: string): Promise<Challenge
           user_id,
           created_at,
           updated_at
-        ),
-        comments:media_comments(
-          id,
-          timestamp,
-          content,
-          author:profiles!inner(
-            id,
-            stage_name,
-            avatar_url,
-            username
-          )
         )
       `)
       .eq('challenge_id', challengeId)
@@ -200,20 +189,7 @@ export async function getChallengeMedias(challengeId: string): Promise<Challenge
     // Transformer les données pour avoir le bon format
     const medias = rawMedias?.map(item => {
       const mediaData = Array.isArray(item.media) ? item.media[0] : item.media;
-      const commentsData = item.comments?.map(comment => {
-        const authorData = Array.isArray(comment.author) ? comment.author[0] : comment.author;
-        return {
-          id: comment.id,
-          timestamp: comment.timestamp,
-          content: comment.content,
-          author: {
-            id: authorData.id,
-            stage_name: authorData.stage_name,
-            avatar_url: authorData.avatar_url,
-            username: authorData.username
-          }
-        };
-      });
+
 
       return {
         id: item.id,
@@ -231,7 +207,7 @@ export async function getChallengeMedias(challengeId: string): Promise<Challenge
           created_at: mediaData.created_at,
           updated_at: mediaData.updated_at
         },
-        comments: commentsData
+        comments: []
       };
     }) as ChallengeMedia[];
 
@@ -359,15 +335,24 @@ export async function createChallenge(input: CreateChallengeInput) {
   }
 }
 
-export async function participateInChallenge(challengeId: string, userId: string) {
+interface ParticipationSubmission {
+  challengeId: string;
+  userId: string;
+  mediaUrl: string;
+  mediaPublicId: string;
+  mediaType: 'audio' | 'video';
+  duration?: number;
+}
+
+export async function participateInChallenge(submission: ParticipationSubmission) {
   const supabase = await createClient();
 
   try {
-    // Verify challenge is active
+    // 1. Verify challenge is active
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
       .select('status')
-      .eq('id', challengeId)
+      .eq('id', submission.challengeId)
       .single();
 
     if (challengeError) {
@@ -378,29 +363,53 @@ export async function participateInChallenge(challengeId: string, userId: string
       return { error: 'This challenge is not active' };
     }
 
-    // Create participation record
+    // 2. Create media record
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('medias')
+      .insert({
+        media_type: submission.mediaType,
+        media_url: submission.mediaUrl,
+        media_public_id: submission.mediaPublicId,
+        duration: submission.duration,
+        user_id: submission.userId
+      })
+      .select()
+      .single();
+
+    if (mediaError) {
+      throw mediaError;
+    }
+
+    // 3. Create participation record with media
     const { error: participationError } = await supabase
       .from('challenge_participations')
       .insert({
-        challenge_id: challengeId,
-        user_id: userId
+        challenge_id: submission.challengeId,
+        user_id: submission.userId,
+        audio_url: submission.mediaUrl // Pour la compatibilité avec le schéma existant
       });
 
     if (participationError) {
       throw participationError;
     }
 
-    // Increment participants count
-    const { error: updateError } = await supabase.rpc('increment_challenge_participants', {
-      p_challenge_id: challengeId
-    });
+    // 4. Link media to challenge
+    const { error: linkError } = await supabase
+      .from('challenges_medias')
+      .insert({
+        challenge_id: submission.challengeId,
+        media_id: mediaData.id,
+        position: 0 // Position par défaut pour les participations
+      });
 
-    if (updateError) {
-      throw updateError;
+    if (linkError) {
+      throw linkError;
     }
 
+    // 5. Increment participants count (géré par le trigger)
+
     revalidatePath('/feed/challenges');
-    return { success: true };
+    return { success: true, mediaId: mediaData.id };
   } catch (error) {
     console.error('Error participating in challenge:', error);
     return { error: 'Failed to participate in challenge' };

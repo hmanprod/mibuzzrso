@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Heart, MessageCircle, Share2, UserPlus, Check, Music2 } from 'lucide-react';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
-import { getChallenge, getChallengeMedias } from '../../actions/challenges';
+import { getChallenge, getChallengeMedias, participateInChallenge } from '../../actions/challenges';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import ParticipateModal from '@/components/feed/ParticipateModal';
 
 
 interface MediaPlayerRef {
@@ -63,9 +65,17 @@ export default function ChallengePage() {
     }
   }, [currentPlaybackTime]);
   const [isFollowLoading] = useState(false);
+  // const [isUploading, setIsUploading] = useState(false);
+  // const [isParticipating, setIsParticipating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
   const audioPlayerRef = useRef<MediaPlayerRef>(null);
   const videoPlayerRef = useRef<MediaPlayerRef>(null);
+
+  console.log("the user is ", user);
+  
 
   useEffect(() => {
     const loadData = async () => {
@@ -129,6 +139,103 @@ export default function ChallengePage() {
     });
   };
 
+  const handleParticipate = async (file: File, setProgress: (progress: number) => void) => {
+    if (!user?.id) {
+      toast({
+        title: 'Erreur',
+        description: 'Vous devez être connecté pour participer',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // setIsUploading(true);
+
+      // 1. Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'ml_default');
+
+      // Créer un XMLHttpRequest pour suivre la progression
+      const xhr = new XMLHttpRequest();
+      const uploadPromise = new Promise<{
+        secure_url: string;
+        public_id: string;
+      }>((resolve, reject) => {
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`);
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            setProgress(progress);
+          }
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(JSON.parse(xhr.response));
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.send(formData);
+      });
+
+      const uploadData = await uploadPromise;
+
+      console.log('Cloudinary upload successful:', uploadData);
+
+      // 2. Get file duration if it's an audio file
+      let duration;
+      if (file.type.startsWith('audio/')) {
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        await new Promise((resolve) => {
+          audio.addEventListener('loadedmetadata', () => {
+            duration = audio.duration;
+            resolve(null);
+          });
+        });
+      }
+
+      // 3. Save participation in database
+      const result = await participateInChallenge({
+        challengeId: params.id as string,
+        userId: user.id,
+        mediaUrl: uploadData.secure_url,
+        mediaPublicId: uploadData.public_id,
+        mediaType: file.type.startsWith('audio/') ? 'audio' : 'video',
+        duration: duration,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: 'Succès !',
+        description: 'Votre participation a été enregistrée',
+      });
+
+      // 4. Close modal and refresh page
+      setIsModalOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error('Error participating:', error);
+      toast({
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue lors de la participation',
+        variant: 'destructive',
+      });
+     }
+    //  finally {
+    //   setIsUploading(false);
+    // }
+  };
+
   const handleShare = () => {
     toast({
       title: "Coming soon",
@@ -172,9 +279,8 @@ export default function ChallengePage() {
     );
   }
 
-  console.log('challenge tes', challenge.medias);
-
   return (
+    <>
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden">
       {/* Challenge header */}
       <div className="flex justify-between items-center p-4">
@@ -230,6 +336,26 @@ export default function ChallengePage() {
         <h2 className="text-lg font-semibold text-[#2D2D2D]">{challenge.title}</h2>
         <p className="mt-1 text-gray-600">{challenge.description}</p>
       </div>
+
+      {/* Participate section */}
+      {challenge.status === 'active' && (
+        <div className="px-4 pb-4">
+          <div className="flex items-center gap-3">
+            <Avatar
+              src={user?.user_metadata?.avatar_url || null}
+              stageName={user?.user_metadata?.stage_name || user?.email?.[0]}
+              size={40}
+              className="rounded-full"
+            />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
+            >
+              Je veux participer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Media section */}
    
@@ -309,14 +435,16 @@ export default function ChallengePage() {
         </button>
       </div>
 
-      {/* Participate button */}
-      {challenge.status === 'active' && (
-        <div className="p-4 border-t border-gray-100">
-          <button className="w-full bg-red-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-red-600 transition-colors">
-            Participate in Challenge
-          </button>
-        </div>
-      )}
+
     </article>
+
+    {/* Modal de participation */}
+    <ParticipateModal
+      open={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onParticipate={handleParticipate}
+      challengeTitle={challenge?.title || ''}
+    />
+    </>
   );
 }

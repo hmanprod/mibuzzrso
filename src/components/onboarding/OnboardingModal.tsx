@@ -3,12 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Profile } from '@/types/database';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -20,6 +14,7 @@ import {
   INDIAN_OCEAN_COUNTRIES, 
   ALL_COUNTRIES 
 } from '@/constants/options';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export function OnboardingModal() {
   const { profile, updateProfile, isLoading: sessionLoading } = useSession();
@@ -64,9 +59,7 @@ export function OnboardingModal() {
   return (
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogContent
-        className="sm:max-w-[425px]"
-        showClose={false}
-        closeOnOverlayClick={false}
+        className="sm:max-w-[425px] relative"
       >
         <DialogHeader>
           <DialogTitle>Compléter votre profil</DialogTitle>
