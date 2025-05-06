@@ -83,7 +83,7 @@ export default function Liked() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 px-4 sm:px-0">Publications Aimees</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-8 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Retrouvez ici toutes les publications que vous avez aimées <span role="img" aria-label="heart">❤️</span></h1>
       
       {error && (
         <div className="bg-red-50 text-red-500 p-4 rounded-lg mt-4">

@@ -38,7 +38,7 @@ export default function ChallengesPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
 
-      <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[36px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
       <div className="flex justify-end items-center gap-2">
         {/* Tabs */}
         <div className="flex gap-0 mb-4 bg-gray-100 rounded-2xl p-1 w-fit">

@@ -148,9 +148,9 @@ export default function FollowedPage() {
             
             <div className="flex flex-1 ml-[274px]">
               <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0">
-                <div className="max-w-2xl mx-auto mt-8">
-                  <div className="flex items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Utilisateurs suivis</h1>
+                <div className="max-w-2xl mx-auto mt-2">
+                  <div className="flex items-center mb-2">
+                    <h1 className="text-2xl font-bold text-gray-800 mb-8 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Suivez l’actualité de vos créateurs préférés <span role="img" aria-label="sparkles">✨</span></h1>
                   </div>
 
                   {loading && followedUsers.length === 0 ? (
@@ -164,7 +164,7 @@ export default function FollowedPage() {
                       {error}
                     </div>
                   ) : followedUsers.length === 0 ? (
-                    <div className="text-center py-12 space-y-4">
+                    <div className="text-center space-y-4">
                       <div className="relative w-24 h-24 mx-auto">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform rotate-6 animate-pulse opacity-20"></div>
                         <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform -rotate-6 animate-pulse opacity-20 animation-delay-200"></div>

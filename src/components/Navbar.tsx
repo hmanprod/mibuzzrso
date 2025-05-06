@@ -92,9 +92,9 @@ export default function Navbar({ className }: NavbarProps) {
           >
             <Search className="w-5 h-5 text-gray-400" />
           </button>
-          <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
+          {/* <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <Bell className="w-6 h-6" />
-          </button>
+          </button> */}
           {/* <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageSquare className="w-6 h-6" />
           </button> */}
