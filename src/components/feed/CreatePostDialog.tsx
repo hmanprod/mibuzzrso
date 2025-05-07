@@ -13,9 +13,10 @@ interface CreatePostDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit?: () => void;
+  postType?: 'post' | 'feedback';
 }
 
-export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePostDialogProps) {
+export default function CreatePostDialog({ open, onClose, onSubmit, postType = 'post' }: CreatePostDialogProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('audio');
   const [postText, setPostText] = useState('');
   const [title, setTitle] = useState('');
@@ -89,6 +90,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit }: CreatePost
 
       // Use the server action to handle database operations
       const result = await createPostWithMedia({
+        type: postType,
         mediaType: activeTab,
         mediaUrl: mediaUpload.url,
         mediaPublicId: mediaUpload.publicId,

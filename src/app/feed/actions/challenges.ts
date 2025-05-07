@@ -348,15 +348,31 @@ export async function participateInChallenge(submission: ParticipationSubmission
   const supabase = await createClient();
 
   try {
-    // 1. Verify challenge is active
-    const { data: challenge, error: challengeError } = await supabase
-      .from('challenges')
-      .select('status')
-      .eq('id', submission.challengeId)
-      .single();
+    // 1. Verify challenge is active and user hasn't participated yet
+    const [{ data: challenge, error: challengeError }, { data: existingParticipation, error: participationError }] = await Promise.all([
+      supabase
+        .from('challenges')
+        .select('status')
+        .eq('id', submission.challengeId)
+        .single(),
+      supabase
+        .from('challenge_participations')
+        .select('id')
+        .eq('challenge_id', submission.challengeId)
+        .eq('user_id', submission.userId)
+        .maybeSingle()
+    ]);
 
     if (challengeError) {
       throw challengeError;
+    }
+
+    if (participationError) {
+      throw participationError;
+    }
+
+    if (existingParticipation) {
+      return { error: 'You have already participated in this challenge' };
     }
 
     if (challenge.status !== 'active') {
@@ -381,7 +397,7 @@ export async function participateInChallenge(submission: ParticipationSubmission
     }
 
     // 3. Create participation record with media
-    const { error: participationError } = await supabase
+    const { error: insertParticipationError } = await supabase
       .from('challenge_participations')
       .insert({
         challenge_id: submission.challengeId,
@@ -389,17 +405,31 @@ export async function participateInChallenge(submission: ParticipationSubmission
         audio_url: submission.mediaUrl // Pour la compatibilité avec le schéma existant
       });
 
-    if (participationError) {
-      throw participationError;
+    if (insertParticipationError) {
+      throw insertParticipationError;
     }
 
-    // 4. Link media to challenge
+    // 4. Get the last position
+    const { data: lastPosition, error: positionError } = await supabase
+      .from('challenges_medias')
+      .select('position')
+      .eq('challenge_id', submission.challengeId)
+      .order('position', { ascending: false })
+      .limit(1);
+
+    if (positionError) {
+      throw positionError;
+    }
+
+    // 5. Link media to challenge with next position
+    const nextPosition = lastPosition && lastPosition.length > 0 ? lastPosition[0].position + 1 : 0;
+    
     const { error: linkError } = await supabase
       .from('challenges_medias')
       .insert({
         challenge_id: submission.challengeId,
         media_id: mediaData.id,
-        position: 0 // Position par défaut pour les participations
+        position: nextPosition
       });
 
     if (linkError) {

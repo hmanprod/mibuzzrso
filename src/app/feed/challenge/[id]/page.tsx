@@ -10,7 +10,8 @@ import { getChallenge, getChallengeMedias, participateInChallenge } from '../../
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/providers/SessionProvider';
+import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import ParticipateModal from '@/components/feed/ParticipateModal';
 
 
@@ -68,7 +69,7 @@ export default function ChallengePage() {
   // const [isUploading, setIsUploading] = useState(false);
   // const [isParticipating, setIsParticipating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, profile } = useSession();
   const router = useRouter();
 
   const audioPlayerRef = useRef<MediaPlayerRef>(null);
@@ -139,7 +140,9 @@ export default function ChallengePage() {
     });
   };
 
-  const handleParticipate = async (file: File, setProgress: (progress: number) => void) => {
+  const { uploadToCloudinary } = useCloudinaryUpload();
+
+  const handleParticipate = async (file: File) => {
     if (!user?.id) {
       toast({
         title: 'Erreur',
@@ -153,38 +156,8 @@ export default function ChallengePage() {
       // setIsUploading(true);
 
       // 1. Upload to Cloudinary
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'ml_default');
-
-      // Créer un XMLHttpRequest pour suivre la progression
-      const xhr = new XMLHttpRequest();
-      const uploadPromise = new Promise<{
-        secure_url: string;
-        public_id: string;
-      }>((resolve, reject) => {
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`);
-        
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            setProgress(progress);
-          }
-        };
-        
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            resolve(JSON.parse(xhr.response));
-          } else {
-            reject(new Error('Upload failed'));
-          }
-        };
-        
-        xhr.onerror = () => reject(new Error('Upload failed'));
-        xhr.send(formData);
-      });
-
-      const uploadData = await uploadPromise;
+      const mediaType = file.type.startsWith('audio/') ? 'audio' : 'video';
+      const uploadData = await uploadToCloudinary(file, mediaType);
 
       console.log('Cloudinary upload successful:', uploadData);
 
@@ -205,8 +178,8 @@ export default function ChallengePage() {
       const result = await participateInChallenge({
         challengeId: params.id as string,
         userId: user.id,
-        mediaUrl: uploadData.secure_url,
-        mediaPublicId: uploadData.public_id,
+        mediaUrl: uploadData.url,
+        mediaPublicId: uploadData.publicId,
         mediaType: file.type.startsWith('audio/') ? 'audio' : 'video',
         duration: duration,
       });
@@ -342,8 +315,8 @@ export default function ChallengePage() {
         <div className="px-4 pb-4">
           <div className="flex items-center gap-3">
             <Avatar
-              src={user?.user_metadata?.avatar_url || null}
-              stageName={user?.user_metadata?.stage_name || user?.email?.[0]}
+              src={profile?.avatar_url || null}
+              stageName={profile?.stage_name || user?.email?.[0]}
               size={40}
               className="rounded-full"
             />

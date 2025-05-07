@@ -1,14 +1,61 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { CreateFeedbackDialog, FeedbackCard } from '@/components/feedback';
+import { getFeedbacks } from './actions/feedback';
+import { Feedback } from '@/types/feedback';
 
 
-export default function Creator() {
-  const router = useRouter();
+
+export default function FeedbacksPage() {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadFeedbacks = async (pageNum: number = 1) => {
+    try {
+      const result = await getFeedbacks(pageNum);
+      
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (result.posts) {
+        if (pageNum === 1) {
+          setFeedbacks(result.posts);
+        } else {
+          setFeedbacks(prev => [...prev, ...result.posts]);
+        }
+        setHasMore(result.posts.length === result.limit);
+      }
+    } catch (err) {
+      setError('Failed to load feedbacks');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFeedbacks();
+  }, []);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadFeedbacks(nextPage);
+    }
+  };
 
   return (
     <AuthGuard>
@@ -19,85 +66,80 @@ export default function Creator() {
           <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
           
           <div className="flex flex-1 ml-[274px]">
-            <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0">
-              <div className="max-w-2xl mx-auto mt-20">
-                <div className="text-left space-y-8">
-                  <div className="relative w-32 h-32">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform rotate-6 animate-pulse opacity-20"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform -rotate-6 animate-pulse opacity-20 animation-delay-200"></div>
-                    <div className="relative bg-gradient-to-br from-primary to-red-700 rounded-3xl w-full h-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-                    <svg
-                      className="w-16 h-16 text-white"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M9 2L15 2L20 9L20 14C20 15.1046 19.1046 16 18 16L6 16C4.89543 16 4 15.1046 4 14L4 9L9 2Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <line
-                        x1="8"
-                        y1="16"
-                        x2="8"
-                        y2="18"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <line
-                        x1="16"
-                        y1="16"
-                        x2="16"
-                        y2="18"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <line
-                        x1="12"
-                        y1="18"
-                        x2="12"
-                        y2="22"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <p className="text-sm font-medium text-red-600 tracking-wide">— Bientôt disponible</p>
-                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 leading-[45px]">
-                    Bientôt vous pourrez partager<br/>vos idées
-                    </h1>
-                    <p className="text-xl text-gray-600">
-                    Ensemble, nous allons faire de la musique
-                    </p>
-                  </div>
-
-                  <div className="pt-4">
-                    <button
-                      onClick={() => router.back()}
-                      className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
-                    >
-                      <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Retour</span>
-                    </button>
-                  </div>
-                </div>
+            <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0 max-w-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Feedback & Idées</h1>
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Partager une idée
+                </Button>
               </div>
+
+              {loading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white rounded-[18px] shadow-sm p-4 animate-pulse">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
+                          <div className="h-3 bg-gray-200 rounded w-1/6" />
+                        </div>
+                      </div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
+                      <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="bg-red-50 text-red-500 p-4 rounded-lg">
+                  {error}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {feedbacks.map((feedback) => (
+                    <FeedbackCard
+                      key={feedback.id}
+                      feedback={feedback}
+                      onDelete={() => loadFeedbacks()}
+                    />
+                  ))}
+                  
+                  {hasMore && (
+                    <div className="text-center py-4">
+                      <Button
+                        variant="outline"
+                        onClick={handleLoadMore}
+                        disabled={loading}
+                      >
+                        {loading ? 'Chargement...' : 'Voir plus'}
+                      </Button>
+                    </div>
+                  )}
+
+                  {!hasMore && feedbacks.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      Aucun feedback pour le moment
+                    </div>
+                  )}
+                </div>
+              )}
             </main>
           </div>
         </div>
       </div>
+
+      <CreateFeedbackDialog
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSubmit={() => {
+          loadFeedbacks();
+          setIsCreateDialogOpen(false);
+        }}
+      />
     </AuthGuard>
   );
 }

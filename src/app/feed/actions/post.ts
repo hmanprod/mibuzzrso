@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 
 interface CreatePostData {
+  type?: 'post' | 'feedback';
   mediaType: 'audio' | 'video';
   mediaUrl: string;
   mediaPublicId: string;
