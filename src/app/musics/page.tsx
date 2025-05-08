@@ -1,62 +1,159 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { MediaCard } from '@/components/library/MediaCard';
+import { getMediaLibrary } from './actions/library';
+import { Media } from '@/types/database';
+import { LibraryAudioPlayer } from '@/components/library/LibraryAudioPlayer';
 
-export default function Music() {
-  const router = useRouter();
+export default function Library() {
+  const [state, setState] = useState<{
+    media: Media[];
+    page: number;
+    loading: boolean;
+    hasMore: boolean;
+  }>({
+    media: [],
+    page: 1,
+    loading: false,
+    hasMore: true
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentMedia, setCurrentMedia] = useState<Media | null>(null);
+
+  // const loadMore = async () => {
+  //   try {
+  //     setState(prev => ({ ...prev, loading: true }));
+  //     const result = await getMoreMedia(state.page + 1);
+
+  //     if (result.error) {
+  //       setError(result.error);
+  //       return;
+  //     }
+
+  //     setState(prev => ({
+  //       ...prev,
+  //       media: [...prev.media, ...result.media],
+  //       page: prev.page + 1,
+  //       hasMore: result.hasMore,
+  //       loading: false
+  //     }));
+  //   } catch (err) {
+  //     setError('Failed to load more media');
+  //     setState(prev => ({ ...prev, loading: false }));
+  //   }
+  // };
+
+  const fetchInitialMedia = useCallback(async () => {
+    try {
+      const result = await getMediaLibrary();
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setState(prev => ({
+        ...prev,
+        media: result.media,
+        hasMore: result.hasMore
+      }));
+    } catch (err) {
+      console.log(err);
+      
+      setError('Failed to load media');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInitialMedia();
+  }, [fetchInitialMedia]);
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="flex justify-center items-center min-h-screen">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  if (error) {
+    return (
+      <AuthGuard>
+        <div className="flex justify-center items-center min-h-screen text-red-500">
+          {error}
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  const handlePlay = (media: Media) => {
+    setCurrentMedia(media);
+  };
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#FAFAFA]">
-        <Navbar className="fixed top-0 left-0 right-0 z-50" />
-        
-        <div className="flex pt-[72px]">
-          <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex">
+          <div className="hidden lg:block w-[274px] fixed top-[60px] bottom-0 border-r border-border p-4">
+            <Sidebar />
+          </div>
           
           <div className="flex flex-1 ml-[274px]">
-            <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0">
-              <div className="max-w-2xl mx-auto mt-20">
-                <div className="text-left space-y-8">
-                  <div className="relative w-32 h-32">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform rotate-6 animate-pulse opacity-20"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary to-red-600 rounded-3xl transform -rotate-6 animate-pulse opacity-20 animation-delay-200"></div>
-                    <div className="relative bg-gradient-to-br from-primary to-red-700 rounded-3xl w-full h-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
-                      <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 19V6l11 13V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="2"/>
-                        <circle cx="17" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <p className="text-sm font-medium text-red-600 tracking-wide">— Bientôt disponible</p>
-                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 leading-[45px]">
-                    Soyez notifié dès le lancement de<br/>notre bibliothèque musicale
-                    </h1>
-                    <p className="text-xl text-gray-600">
-                    Quand nous lancerons la bibliothèque
-                    </p>
+            <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0 max-w-7xl">
+              <div className="container mx-auto py-8 px-4 space-y-8">
+                <section>
+                  <h2 className="text-2xl font-semibold mb-4">Bibliothèque</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {state.media.map((item) => (
+                      <MediaCard 
+                        key={item.id} 
+                        media={item} 
+                        onPlay={handlePlay}
+                      />
+                    ))}
                   </div>
 
-                  <div className="pt-4">
-                    <button
-                      onClick={() => router.back()}
-                      className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="outline"
+                      asChild
                     >
-                      <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Retour</span>
-                    </button>
+                      <Link href="/musics/all">
+                        Voir tous les médias
+                      </Link>
+                    </Button>
                   </div>
-                </div>
+
+                  {!state.hasMore && state.media.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      Aucun média dans la bibliothèque
+                    </div>
+                  )}
+                </section>
               </div>
             </main>
           </div>
         </div>
+
+        {/* Player global */}
+        <LibraryAudioPlayer 
+          media={currentMedia} 
+          onClose={() => setCurrentMedia(null)} 
+        />
       </div>
     </AuthGuard>
   );

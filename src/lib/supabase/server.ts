@@ -10,7 +10,7 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
-          console.log("les cookies sont ", cookieStore.getAll());
+          // console.log("les cookies sont ", cookieStore.getAll());
           
           return cookieStore.getAll()
         },

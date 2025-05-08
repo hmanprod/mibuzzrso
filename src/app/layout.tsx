@@ -58,7 +58,7 @@ export default async function RootLayout({
         <SessionProvider initialUser={session?.user ?? null}>
           <SearchProvider>
             <MediaControlProvider>
-              {children} {/* Contenu de l'application */}
+                {children} {/* Contenu de l'application */}
               <Toaster />
               {process.env.NODE_ENV === 'development' && <AuthDebug />}
             </MediaControlProvider>

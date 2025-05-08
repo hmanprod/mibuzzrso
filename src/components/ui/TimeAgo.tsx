@@ -25,7 +25,7 @@ export function TimeAgo({
   };
 
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-2 text-xs">
       <span>{formatTimeago(date, language)}</span>
       {showLanguageToggle && (
         <button 

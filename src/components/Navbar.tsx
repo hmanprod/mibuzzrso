@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bell, User, LogOut, Search, ShieldCheck } from 'lucide-react';
+import {  User, LogOut, Search, ShieldCheck } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
@@ -45,7 +45,7 @@ export default function Navbar({ className }: NavbarProps) {
 
   return (
     <nav className={twMerge("h-[60px] bg-white border-b border-[#EAEAEA]", className)}>
-      <div className="h-full mx-auto px-6 flex items-center justify-between">
+      <div className="h-full max-w-[1300px] mx-auto px-6 flex items-center justify-between">
         {/* Zone gauche : Logo et navigation principale */}
         <div className="flex items-center gap-8">
           <Link href="/">
@@ -92,9 +92,9 @@ export default function Navbar({ className }: NavbarProps) {
           >
             <Search className="w-5 h-5 text-gray-400" />
           </button>
-          <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
+          {/* <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <Bell className="w-6 h-6" />
-          </button>
+          </button> */}
           {/* <button className="text-[#666666] hover:text-[#2D2D2D] transition-colors">
             <MessageSquare className="w-6 h-6" />
           </button> */}
@@ -123,7 +123,7 @@ export default function Navbar({ className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/profile');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center  text-[15px] gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <User className="w-4 h-4" />
                     <span>Mon profil</span>
@@ -134,7 +134,7 @@ export default function Navbar({ className }: NavbarProps) {
                       setIsDropdownOpen(false);
                       router.push('/account');
                     }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                    className="flex items-center  text-[15px] gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
                   >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Mon compte</span>
@@ -146,7 +146,7 @@ export default function Navbar({ className }: NavbarProps) {
 
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-100 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Déconnexion</span>

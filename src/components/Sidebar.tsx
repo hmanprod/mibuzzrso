@@ -14,7 +14,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
   return (
     <aside className={twMerge("flex flex-col justify-between bg-transparent p-6", className)}>
-      <nav className="space-y-2">
+      <nav className="space-y-2 text-sm">
         <Link
           href="/feed/challenges"
           className={twMerge(
@@ -49,7 +49,7 @@ export default function Sidebar({ className }: SidebarProps) {
         </Link>
       </nav>
 
-      <nav>
+      <nav className="text-sm">
         <Link
           href="/feedbacks"
           className={twMerge(

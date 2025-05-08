@@ -28,6 +28,7 @@ interface AudioPlayerProps {
   }[];
   onCommentAdded?: () => Promise<void>;
   onTimeUpdate?: (time: number) => void;
+  downloadable?: boolean;
 }
 
 interface AudioPlayerRef {
@@ -35,7 +36,7 @@ interface AudioPlayerRef {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
-  ({ audioUrl, mediaId, postId, comments, onTimeUpdate }, ref) => {
+  ({ audioUrl, mediaId, postId, comments, onTimeUpdate, downloadable }, ref) => {
   const { user } = useSession();
   const { register, unregister, play } = useMediaControl();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -210,7 +211,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
   }));
 
   return (
-    <div className="bg-white rounded-[18px] p-4 space-y-4">
+    <div className="rounded-[18px] p-4">
       <audio
         ref={audioRef}
         src={processedAudioUrlRef.current}
@@ -219,7 +220,8 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
       />
 
       {/* Contrôles principaux */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="flex items-center gap-2">
         <button
           onClick={togglePlay}
           className="w-10 h-10 flex items-center justify-center bg-primary rounded-full hover:bg-primary/90 transition-colors"
@@ -237,7 +239,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 min-w-[40px]">
+          <span className="text-sm text-gray-600 min-w-[30px]">
             {formatTime(currentTime)}
           </span>
           <span className="text-sm text-gray-400">/</span>
@@ -246,19 +248,36 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative">
           <button
             onClick={toggleMute}
             className="text-gray-600 hover:text-gray-800 transition-colors"
           >
             {isMuted ? (
-              <VolumeX className="w-6 h-6" onClick={toggleMute} />
+              <VolumeX className="w-4 h-4" onClick={toggleMute} />
             ) : (
-              <Volume2 className="w-6 h-6" onClick={toggleMute} />
+              <Volume2 className="w-4 h-4" onClick={toggleMute} />
             )}
           </button>
           <span className="text-sm text-gray-600">{readsCount} lectures</span>
+          
         </div>
+        </div>
+
+        {downloadable && (
+            <a
+              href={audioUrl}
+              download
+              className="flex items-center gap-2 rounded-full hover:bg-gray-200 transition-colors text-sm"
+              title="Télécharger l'audio"
+              style={{ right: 0 }}
+            >
+              Télécharger
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+              </svg>
+            </a>
+          )}
       </div>
 
       {/* Waveform with comment markers */}

@@ -15,6 +15,8 @@ export interface Media {
   title?: string;
   description?: string;
   user_id: string;
+  likes_count?: number;
+  is_liked?: boolean;
 }
 
 export interface Post {
@@ -105,6 +107,8 @@ export interface Challenge {
   start_at: string;
   end_at: string;
   winning_prize?: string;
+  winner_uid?: string;
+  winner_displayname?: string;
   participants_count: number;
   likes: number;
   is_liked: boolean;

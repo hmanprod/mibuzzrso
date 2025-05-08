@@ -54,18 +54,19 @@ export default function SearchLayout({
     <AuthGuard>
       <div className="min-h-screen bg-[#FAFAFA]">
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
-        
-        <div className="flex pt-[72px]">
-          <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
-          
-          <div className="flex flex-1 ml-[274px]">
-            {/* Feed central */}
-            <main className="flex-1 max-w-[600px] mx-auto w-full py-4 px-4 sm:px-0">
-            {children}
-            </main>
+        <div className="max-w-[1300px] mx-auto">
+          <div className="flex pt-[72px]">
+            <Sidebar className="fixed bottom-0 top-[72px] w-[274px]" />
             
-            <RightSidebar className="w-[350px]" suggestedUsers={topUsers} />
-            
+            <div className="flex flex-1 ml-[274px]">
+              {/* Feed central */}
+              <main className="flex-1 max-w-[600px] mx-auto w-full py-4 px-4 sm:px-0">
+              {children}
+              </main>
+              
+              <RightSidebar className="w-[350px]" suggestedUsers={topUsers} />
+              
+            </div>
           </div>
         </div>
       </div>

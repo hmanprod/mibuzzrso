@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Share2, UserPlus, Check, Music2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar } from 'lucide-react';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
@@ -13,7 +13,9 @@ import { cn } from '@/lib/utils';
 import { useSession } from '@/components/providers/SessionProvider';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import ParticipateModal from '@/components/feed/ParticipateModal';
-
+import { TimeAgo } from '@/components/ui/TimeAgo';
+import WinnerCard from '@/components/challenge/WinnerCard';
+import ChallengeSkeleton from '@/components/challenge/ChallengeSkeleton';
 
 interface MediaPlayerRef {
   seekToTime: (time: number) => void;
@@ -224,24 +226,7 @@ export default function ChallengePage() {
   };
 
   if (loading) {
-    return (
-      <article className="bg-white rounded-[18px] shadow-sm overflow-hidden animate-pulse">
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div className="space-y-2">
-              <div className="h-4 w-32 bg-gray-200 rounded"></div>
-              <div className="h-3 w-24 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="h-6 w-3/4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-        </div>
-        <div className="h-96 bg-gray-200"></div>
-      </article>
-    );
+    return <ChallengeSkeleton />;
   }
 
   if (error || !challenge) {
@@ -254,21 +239,48 @@ export default function ChallengePage() {
 
   return (
     <>
-    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden">
+    {/* Participate section */}
+    {challenge.status === 'active' ? (
+      <div className="bg-white rounded-[18px] p-4 space-y-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={profile?.avatar_url || null}
+            stageName={profile?.stage_name || profile?.email?.[0]}
+            size={40}
+            className="rounded-full"
+          />
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
+          >
+            Je veux participer au challenge
+          </button>
+        </div>
+      </div>
+    ) : null}
+
+    {/* Winner card */}
+    <WinnerCard
+      winnerDisplayName={challenge?.winner_displayname || ''}
+      show={challenge?.status === 'completed' && !!challenge?.winner_displayname}
+    />
+
+    {/* Challenge content */}
+    <article className="bg-orange-50 rounded-[18px] shadow-sm overflow-hidden">
       {/* Challenge header */}
-      <div className="flex justify-between items-center p-4">
-        <div className="flex items-center space-x-3">
+      <div className="flex justify-between flex-1 items-center p-4">
+        <div className="flex items-center flex-1 space-x-3">
           <Avatar
             src={challenge.creator?.profile?.avatar_url || ''}
             stageName={(challenge.creator?.profile?.stage_name || 'C')[0]}
             size={40}
           />
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-[#2D2D2D]">
+          <div className="flex items-center flex-1 justify-between space-x-2">
+            <div className="flex flex-col items-start">
+              <h3 className="font-semibold text-sm text-[#2D2D2D]">
                 {challenge.creator?.profile?.stage_name || 'Challenge Creator'}
               </h3>
-              {/* <span className="text-sm text-gray-500">@{challenge.creator?.username || 'creator'}</span> */}
+              <TimeAgo date={challenge.created_at} defaultLanguage="fr" />
             </div>
             <button
               className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
@@ -293,47 +305,43 @@ export default function ChallengePage() {
             </button>
           </div>
         </div>
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          challenge.status === 'active'
-            ? 'bg-green-100 text-green-700'
-            : challenge.status === 'completed'
-            ? 'bg-gray-100 text-gray-700'
-            : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          {challenge.status}
-        </span>
+        
       </div>
 
       {/* Title and description */}
       <div className="px-4 pb-4">
-        <h2 className="text-lg font-semibold text-[#2D2D2D]">{challenge.title}</h2>
-        <p className="mt-1 text-gray-600">{challenge.description}</p>
+        <h2 className="text-md font-semibold text-[#2D2D2D]">{challenge.title}</h2>
+        <p className="mt-1 text-sm text-gray-600">{challenge.description}</p>
       </div>
 
-      {/* Participate section */}
-      {challenge.status === 'active' && (
-        <div className="px-4 pb-4">
-          <div className="flex items-center gap-3">
-            <Avatar
-              src={profile?.avatar_url || null}
-              stageName={profile?.stage_name || user?.email?.[0]}
-              size={40}
-              className="rounded-full"
-            />
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
-            >
-              Je veux participer
-            </button>
-          </div>
+      {/* Challenge info */}
+      <div className="flex justify-between items-center px-4 p-4 gap-2 text-sm">
+        <div className="flex flex-col items-center flex-1">
+          <Users className="w-6 h-6 text-gray-400 mb-1" />
+          <span className="font-semibold text-gray-700">{challenge.participants_count}</span>
+          <span className="text-xs text-gray-400">Participants</span>
         </div>
-      )}
+        <div className="flex flex-col items-center flex-1">
+          <Trophy className={`w-6 h-6 mb-1 ${challenge.winning_prize ? 'text-yellow-400' : 'text-gray-200'}`} />
+          <span className="font-semibold text-gray-700 text-center">
+            {challenge.winning_prize || <span className="text-xs text-gray-400">Aucun</span>}
+          </span>
+          <span className="text-xs text-gray-400">Récompense</span>
+        </div>
+        <div className="flex flex-col items-center flex-1">
+          <Calendar className="w-6 h-6 text-red-400 mb-1" />
+          <span className="font-semibold text-gray-700">{new Date(challenge.end_at).toLocaleDateString()}</span>
+          <span className="text-xs text-gray-400">Date de Fin</span>
+        </div>
+      </div>
+
+      
 
       {/* Media section */}
-   
+      <h3 className="text-md font-semibold text-[#2D2D2D] mx-4 border-b border-gray-200 py-2">Fichier à télécharger</h3>
+
       {/* Section média */}
-      {medias.length > 0 && (
+      {medias.length > 0 ? (
         <div className="mb-4 space-y-4">
           {medias.map((media, index) => {
             const isAudio = media.media.media_type === 'audio';
@@ -351,34 +359,28 @@ export default function ChallengePage() {
                     {...commonProps}
                     audioUrl={media.media.media_url}
                     ref={audioPlayerRef}
+                    downloadable={challenge.status !== 'completed'}
                   />
                 ) : (
                   <VideoPlayer
                     {...commonProps}
                     videoUrl={media.media.media_url}
                     ref={videoPlayerRef}
+                    downloadable={challenge.status !== 'completed'}
                   />
+                )}
+                {challenge.status === 'completed' && (
+                  <div className="text-xs text-gray-400 italic mt-1 ml-2">Téléchargement désactivé, le challenge est terminé.</div>
                 )}
               </div>
             );
           })}
         </div>
-      )}
-
-      {/* Challenge info */}
-      <div className="px-4 pb-4">
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span className="flex items-center gap-1">
-            <Music2 className="w-4 h-4" />
-            {challenge.type.charAt(0).toUpperCase() + challenge.type.slice(1)}
-          </span>
-          <span>{challenge.participants_count} participants</span>
-          {challenge.winning_prize && (
-            <span>Prize: {challenge.winning_prize}</span>
-          )}
-          <span>Ends {new Date(challenge.end_at).toLocaleDateString()}</span>
+      ) : (
+        <div className="px-4 pt-3 pb-8 text-sm text-center text-gray-400 text-sm italic">
+          Aucun fichier média n&apos;est disponible pour ce challenge.
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-6 px-4 pb-4">

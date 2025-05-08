@@ -45,7 +45,9 @@ export default function ProfilePage() {
   return (
     <AuthGuard>
       <Navbar />
-      <ProfileComponent userProfile={userProfile} userStats={userStats} isLoading={loading} />
+      <div className="max-w-[1300px] mx-auto">
+        <ProfileComponent userProfile={userProfile} userStats={userStats} isLoading={loading} />
+      </div>
     </AuthGuard>
   );
 }

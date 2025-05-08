@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { TimeAgo } from '../ui/TimeAgo';
 
 interface FeedPostProps {
   post: ExtendedPost;
@@ -237,8 +238,8 @@ export default function FeedPost({ post }: FeedPostProps) {
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4">
       {/* Post header */}
-      <div className="flex justify-between items-center p-4">
-        <div className="flex items-center space-x-3">
+      <div className="flex justify-between w-full items-center p-4">
+        <div className="flex items-center w-full space-x-3 text-sm">
           <div>
             <Link href={`/profile/${post.profile.id}`}>
               <Avatar
@@ -248,15 +249,16 @@ export default function FeedPost({ post }: FeedPostProps) {
               />
             </Link>
           </div>
-          <div>
-            <Link href={`/profile/${post.profile.id}`}>
-              <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-[#2D2D2D]">
-                  {post.profile.stage_name || 'Unknown Artist'}
-                </h3>
-                <p className="text-sm text-gray-500">@{post.user_id}</p>
-              </div>
-            </Link>
+          <div className="flex flex-1 items-center justify-between space-x-2">
+            <div className="flex flex-1 items-center justify-between space-x-2">
+              <Link href={`/profile/${post.profile.id}`}>
+                <div className="flex flex-col items-start">
+                  <h3 className="font-semibold text-[#2D2D2D]">
+                    {post.profile.stage_name || 'Unknown Artist'}
+                  </h3>
+                  <TimeAgo date={post.created_at} defaultLanguage="fr" />
+                </div>
+              </Link>
               {!isAuthor && (
                 <button
                   className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
@@ -280,7 +282,7 @@ export default function FeedPost({ post }: FeedPostProps) {
                   )}
                 </button>
               )}
-              
+              </div>
             
           </div>
         </div>
@@ -311,13 +313,21 @@ export default function FeedPost({ post }: FeedPostProps) {
 
       {/* Title and description */}
       {mediaItem && (
-        <div className="px-4 pb-4">
-          <h2 className="text-lg font-semibold text-[#2D2D2D]">{mediaItem?.title || 'Untitled'}</h2>
+        <div className="px-4">
+          <h2 className="text-base font-semibold text-[#2D2D2D]">{mediaItem?.title || 'Untitled'}</h2>
           {mediaItem.description && (
             <p className="mt-1 text-gray-600">{mediaItem.description}</p>
           )}
         </div>
       )}
+
+      {/* Title and description */}
+      {post.content && (
+           <div className="px-4 pb-4">
+          <p className="text-gray-600 text-sm">{post.content}</p>
+          </div>
+        )}
+      
 
       {/* Media player */}
       {mediaItem && (
@@ -344,12 +354,7 @@ export default function FeedPost({ post }: FeedPostProps) {
         )
       )}
 
-      {/* Title and description */}
-      <div className="px-4 pb-4">
-        {post.content && (
-          <p className="text-gray-600">{post.content}</p>
-        )}
-      </div>
+      
 
       {/* Actions */}
       <div className="flex items-center gap-3 px-4 pb-4">
