@@ -13,6 +13,7 @@ export interface Media {
   media_public_id: string;
   duration?: number;
   title?: string;
+  author?: string;
   description?: string;
   user_id: string;
   likes_count?: number;
@@ -67,6 +68,7 @@ export interface Profile {
   musical_interests: string[] | null;
   talents: string[] | null;
   is_admin: boolean | null;
+  points: number;
   social_links: {
     instagram?: string;
     facebook?: string;

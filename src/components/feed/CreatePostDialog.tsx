@@ -20,6 +20,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
   const [activeTab, setActiveTab] = useState<MediaType>('audio');
   const [postText, setPostText] = useState('');
   const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +91,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
 
       // Use the server action to handle database operations
       const result = await createPostWithMedia({
+        author: activeTab === 'audio' ? author.trim() : null,
         type: postType,
         mediaType: activeTab,
         mediaUrl: mediaUpload.url,
@@ -236,13 +238,24 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
               ) : (
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder={`${activeTab === 'audio' ? 'Audio' : 'Video'} title`}
-                      className="flex-1 px-3 py-2 border rounded-md mr-2"
-                    />
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={`${activeTab === 'audio' ? 'Audio' : 'Video'} title`}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                      {activeTab === 'audio' && (
+                        <input
+                          type="text"
+                          value={author}
+                          onChange={(e) => setAuthor(e.target.value)}
+                          placeholder="Artist name"
+                          className="w-full px-3 py-2 border rounded-md"
+                        />
+                      )}
+                    </div>
                     <Button
                       type="button"
                       variant="destructive"
@@ -250,6 +263,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                       onClick={() => {
                         setSelectedFile(null);
                         setTitle('');
+                        setAuthor('');
                       }}
                     >
                       <Trash2 className="w-4 h-4" />

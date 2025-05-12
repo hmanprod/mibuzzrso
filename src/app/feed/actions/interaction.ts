@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Profile } from '@/types/database'
+import { addPointsForLike } from '@/app/points/actions'
 
 export async function getCommentsByMediaId(mediaId: string) {
   const supabase = await createClient()
@@ -280,6 +281,19 @@ export async function togglePostLike(postId: string) {
       if (insertError) {
         console.error('Error adding like:', insertError)
         return { error: 'Failed to like post' }
+      }
+
+      // Récupérer le media_id du post pour ajouter les points
+      const { data: postData, error: postError } = await supabase
+        .from('posts_medias')
+        .select('media_id')
+        .eq('post_id', postId)
+        .single()
+
+      if (!postError && postData?.media_id) {
+        console.log("awaiting likes");
+        
+        await addPointsForLike(postData.media_id)
       }
 
       liked = true

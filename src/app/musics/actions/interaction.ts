@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { PostgrestError } from '@supabase/supabase-js';
+import { addPointsForLike } from '@/app/points/actions';
 
 type InteractionQueryResult = {
   data: Interaction | null;
@@ -91,6 +92,9 @@ export async function toggleMediaLike(mediaId: string): Promise<LikeResponse> {
         console.error('Error adding like:', insertError);
         return { error: 'Failed to add like' };
       }
+
+      // Ajouter les points pour le like
+      await addPointsForLike(mediaId);
 
       return { liked: true };
     }

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Media } from '@/types/database';
 import { revalidatePath } from 'next/cache'
+import { addPointsForMedia, addPointsForChallenge } from '@/app/points/actions';
 
 export interface Challenge {
   id: string;
@@ -450,6 +451,12 @@ export async function participateInChallenge(submission: ParticipationSubmission
     }
 
     // 5. Increment participants count (géré par le trigger)
+
+    // 6. Ajouter les points
+    await Promise.all([
+      addPointsForMedia(mediaData.id), // Points pour le nouveau média
+      addPointsForChallenge(mediaData.id, submission.challengeId) // Points pour la participation
+    ]);
 
     revalidatePath('/feed/challenges');
     return { success: true, mediaId: mediaData.id };

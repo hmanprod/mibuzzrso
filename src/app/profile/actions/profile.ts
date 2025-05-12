@@ -18,10 +18,10 @@ export async function getUserProfile(profileId: string) {
   const supabase = await createClient()
 
   try {
-    // Get the profile data
+    // Get the profile data with points
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, points')
       .eq('id', profileId)
       .single();
 

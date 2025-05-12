@@ -6,6 +6,8 @@ import { Users, Clock, ArrowRight, Music } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { useSession } from "@/components/providers/SessionProvider";
+
 
 function daysLeft(end_at: string) {
   const end = new Date(end_at);
@@ -20,6 +22,10 @@ export default function ChallengesPage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const router = useRouter();
+  const { user } = useSession()
+
+  console.log("the user is ", user);
+  
 
   useEffect(() => {
     setLoading(true);

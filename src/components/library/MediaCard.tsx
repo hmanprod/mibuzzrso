@@ -18,6 +18,8 @@ export function MediaCard({ media, onPlay }: MediaCardProps) {
   const [loading, setLoading] = useState(false);
   const { user } = useSession();
 
+  
+  
   const fetchLikes = useCallback(async () => {
     try {
       const { count, isLiked, error } = await getMediaLikes(media.id);
@@ -126,6 +128,10 @@ export function MediaCard({ media, onPlay }: MediaCardProps) {
             </button>
           </div>
           <div className="flex items-center justify-between">
+            <div>
+          <h3 className="text-sm font-medium opacity-75 ">{media.title}</h3>
+          <h3 className="text-sm font-medium opacity-75 ">{media.author}</h3>
+            </div>
             <span className="text-sm font-medium opacity-75">
               {media.media_type === 'audio' ? 'Audio' : 'Vidéo'}
             </span>
@@ -134,12 +140,12 @@ export function MediaCard({ media, onPlay }: MediaCardProps) {
       </div>
 
       {/* Titre et description */}
-      <div className="p-4 bg-white">
-        <h3 className="font-semibold truncate">{media.title}</h3>
+      {/* <div className="p-4 bg-white">
+       
         {media.description && (
           <p className="text-sm text-gray-500 line-clamp-2">{media.description}</p>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

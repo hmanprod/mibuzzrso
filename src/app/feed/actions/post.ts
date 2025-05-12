@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { addPointsForMedia } from '@/app/points/actions'
 
 
 interface CreatePostData {
@@ -10,6 +11,7 @@ interface CreatePostData {
   mediaUrl: string;
   mediaPublicId: string;
   title: string;
+  author?: string | null;
   duration: number | null;
   content: string | null;
   userId: string;
@@ -176,6 +178,7 @@ export async function createPostWithMedia(data: CreatePostData) {
         media_url: data.mediaUrl,
         media_public_id: data.mediaPublicId,
         title: data.title,
+        author: data.author,
         duration: data.duration,
         user_id: data.userId
       })
@@ -209,6 +212,9 @@ export async function createPostWithMedia(data: CreatePostData) {
     
     // Revalidate the feed page to show the new post
     revalidatePath('/feed');
+
+    // Ajouter les points pour le nouveau média
+    await addPointsForMedia(mediaData.id);
     
     return { success: true, postId: postData.id };
   } catch (error) {
