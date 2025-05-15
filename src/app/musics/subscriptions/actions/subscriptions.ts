@@ -50,7 +50,7 @@ export async function getSubscriptionsMedia(limit = 12, page = 1): Promise<Media
     const total = mediaData.length > 0 ? mediaData[0].total_count : 0;
 
     // Clean media data
-    const cleanedMediaData = mediaData.map(({  ...rest }) => rest);
+    const cleanedMediaData = mediaData.map(({ ...rest }) => rest);
 
     return {
       media: cleanedMediaData,

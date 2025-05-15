@@ -16,8 +16,7 @@ interface TopUser {
   pseudo_url: string;
 }
 
-
-export default function SearchLayout({
+export default function MusicsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -28,7 +27,6 @@ export default function SearchLayout({
     try {
       const { data, error } = await getTopInteractingUsers();
       if (!error && data) {
-        // Transform the data to match the expected format for SuggestedUsers
         const formattedUsers = data.map((user: TopUser) => ({
           user_id: user.user_id,
           avatar_url: user.avatar_url,
@@ -38,7 +36,6 @@ export default function SearchLayout({
         }));
         
         setTopUsers(formattedUsers.slice(0, 3));
-        // console.log('✨ Top users loaded:', formattedUsers.slice(0, 3));
       } else if (error) {
         console.error('Error in getTopInteractingUsers response:', error);
       }
@@ -57,16 +54,15 @@ export default function SearchLayout({
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
         <div className="max-w-[1300px] mx-auto">
           <div className="flex pt-[72px]">
-            <Sidebar  />
+            <Sidebar />
             
             <div className="flex flex-1">
               {/* Feed central */}
               <main className="flex-1 max-w-[600px] mx-auto w-full py-4 px-4 sm:px-0">
-              {children}
+                {children}
               </main>
               
               <RightSidebar className="w-[350px]" suggestedUsers={topUsers} />
-              
             </div>
           </div>
         </div>
