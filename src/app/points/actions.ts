@@ -6,12 +6,18 @@ export async function addPointsForLike(mediaId: string) {
   const supabase = await createClient();
   
   try {
-    const { data, error } = await supabase
+    // Récupérer l'utilisateur courant
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const {  error } = await supabase
       .rpc('add_points_for_like', {
-        p_media_id: mediaId
+        p_media_id: mediaId,
+        p_user_id: user.id
       });
       
-      console.log("data", data)
     if (error) throw error;
     return { success: true };
   } catch (error) {
@@ -27,6 +33,23 @@ export async function addPointsForMedia(mediaId: string) {
     const {  error } = await supabase
       .rpc('add_points_for_media', {
         p_media_id: mediaId
+      });
+      
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error adding points for media:', error);
+    return { success: false, error: 'Failed to add points' };
+  }
+}
+
+export async function addPointsForComment(commentId: string) {
+  const supabase = await createClient();
+  
+  try {
+    const { error } = await supabase
+      .rpc('add_points_for_comment', {
+        p_comment_id: commentId
       });
       
     if (error) throw error;

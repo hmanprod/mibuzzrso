@@ -19,6 +19,7 @@ interface User {
   full_name?: string;
   interaction_score?: number;
   is_followed?: boolean;
+  pseudo_url: string;
 }
 
 export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
@@ -121,7 +122,7 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
                   </div>
                 )}
                 <div>
-                  <Link href={`/profile/${user.user_id}`} className="font-medium text-sm text-[#2D2D2D] hover:text-[#FA4D4D]">
+                  <Link href={`/profile/${user.pseudo_url}`} className="font-medium text-sm text-[#2D2D2D] hover:text-[#FA4D4D]">
                     {user.stage_name || 'Anonymous User'}
                   </Link>
                   {/* <p className="text-sm text-[#666666]">

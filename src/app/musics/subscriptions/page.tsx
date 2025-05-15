@@ -3,9 +3,8 @@ import { Loader2 } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import LibraryMediaCard from '@/components/library/LibraryMediaCard';
-import { getMediaLibrary } from '../my-musics/actions/library';
-import { SearchAndFilters } from './components';
+import { getSubscriptionsMedia } from './actions/subscriptions';
+import { SubscriptionsList } from './components';
 
 function LoadingSpinner() {
   return (
@@ -16,7 +15,7 @@ function LoadingSpinner() {
 }
 
 async function MediaList() {
-  const result = await getMediaLibrary(12);
+  const result = await getSubscriptionsMedia(12, 1);
 
   if (result.error) {
     return (
@@ -29,21 +28,21 @@ async function MediaList() {
   if (!result.media?.length) {
     return (
       <div className="text-center py-8 text-gray-500">
-        Aucun média disponible
+        Aucun média disponible des utilisateurs suivis
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col space-y-4">
-      {result.media.map((item) => (
-        <LibraryMediaCard key={item.id} media={item} />
-      ))}
-    </div>
+    <SubscriptionsList 
+      initialMedia={result.media}
+      initialTotal={result.total}
+      initialHasMore={result.hasMore}
+    />
   );
 }
 
-export default async function AllMedia() {
+export default async function SubscriptionsPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background">
@@ -58,8 +57,7 @@ export default async function AllMedia() {
               <div className="container mx-auto py-8 px-4 space-y-8">
                 <section>
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-semibold">Tous les médias</h2>
-                    <SearchAndFilters />
+                    <h2 className="text-2xl font-semibold">Médias des abonnements</h2>
                   </div>
                   <Suspense fallback={<LoadingSpinner />}>
                     <MediaList />

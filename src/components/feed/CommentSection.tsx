@@ -6,6 +6,7 @@ import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
 import { addComment, likeComment, getCommentLikes } from '@/app/feed/actions/interaction';
+import { addPointsForComment } from '@/app/points/actions';
 import { formatTime } from '@/lib/utils';
 import { formatTimeago, getUserLanguage } from '@/lib/timeago';
 
@@ -102,7 +103,7 @@ export default function CommentSection({
       setIsSubmittingComment(true);
       
       // Pass the current playback time and parent comment ID if replying
-      const { error } = await addComment(
+      const { error, data } = await addComment(
         mediaId, 
         content.trim(), 
         replyingTo?.timestamp || currentPlaybackTime,
@@ -117,6 +118,14 @@ export default function CommentSection({
           variant: "destructive"
         });
         return;
+      }
+
+      // Ajouter les points pour le commentaire
+      if (data?.id) {
+        const { error: pointsError } = await addPointsForComment(data.id);
+        if (pointsError) {
+          console.error('Error adding points for comment:', pointsError);
+        }
       }
 
       // Clear the comment text and reset replying state

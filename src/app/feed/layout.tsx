@@ -13,6 +13,7 @@ interface TopUser {
   stage_name: string;
   interaction_score: number;
   is_followed: boolean;
+  pseudo_url: string;
 }
 
 
@@ -56,7 +57,7 @@ export default function SearchLayout({
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
         <div className="max-w-[1300px] mx-auto">
           <div className="flex pt-[72px]">
-            <Sidebar className="fixed bottom-0 top-[72px] w-[274px]" />
+            <Sidebar />
             
             <div className="flex flex-1 ml-[274px]">
               {/* Feed central */}

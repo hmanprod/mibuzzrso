@@ -251,7 +251,7 @@ export default function FeedPost({ post }: FeedPostProps) {
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2">
             <div className="flex flex-1 items-center justify-between space-x-2">
-              <Link href={`/profile/${post.profile.id}`}>
+              <Link href={`/profile/${post.profile.pseudo_url}`}>
                 <div className="flex flex-col items-start">
                   <h3 className="font-semibold text-[#2D2D2D]">
                     {post.profile.stage_name || 'Unknown Artist'}

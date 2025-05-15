@@ -12,6 +12,7 @@ interface TopUser {
   full_name?: string | null;
   label?: string | null;
   interaction_score: number;
+  pseudo_url: string;
 }
 
 export default async function TopProfilesPage() {
@@ -57,7 +58,7 @@ export default async function TopProfilesPage() {
                       <span className="bg-indigo-500 text-white text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center mr-2">
                         {index + 1}
                       </span>
-                      <Link href={`/profile/${user.user_id}`} className="text-lg font-semibold hover:text-indigo-600">
+                      <Link href={`/profile/${user.pseudo_url}`} className="text-lg font-semibold hover:text-indigo-600">
                         {user.stage_name || 'Anonymous User'}
                       </Link>
                     </div>

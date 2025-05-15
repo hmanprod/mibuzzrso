@@ -82,7 +82,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
     }
 
     // Add the comment
-    const { error: commentError } = await supabase
+    const { data: commentData, error: commentError } = await supabase
       .from('comments')
       .insert({
         content,
@@ -94,7 +94,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
       .select('id')
       .single()
 
-    if (commentError) {
+    if (commentError || !commentData) {
       console.error('Error adding comment:', commentError)
       return { error: 'Failed to add comment' }
     }
@@ -114,7 +114,7 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
       // We don't return an error here as the comment was successfully created
     }
 
-    return { success: true }
+    return { success: true, data: commentData }
   } catch (error) {
     console.error('Error in addComment:', error)
     return { error: 'An unexpected error occurred' }

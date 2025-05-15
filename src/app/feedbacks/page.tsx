@@ -63,7 +63,7 @@ export default function FeedbacksPage() {
         <Navbar className="fixed top-0 left-0 right-0 z-50" />
         
         <div className="flex pt-[72px]">
-          <Sidebar className="fixed left-0 bottom-0 top-[72px] w-[274px]" />
+          <Sidebar />
           
           <div className="flex flex-1 ml-[274px]">
             <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0 max-w-2xl">

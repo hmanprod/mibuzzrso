@@ -2,10 +2,10 @@ import { Media } from '@/types/database';
 import { TimeAgo } from '../ui/TimeAgo';
 import { Heart, PlayCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from 'react';
-import { getMediaLikes, toggleMediaLike } from '@/app/musics/actions/interaction';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
 import Image from 'next/image';
+import { getMediaLikes, toggleMediaLike } from '@/app/musics/my-musics/actions/interaction';
 
 interface MediaCardProps {
   media: Media;

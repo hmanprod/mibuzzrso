@@ -48,6 +48,7 @@ export interface ProfilePublic {
   id: string;
   stage_name: string | null;
   avatar_url: string | null;
+  pseudo_url: string;
 }
 
 export interface Profile {
@@ -69,6 +70,7 @@ export interface Profile {
   talents: string[] | null;
   is_admin: boolean | null;
   points: number;
+  pseudo_url: string;
   social_links: {
     instagram?: string;
     facebook?: string;

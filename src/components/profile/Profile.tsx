@@ -403,7 +403,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                 {activeTab && (
                   <div>
                     {isCurrentUser && (
-                    <CreatePostBlock onOpen={() => setShowCreatePost(true)} />
+                    <CreatePostBlock onClick={() => setShowCreatePost(true)} />
                     )}
 
                     <div className="mt-8 space-y-4">

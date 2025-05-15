@@ -27,6 +27,9 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 
+    console.log("the user in music is ", supabase);
+    
+
     // Call the get_media_with_likes function
     const { data: mediaData, error } = await supabase
       .rpc('get_media_with_likes', {

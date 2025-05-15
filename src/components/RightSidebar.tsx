@@ -9,6 +9,7 @@ interface User {
   stage_name?: string;
   full_name?: string;
   interaction_score?: number;
+  pseudo_url: string;
 }
 
 interface RightSidebarProps {

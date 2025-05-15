@@ -1,6 +1,6 @@
 -- Ajouter la colonne points à la table profiles
 ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 1000;
+ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
 
 -- Créer la table d'historique des points
 CREATE TABLE IF NOT EXISTS points_history (
@@ -21,7 +21,7 @@ BEGIN
     FOR user_record IN SELECT id FROM profiles
     LOOP
         -- Points de base
-        UPDATE profiles SET points = 1000 WHERE id = user_record.id;
+        UPDATE profiles SET points = 0 WHERE id = user_record.id;
         
         -- Points pour les médias publiés (+10 par média)
         UPDATE profiles 

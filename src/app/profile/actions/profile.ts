@@ -15,7 +15,7 @@ interface ExtendedProfile extends Profile {
  * Get a user profile by ID
  */
 export async function getUserProfile(profileId: string) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   try {
     // Get the profile data with points
@@ -26,22 +26,22 @@ export async function getUserProfile(profileId: string) {
       .single();
 
     if (error) {
-      console.error('Error fetching profile:', error)
-      return { error: 'Failed to load profile' }
+      console.error('Error fetching profile:', error);
+      return { error: 'Failed to load profile' };
     }
 
     // First get all media IDs for this user
     const { data: mediaData, error: mediaError } = await supabase
       .from('medias')
       .select('id')
-      .eq('user_id', profileId)
+      .eq('user_id', profileId);
 
     if (mediaError) {
-      console.error('Error fetching user media:', mediaError)
+      console.error('Error fetching user media:', mediaError);
       return { 
         profile: data,
         totalReads: 0
-      }
+      };
     }
 
     // If user has no media, return 0 reads
@@ -49,35 +49,105 @@ export async function getUserProfile(profileId: string) {
       return { 
         profile: data,
         totalReads: 0
-      }
+      };
     }
 
     // Extract the media IDs
-    const mediaIds = mediaData.map(media => media.id)
+    const mediaIds = mediaData.map(media => media.id);
 
     // Get the total read count for all media associated with this user
     const { count: totalReads, error: readsError } = await supabase
       .from('interactions')
       .select('*', { count: 'exact', head: true})
       .eq('type', 'read')
-      .in('media_id', mediaIds)
+      .in('media_id', mediaIds);
 
     if (readsError) {
-      console.error('Error fetching read count:', readsError)
+      console.error('Error fetching read count:', readsError);
       // Continue with profile data even if read count fails
       return { 
         profile: data,
         totalReads: 0
-      }
+      };
     }
 
     return { 
       profile: data,
       totalReads: totalReads || 0
-    }
+    };
   } catch (error) {
-    console.error('Error in getUserProfile:', error)
-    return { error: 'An unexpected error occurred' }
+    console.error('Error in getUserProfile:', error);
+    return { error: 'An unexpected error occurred' };
+  }
+}
+
+/**
+ * Get a user profile by pseudo_url
+ */
+export async function getUserProfileByPseudoUrl(pseudoUrl: string) {
+  const supabase = await createClient();
+
+  try {
+    // Get the profile data with points
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*, points')
+      .eq('pseudo_url', pseudoUrl)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return { error: 'Failed to load profile' };
+    }
+
+    // First get all media IDs for this user
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('medias')
+      .select('id')
+      .eq('user_id', profile.id);
+
+    if (mediaError) {
+      console.error('Error fetching user media:', mediaError);
+      return { 
+        profile,
+        totalReads: 0
+      };
+    }
+
+    // If user has no media, return 0 reads
+    if (!mediaData || mediaData.length === 0) {
+      return { 
+        profile,
+        totalReads: 0
+      };
+    }
+
+    // Extract the media IDs
+    const mediaIds = mediaData.map(media => media.id);
+
+    // Get the total read count for all media associated with this user
+    const { count: totalReads, error: readsError } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true})
+      .eq('type', 'read')
+      .in('media_id', mediaIds);
+
+    if (readsError) {
+      console.error('Error fetching read count:', readsError);
+      // Continue with profile data even if read count fails
+      return { 
+        profile,
+        totalReads: 0
+      };
+    }
+
+    return { 
+      profile,
+      totalReads: totalReads || 0
+    };
+  } catch (error) {
+    console.error('Error in getUserProfileByPseudoUrl:', error);
+    return { error: 'An unexpected error occurred' };
   }
 }
 

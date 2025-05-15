@@ -4,10 +4,10 @@ import { Avatar } from '../ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 
 interface CreatePostBlockProps {
-  onOpen: () => void;
+  onClick: () => void;
 }
 
-export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
+export default function CreatePostBlock({ onClick }: CreatePostBlockProps) {
   const { profile } = useSession();
 
   return (
@@ -22,7 +22,7 @@ export default function CreatePostBlock({ onOpen }: CreatePostBlockProps) {
         />
         
         <button
-          onClick={onOpen}
+          onClick={onClick}
           className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
         >
           Quoi de neuf ?

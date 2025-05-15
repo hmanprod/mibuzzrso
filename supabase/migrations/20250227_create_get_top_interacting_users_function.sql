@@ -6,7 +6,8 @@ RETURNS TABLE (
   full_name text,
   avatar_url text,
   label text,
-  interaction_score float
+  interaction_score float,
+  pseudo_url text
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -31,7 +32,8 @@ BEGIN
         WHEN i.type = 'comment' THEN 2
         ELSE 0
       END
-    )::float AS interaction_score
+    )::float AS interaction_score,
+    p.pseudo_url
   FROM 
     interactions i
   JOIN 
@@ -39,7 +41,7 @@ BEGIN
   JOIN 
     profiles p ON po.user_id = p.id  -- Récupère l'auteur du post
   GROUP BY 
-    p.id, p.stage_name, p.first_name, p.last_name, p.avatar_url, p.label
+    p.id, p.stage_name, p.first_name, p.last_name, p.avatar_url, p.label, p.pseudo_url
   ORDER BY 
     interaction_score DESC
   LIMIT limit_count;

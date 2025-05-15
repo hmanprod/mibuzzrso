@@ -7,10 +7,13 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window === 'undefined') return null;
     const cached = localStorage.getItem('mibuzz_user');
+    console.log("the cached", cached);
     return cached ? JSON.parse(cached) : null;
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
+
+  
 
   useEffect(() => {
     // Get initial session
