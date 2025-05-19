@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Share2, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
 import type { ExtendedPost } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -107,13 +107,13 @@ export default function FeedPost({ post }: FeedPostProps) {
     }
   };
 
-  const handleShare = () => {
-    // TODO: Implement share functionality
-    toast({
-      title: "Bientôt disponible",
-      description: "La fonctionnalité de partage sera disponible prochainement",
-    });
-  };
+  // const handleShare = () => {
+  //   // TODO: Implement share functionality
+  //   toast({
+  //     title: "Bientôt disponible",
+  //     description: "La fonctionnalité de partage sera disponible prochainement",
+  //   });
+  // };
 
   const fetchComments = useCallback(async () => {
     if (!mediaItem) return;
@@ -379,12 +379,12 @@ export default function FeedPost({ post }: FeedPostProps) {
           <MessageCircle className="w-6 h-6" />
           <span>{commentsCount}</span>
         </button>
-        <button 
+        {/* <button 
           className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
           onClick={handleShare}
         >
           <Share2 className="w-6 h-6" />
-        </button>
+        </button> */}
       </div>
 
       {/* Comments section */}

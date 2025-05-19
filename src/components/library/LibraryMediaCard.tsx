@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Pause, Play, Share } from 'lucide-react';
+import { Heart, Pause, Play } from 'lucide-react';
 import type { Media } from '@/types/database';
 import { cn } from '@/lib/utils';
 import AudioPlayer from '../feed/AudioPlayer';
@@ -29,12 +29,12 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
     setIsPlaying(!isPlaying);
   };
 
-  const handleShare = () => {
-    // Add share functionality here
-  };
+  // const handleShare = () => {
+  //   // Add share functionality here
+  // };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex">
+    <div className="rounded-lg duration-200 flex">
       {/* Left side - Cover image and play button */}
       {media.media_cover_url && (
         <div className="relative w-40 aspect-square flex-shrink-0">
@@ -61,13 +61,13 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
       )}
 
       {/* Right side - Title, author, media player and actions */}
-      <div className="flex-1 p-4 flex flex-col min-w-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="min-w-0 flex-1 mr-4">
-            <h3 className="font-semibold text-base text-[#333333] truncate">{media.title || 'Untitled'}</h3>
-            <p className="text-sm text-[#666666] truncate">{media.author}</p>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0 flex-1 ml-4">
+            <h3 className="font-semibold text-base text-[#333333] truncate">{media.author} {media.author ? ' - ' : ''} {media.title || 'Untitled'}</h3>
+            <p className="text-xs text-[#666666] truncate">//TODO Publie par @user_name</p>
           </div>
-          {!media.media_cover_url && (
+          {/* {!media.media_cover_url && (
             <button
               onClick={handlePlayClick}
               className="p-2 rounded-full bg-[#E94135]/10 hover:bg-[#E94135]/20 transition-colors duration-200 flex-shrink-0"
@@ -78,7 +78,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
                 <Play className="w-5 h-5 text-[#E94135]" />
               )}
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Media player */}
@@ -107,7 +107,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
         </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-4 mt-2 ml-4">
             <button
               className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
               onClick={handleLike}
@@ -121,15 +121,15 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
               />
               <span className="text-sm text-gray-500">{likesCount}</span>
             </button>
-            <button
+            {/* <button
               onClick={handleShare}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               <Share className="w-5 h-5" />
-            </button>
+            </button> */}
           </div>
         </div>
-      </div>
+    </div>
 
   );
 }

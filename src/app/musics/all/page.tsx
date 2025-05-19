@@ -86,10 +86,10 @@ export default function AllMedia() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between mb-6">
+      {/* <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold">Tous les médias</h2>
         <SearchAndFilters />
-      </div>
+      </div> */}
 
       {error && (
         <div className="bg-red-50 p-4 rounded-md mb-6">
@@ -102,7 +102,7 @@ export default function AllMedia() {
           <div key={i} className="animate-pulse bg-gray-200 h-32 rounded-md mb-4" />
         ))
       ) : (
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-10">
           {media.map((item) => (
             <LibraryMediaCard key={item.id} media={item} />
           ))}
