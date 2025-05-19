@@ -6,7 +6,7 @@ import { addPointsForMedia } from '@/app/points/actions'
 
 
 interface CreatePostData {
-  type?: 'post' | 'feedback';
+  type?: 'post' | 'feedback' | 'challenge_participation';
   mediaType: 'audio' | 'video';
   mediaUrl: string;
   mediaPublicId: string;
@@ -15,6 +15,7 @@ interface CreatePostData {
   duration: number | null;
   content: string | null;
   userId: string;
+  challengeId?: string;
 }
 
 /**
@@ -166,6 +167,67 @@ export async function getLikedPosts(page: number = 1, limit: number = 5) {
   });
 }
 
+export async function createPostWithMediaNew(data: CreatePostData) {
+  const supabase = await createClient();
+  
+  try {
+    // Insert post
+    const { data: post, error: insertPostError } = await supabase
+      .from('posts')
+      .insert([
+        {
+          title: data.title,
+          content: data.content,
+          type: data.type || 'post',
+          user_id: data.userId,
+          challenge_id: data.challengeId
+        }
+      ])
+      .select()
+      .single();
+      
+    if (insertPostError) throw insertPostError;
+    
+    // Insert media
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('medias')
+      .insert({
+        media_type: data.mediaType,
+        media_url: data.mediaUrl,
+        media_public_id: data.mediaPublicId,
+        duration: data.duration,
+        title: data.title,
+        author: data.author,
+        user_id: data.userId
+      })
+      .select()
+      .single();
+
+    if (mediaError) throw mediaError;
+
+    // Link media to post
+    const { error: linkError } = await supabase
+      .from('post_medias')
+      .insert({
+        post_id: post.id,
+        media_id: mediaData.id,
+        position: 0
+      });
+
+    if (linkError) throw linkError;
+    // Add points for media
+    await addPointsForMedia(mediaData.id);
+
+    // Revalidate feed page
+    revalidatePath('/feed');
+
+    return { success: true, postId: post.id };
+  } catch (error) {
+    console.error('Error creating post with media:', error);
+    return { success: false, error: 'Failed to create post' };
+  }
+}
+
 export async function createPostWithMedia(data: CreatePostData) {
   const supabase = await createClient();
   
@@ -200,13 +262,84 @@ export async function createPostWithMedia(data: CreatePostData) {
     if (postError) throw postError;
     
     // 3. Link post and media
-    const { error: linkError } = await supabase
+    const { data: pmdta, error: linkError } = await supabase
       .from('posts_medias')
       .insert({
         post_id: postData.id,
         media_id: mediaData.id,
         position: 1 // First position since it's a new post
       });
+      
+    console.log("post media data", pmdta);
+    
+    
+    if (linkError) throw linkError;
+    
+    // Revalidate the feed page to show the new post
+    revalidatePath('/feed');
+
+    // Ajouter les points pour le nouveau média
+    await addPointsForMedia(mediaData.id);
+    
+    return { success: true, postId: postData.id };
+  } catch (error) {
+    console.error('Error creating post with media:', error);
+    return { success: false, error: 'Failed to create post' };
+  }
+}
+
+export async function createPostWithMediaCP(data: Omit<CreatePostData, 'challengeId'>, challengeId: string) {
+  const supabase = await createClient();
+  console.log("the challenge id is ", challengeId);
+  
+  
+  try {
+    // 1. Create media record
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('medias')
+      .insert({
+        media_type: data.mediaType,
+        media_url: data.mediaUrl,
+        media_public_id: data.mediaPublicId,
+        title: data.title,
+        author: data.author,
+        duration: data.duration,
+        user_id: data.userId
+      })
+      .select()
+      .single();
+      
+    if (mediaError) throw mediaError;
+    
+    // 2. Create post record with challenge_participation type
+    const { data: postData, error: postError } = await supabase
+      .from('posts')
+      .insert({
+        content: data.content,
+        post_type: 'challenge_participation',
+        user_id: data.userId,
+        challenge_id: challengeId
+      })
+      .select()
+      .single();
+
+    console.log("les postData", postData, "and mediadtat", mediaData);
+    
+      
+    if (postError) throw postError;
+    
+    // 3. Link post and media
+    const {  error: linkError } = await supabase
+      .from('posts_medias')
+      .insert({
+        post_id: postData.id,
+        media_id: mediaData.id,
+        position: 1 // First position since it's a new post
+      });
+
+
+      console.log("les pmdatas sont", linkError);
+      
       
     if (linkError) throw linkError;
     
@@ -220,6 +353,33 @@ export async function createPostWithMedia(data: CreatePostData) {
   } catch (error) {
     console.error('Error creating post with media:', error);
     return { success: false, error: 'Failed to create post' };
+  }
+}
+
+export async function getChallengeParticipations(challengeId: string) {
+  const supabase = await createClient();
+
+  try {
+    const { data: posts, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        profile:user_id (*),
+        medias:posts_medias!inner (id, position, media:media_id (*))
+      `)
+      .eq('post_type', 'challenge_participation')
+      .eq('challenge_id', challengeId)
+      .order('created_at', { ascending: false });
+
+      console.log("posts", posts);
+      
+
+    if (error) throw error;
+
+    return { posts, error: null };
+  } catch (error) {
+    console.error('Error fetching challenge participations:', error);
+    return { posts: null, error: 'Failed to fetch participations' };
   }
 }
 

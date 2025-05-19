@@ -65,7 +65,7 @@ export default function FeedPost({ post }: FeedPostProps) {
   // Get the first media item (for now we'll just handle single media)
   const mediaItem = post.medias[0];
 
-  console.log('mediaItem',mediaItem);
+  // console.log('mediaItem',mediaItem);
 
 
   const handleLike = async () => {

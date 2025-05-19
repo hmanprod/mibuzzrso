@@ -338,7 +338,7 @@ export default function CommentSection({
             type="text" 
             value={commentText} 
             onChange={(e) => setCommentText(e.target.value)} 
-            placeholder={replyingTo ? "Repondre à un commentaire..." : "Ajouter un commentaire"} 
+            placeholder={replyingTo ? "Repondre à un commentaire..." : "ajouter un commentaire"} 
             className="w-full p-2 pl-4 text-sm text-gray-700 rounded-lg shadow-sm focus:ring-1 focus:ring-primary focus:outline-none"
           />
           <button 

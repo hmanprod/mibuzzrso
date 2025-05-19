@@ -83,7 +83,7 @@ export async function createFeedbackPost(data: CreateFeedbackData) {
       .select()
       .single();
 
-    console.log("post", postData);
+    // console.log("post", postData);
     
       
     if (postError) throw postError;

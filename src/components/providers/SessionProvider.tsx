@@ -37,6 +37,8 @@ export function SessionProvider({
 
   // Effet pour récupérer le profil si initialUser existe
   useEffect(() => {
+    // console.log("on va fetcher le profil");
+    
     async function fetchProfile() {
       if (!initialUser?.id) {
         setIsLoading(false);

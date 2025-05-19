@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import {  User, LogOut, Search, ShieldCheck } from 'lucide-react';
+import { User, LogOut, Search, ShieldCheck, Trophy } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
 import { useSession } from '@/components/providers/SessionProvider';
 import SearchBar from '@/components/ui/SearchBar';
+import RankBadge from './profile/RankBadge';
+import PointsBadge from './ui/PointsBadge';
 
 interface NavbarProps {
   onOpenCreatePost?: () => void;
@@ -43,6 +45,9 @@ export default function Navbar({ className }: NavbarProps) {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
+  // console.log("the profiles", profile?.points);
+  
+
   return (
     <nav className={twMerge("h-[60px] bg-white border-b border-[#EAEAEA]", className)}>
       <div className="h-full max-w-[1300px] mx-auto px-6 flex items-center justify-between">
@@ -68,7 +73,7 @@ export default function Navbar({ className }: NavbarProps) {
               Fil d&apos;actualité
             </Link>
             <Link 
-              href="/musics"
+              href="/musics/all"
               className={twMerge(
                 "text-[#2D2D2D] font-medium text-[14px] hover:text-[#000000] transition-colors rounded-[18px] px-4 py-2",
                 pathname === '/musics' && 'bg-gray-100'
@@ -104,17 +109,27 @@ export default function Navbar({ className }: NavbarProps) {
           </button> */}
           <div className="flex items-center gap-2">
             <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggleDropdown}
-                className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
-              >
-                <Avatar
-                  src={profile?.avatar_url || null}
-                  stageName={profile?.stage_name}
-                  size={40}
-                  className="object-cover"
-                />
-              </button>
+              <div className="flex items-center gap-2 bg-white border-red-700 border-[1px] rounded-full p-[1px]">
+                <button
+                  onClick={toggleDropdown}
+                  className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                >
+                  <Avatar
+                    src={profile?.avatar_url || null}
+                    stageName={profile?.stage_name}
+                    size={40}
+                    className="object-cover"
+                  />
+                </button>
+                <div className="hidden md:flex  items-end gap-0.5">
+                  {profile?.points !== undefined && profile.points > 0 && (
+                    <PointsBadge points={profile.points} />
+                  )}
+                  {profile?.points !== undefined && profile.points >= 150 && (
+                    <RankBadge points={profile.points} />
+                  )}
+                </div>
+              </div>
 
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100">
@@ -139,8 +154,19 @@ export default function Navbar({ className }: NavbarProps) {
                     <ShieldCheck className="w-4 h-4" />
                     <span>Mon compte</span>
                   </button>
-                  
 
+                  {profile?.points && profile.points >= 150 && (
+                    <button
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        router.push('/rankings');
+                      }}
+                      className="flex items-center text-[15px] gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                    >
+                      <Trophy className="w-4 h-4" />
+                      <span>Classement</span>
+                    </button>
+                  )}
 
                   <div className="h-[1px] bg-gray-100 my-1" />
 
