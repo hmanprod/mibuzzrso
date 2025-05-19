@@ -109,19 +109,8 @@ export default function Navbar({ className }: NavbarProps) {
           </button> */}
           <div className="flex items-center gap-2">
             <div className="relative" ref={dropdownRef}>
-              <div className="flex items-center gap-2 bg-white border-red-700 border-[1px] rounded-full p-[1px]">
-                <button
-                  onClick={toggleDropdown}
-                  className="w-10 h-10 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
-                >
-                  <Avatar
-                    src={profile?.avatar_url || null}
-                    stageName={profile?.stage_name}
-                    size={40}
-                    className="object-cover"
-                  />
-                </button>
-                <div className="hidden md:flex  items-end gap-0.5">
+              <div className="flex items-center gap-2 bg-primary/20 rounded-full p-1">
+                <div className="hidden md:flex  items-end gap-0.5 bg-primary/80 rounded-full text-white p-1">
                   {profile?.points !== undefined && profile.points > 0 && (
                     <PointsBadge points={profile.points} />
                   )}
@@ -129,6 +118,17 @@ export default function Navbar({ className }: NavbarProps) {
                     <RankBadge points={profile.points} />
                   )}
                 </div>
+                <button
+                  onClick={toggleDropdown}
+                  className="rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                >
+                  <Avatar
+                    src={profile?.avatar_url || null}
+                    stageName={profile?.stage_name}
+                    size={32}
+                    className="object-cover"
+                  />
+                </button>
               </div>
 
               {isDropdownOpen && (
