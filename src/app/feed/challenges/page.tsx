@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { useSession } from "@/components/providers/SessionProvider";
+import CreateChallengeDialog from "@/components/feed/CreateChallengeDialog";
 
 
 function daysLeft(end_at: string) {
@@ -21,10 +22,11 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
+  const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const router = useRouter();
   const { user } = useSession()
 
-  console.log("the user is ", user);
+  // console.log("the user is ", user);
   
 
   useEffect(() => {
@@ -45,7 +47,15 @@ export default function ChallengesPage() {
     <div className="p-6 max-w-2xl mx-auto">
 
       <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
-      <div className="flex justify-end items-center gap-2">
+      <div className="flex justify-between items-center gap-2">
+        {user && (
+          <button
+            onClick={() => setShowCreateChallenge(true)}
+            className="px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition"
+          >
+            Créer un challenge
+          </button>
+        )}
         {/* Tabs */}
         <div className="flex gap-0 mb-4 bg-gray-100 rounded-2xl p-1 w-fit">
         {['all', 'active', 'completed'].map(tab => (
@@ -165,6 +175,15 @@ export default function ChallengesPage() {
           </div>
         ))}
       </div>
+
+      {/* Modal de création de challenge */}
+      <CreateChallengeDialog
+        open={showCreateChallenge}
+        onClose={() => setShowCreateChallenge(false)}
+        onSubmit={() => {
+          setStatus('active'); // Rafraîchir pour voir le nouveau challenge
+        }}
+      />
     </div>
   );
 }

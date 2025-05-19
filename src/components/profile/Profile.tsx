@@ -27,6 +27,7 @@ import ProfileSkeleton from './ProfileSkeleton';
 import { followUser, isFollowing } from '@/app/profile/actions/follower';
 import { toast } from '@/components/ui/use-toast';
 import UserLevel from './UserLevel';
+import RankBadge from './RankBadge';
 
 interface ProfileProps {
     userProfile?: ProfileType | null;
@@ -267,11 +268,18 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                 {/* Niveau utilisateur */}
                 <UserLevel points={userProfile.points || 0} />
 
-                {userProfile.bio && (
-                  <div className="mt-4 relative text-gray-700 italic">
-                      {userProfile.bio}
-                  </div>
-                )}
+                {/* Badge de rang */}
+              {userProfile.points > 0 && (
+                <div className="mt-4">
+                  <RankBadge points={userProfile.points} />
+                </div>
+              )}
+
+              {userProfile.bio && (
+                <div className="mt-4 relative text-gray-700 italic">
+                  {userProfile.bio}
+                </div>
+              )}
 
 
                 {userProfile.social_links && Object.keys(userProfile.social_links).length > 0 && (

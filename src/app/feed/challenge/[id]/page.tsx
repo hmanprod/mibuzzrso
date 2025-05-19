@@ -7,6 +7,7 @@ import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
 import { getChallenge, getChallengeMedias, participateInChallenge } from '../../actions/challenges';
+import { getChallengeParticipations } from '../../actions/post';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -50,10 +51,30 @@ interface ChallengeMedia {
   }>;
 }
 
+interface Participation {
+  id: string;
+  content: string;
+  created_at: string;
+  user: { id: string; email: string };
+  profile: { id: string; username: string; stage_name: string; avatar_url: string | null };
+  medias: Array<{
+    id: string;
+    position: number;
+    media: {
+      id: string;
+      media_type: 'audio' | 'video';
+      media_url: string;
+      media_public_id: string;
+      duration?: number;
+    };
+  }>;
+}
+
 export default function ChallengePage() {
   const params = useParams();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [medias, setMedias] = useState<ChallengeMedia[]>([]);
+  const [participations, setParticipations] = useState<Participation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -77,7 +98,7 @@ export default function ChallengePage() {
   const audioPlayerRef = useRef<MediaPlayerRef>(null);
   const videoPlayerRef = useRef<MediaPlayerRef>(null);
 
-  console.log("the user is ", user);
+  // console.log("the user is ", user);
   
 
   useEffect(() => {
@@ -85,7 +106,7 @@ export default function ChallengePage() {
       try {
         // Charger le challenge
         const challengeResult = await getChallenge(params.id as string);
-        console.log("Challenge result:", challengeResult);
+        // console.log("Challenge result:", challengeResult);
         
         if (challengeResult.error) {
           throw new Error(challengeResult.error);
@@ -122,6 +143,16 @@ export default function ChallengePage() {
             comments: media.comments
           }));
           setMedias(typedMedias);
+        }
+
+        // Charger les participations
+        const participationsResult = await getChallengeParticipations(params.id as string);
+        console.log("challenge participation results", participationsResult);
+        
+        if (participationsResult.error) {
+          console.error('Error loading participations:', participationsResult.error);
+        } else if (participationsResult.posts) {
+          setParticipations(participationsResult.posts);
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -413,12 +444,65 @@ export default function ChallengePage() {
 
     </article>
 
+    {/* Section des participations */}
+    <div className="mt-8">
+      <h3 className="text-lg font-semibold mb-4">Participations au challenge</h3>
+      <div className="space-y-6">
+        {participations.length > 0 ? (
+          participations.map((participation) => (
+            <div key={participation.id} className="bg-white rounded-[18px] p-4 shadow-sm">
+              <div className="flex items-center space-x-3 mb-4">
+                <Avatar
+                  src={participation.profile.avatar_url}
+                  stageName={participation.profile.stage_name || participation.profile.username}
+                  size={40}
+                />
+                <div>
+                  <h4 className="font-semibold text-sm">{participation.profile.stage_name || participation.profile.username}</h4>
+                  <TimeAgo date={participation.created_at} defaultLanguage="fr" />
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-4">{participation.content}</p>
+              
+              {participation.medias?.map((mediaItem) => (
+                <div key={mediaItem.id} className="mt-4">
+                  {mediaItem.media.media_type === 'audio' ? (
+                    <AudioPlayer
+                      mediaId={mediaItem.media.id}
+                      postId={participation.id}
+                      audioUrl={mediaItem.media.media_url}
+                      comments={[]}
+                      onTimeUpdate={() => {}}
+                      downloadable={false}
+                    />
+                  ) : (
+                    <VideoPlayer
+                      mediaId={mediaItem.media.id}
+                      postId={participation.id}
+                      videoUrl={mediaItem.media.media_url}
+                      comments={[]}
+                      onTimeUpdate={() => {}}
+                      downloadable={false}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 italic">Aucune participation pour le moment</p>
+        )}
+      </div>
+    </div>
+
     {/* Modal de participation */}
     <ParticipateModal
       open={isModalOpen}
       onClose={() => setIsModalOpen(false)}
       onParticipate={handleParticipate}
       challengeTitle={challenge?.title || ''}
+      challengeId={challenge.id}
     />
     </>
   );

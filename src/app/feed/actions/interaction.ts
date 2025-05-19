@@ -291,7 +291,7 @@ export async function togglePostLike(postId: string) {
         .single()
 
       if (!postError && postData?.media_id) {
-        console.log("awaiting likes");
+        // console.log("awaiting likes");
         
         await addPointsForLike(postData.media_id)
       }
