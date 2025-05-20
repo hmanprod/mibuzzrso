@@ -93,7 +93,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[1300px] mx-auto">
-        <div className="flex pt-[72px]">
+        <div className="flex">
           <div className="flex flex-1">
             <main className="flex-1 max-w-[600px] mx-auto w-full py-4 px-4 sm:px-0">
               {error && (
