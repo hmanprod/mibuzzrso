@@ -1,22 +1,17 @@
 'use client';
 
+'use client';
+
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Avatar } from '@/components/ui/Avatar';
 import Link from 'next/link';
 import RankBadge from '@/components/profile/RankBadge';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import { getWeeklyRankings, type RankingUser } from './actions/ranking';
 
 
-interface RankingUser {
-  id: string;
-  stage_name: string;
-  avatar_url: string | null;
-  points: number;
-  points_earned: number;
-  rank: number;
-}
+
 
 export default function RankingsPage() {
   const [rankings, setRankings] = useState<RankingUser[]>([]);
@@ -24,48 +19,19 @@ export default function RankingsPage() {
 
   useEffect(() => {
     async function fetchRankings() {
-      const supabase = createClient();
-      
-      // D'abord, on récupère les classements de la semaine
-      const { data: weeklyRankings, error } = await supabase
-        .from('weekly_rankings')
-        .select('points_earned, rank, user_id')
-        .eq('week_start', new Date().toISOString().split('T')[0])
-        .order('rank', { ascending: true });
-
-      if (error || !weeklyRankings) {
+      try {
+        const { data, error } = await getWeeklyRankings();
+        if (error) {
+          console.error('Error fetching rankings:', error);
+          return;
+        }
+        
+        setRankings(data || []);
+      } catch (error) {
         console.error('Error fetching rankings:', error);
-        return;
+      } finally {
+        setIsLoading(false);
       }
-
-      // Ensuite, on récupère les profils correspondants
-      const userIds = weeklyRankings.map(r => r.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, stage_name, avatar_url, points')
-        .in('id', userIds);
-
-      if (!profiles) return;
-
-      // On combine les données
-      const formattedRankings = weeklyRankings.map(ranking => {
-        const profile = profiles.find(p => p.id === ranking.user_id);
-        if (!profile) return null;
-
-        return {
-          id: profile.id,
-          stage_name: profile.stage_name,
-          avatar_url: profile.avatar_url,
-          points: profile.points,
-          points_earned: ranking.points_earned,
-          rank: ranking.rank
-        };
-      }).filter((r): r is RankingUser => r !== null);
-
-
-
-      setRankings(formattedRankings);
-      setIsLoading(false);
     }
 
     fetchRankings();
