@@ -152,6 +152,9 @@ export default function LoginPage() {
           En continuant, vous acceptez notre{' '}
           <Link href="/privacy-policy" className="underline hover:text-primary">
             politique de confidentialité
+          </Link> et les{' '}
+          <Link href="/terms" className="underline hover:text-primary">
+            conditions générales d&apos;utilisation
           </Link>.
         </p>
       </form>
