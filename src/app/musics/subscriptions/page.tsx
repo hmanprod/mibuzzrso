@@ -1,8 +1,5 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { getSubscriptionsMedia } from './actions/subscriptions';
 import { SubscriptionsList } from './components';
 
@@ -44,15 +41,12 @@ async function MediaList() {
 
 export default async function SubscriptionsPage() {
   return (
-    <AuthGuard>
+ 
       <div className="min-h-screen bg-background">
-        <Navbar />
+      
         <div className="flex">
-          <div className="hidden lg:block w-[274px] fixed top-[60px] bottom-0 border-r border-border p-4">
-            <Sidebar />
-          </div>
           
-          <div className="flex flex-1 ml-[274px]">
+          <div className="flex flex-1">
             <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0 max-w-7xl">
               <div className="container mx-auto py-8 px-4 space-y-8">
                 <section>
@@ -68,6 +62,5 @@ export default async function SubscriptionsPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   );
 }

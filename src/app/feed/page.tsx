@@ -8,8 +8,6 @@ import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import type { ExtendedPost } from '@/types/database';
 import { getPosts } from './actions/post';
 
-import PageContainer from '@/components/layouts/PageContainer';
-import MainContent from '@/components/layouts/MainContent';
 
 export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -93,47 +91,53 @@ export default function Home() {
   };
 
   return (
-    <PageContainer>
-      <MainContent>
-        {error && (
-          <div className="bg-red-50 p-4 rounded-md mb-6">
-            <p className="text-red-800">{error}</p>
-          </div>
-        )}
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <div className="max-w-[1300px] mx-auto">
+        <div className="flex pt-[72px]">
+          <div className="flex flex-1">
+            <main className="flex-1 max-w-[600px] mx-auto w-full py-4 px-4 sm:px-0">
+              {error && (
+                <div className="bg-red-50 p-4 rounded-md mb-6">
+                  <p className="text-red-800">{error}</p>
+                </div>
+              )}
 
-        <CreatePostBlock onClick={() => setShowCreatePost(true)} />
+              <CreatePostBlock onClick={() => setShowCreatePost(true)} />
 
-        {loading && !posts.length ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <FeedPostSkeleton key={i} />
-          ))
-        ) : (
-          <>
-            {posts.map((post) => (
-              <FeedPost
-                key={post.id}
-                post={post}
+              {loading && !posts.length ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <FeedPostSkeleton key={i} />
+                ))
+              ) : (
+                <>
+                  {posts.map((post) => (
+                    <FeedPost
+                      key={post.id}
+                      post={post}
+                    />
+                  ))}
+                  
+                  {loadingMore && (
+                    <FeedPostSkeleton />
+                  )}
+
+                  {!hasMore && posts.length > 0 && (
+                    <div className="text-center text-gray-500 mt-8">
+                      No more posts to load
+                    </div>
+                  )}
+                </>
+              )}
+              <CreatePostDialog
+                open={showCreatePost}
+                onClose={() => setShowCreatePost(false)}
+                onSubmit={handleCreatePost}
               />
-            ))}
-            
-            {loadingMore && (
-              <FeedPostSkeleton />
-            )}
-
-            {!hasMore && posts.length > 0 && (
-              <div className="text-center text-gray-500 mt-8">
-                No more posts to load
-              </div>
-            )}
-          </>
-        )}
-        <CreatePostDialog
-          open={showCreatePost}
-          onClose={() => setShowCreatePost(false)}
-          onSubmit={handleCreatePost}
-        />
-      </MainContent>
-    </PageContainer>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
   
   );
 }
