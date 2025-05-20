@@ -61,18 +61,18 @@ export default function CreateFeedbackDialog({ open, onClose, onSubmit }: Create
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Partager une idée</DialogTitle>
+          <DialogTitle>Une idée pour faire bouger MiBuzz ?</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="content">Description</Label>
+              <Label htmlFor="content">Dis-nous ce que tu as en tête (idées, suggestions, bugs, etc.)</Label>
               <Textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Décrivez votre idée"
+                placeholder="Ex : Ajoute un nouveau type de challenge, une fonctionnalité, ou une amélioration…"
                 className="mt-1 h-32"
               />
             </div>

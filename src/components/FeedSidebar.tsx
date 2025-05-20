@@ -32,10 +32,10 @@ export default function FeedSidebar() {
         </Link>
 
         <Link
-          href="/musics/subscriptions"
+          href="/profile/followed"
           className={twMerge(
             'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
-            pathname === '/musics/subscriptions' && 'bg-gray-100'
+            pathname === '/profile/followed' && 'bg-gray-100'
           )}
         >
           <Users className="w-6 h-6" />

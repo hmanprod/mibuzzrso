@@ -38,12 +38,12 @@ export default function EditPostDialog({
     e.preventDefault();
     
     if (!user) {
-      setError('You must be logged in to edit a post');
+      setError('Vous devez être connecté pour modifier un post');
       return;
     }
 
     if (!title.trim()) {
-      setError('Title is required');
+      setError('Le titre est requis');
       return;
     }
 
@@ -55,26 +55,26 @@ export default function EditPostDialog({
       const contentResult = await updatePostContent(postId, content, user.id);
       
       if (!contentResult.success) {
-        throw new Error(contentResult.error || 'Failed to update post content');
+        throw new Error(contentResult.error || 'Échec de la mise à jour du contenu du post');
       }
       
       // Update the media title
       const titleResult = await updateMediaTitle(mediaId, title, user.id);
       
       if (!titleResult.success) {
-        throw new Error(titleResult.error || 'Failed to update media title');
+        throw new Error(titleResult.error || 'Échec de la mise à jour du titre du média');
       }
       
       toast({
-        title: "Success",
-        description: "Post updated successfully"
+        title: "Succès",
+        description: "Post mis à jour avec succès"
       });
       
       onClose();
       onUpdated?.();
     } catch (error) {
       console.error('Error updating post:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update post. Please try again.');
+      setError(error instanceof Error ? error.message : 'Échec de la mise à jour du post. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }
@@ -84,21 +84,21 @@ export default function EditPostDialog({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Edit Post</DialogTitle>
+          <DialogTitle>Modifier le post</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           {/* Title Field */}
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium">
-              Title
+              Titre
             </label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter title"
+              placeholder="Entrez le titre"
               className="w-full px-3 py-2 border rounded-md"
               required
             />
@@ -107,13 +107,13 @@ export default function EditPostDialog({
           {/* Content Field */}
           <div className="space-y-2">
             <label htmlFor="content" className="text-sm font-medium">
-              Content (optional)
+              Contenu (optionnel)
             </label>
             <textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="What's on your mind?"
+              placeholder="Qu'avez-vous à partager ?"
               className="w-full min-h-[100px] px-3 py-2 border rounded-md resize-none"
             />
           </div>
@@ -124,7 +124,7 @@ export default function EditPostDialog({
           
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
+              Annuler
             </Button>
             <Button 
               type="submit" 
@@ -133,10 +133,10 @@ export default function EditPostDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
+                  Mise à jour...
                 </>
               ) : (
-                'Update Post'
+                'Mettre à jour le post'
               )}
             </Button>
           </div>

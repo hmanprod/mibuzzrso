@@ -81,8 +81,8 @@ export default function CommentSection({
     
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to add comments",
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour ajouter des commentaires",
         variant: "destructive"
       });
       return;
@@ -92,8 +92,8 @@ export default function CommentSection({
     
     if (!content.trim() || !mediaId) {
       toast({
-        title: "Empty comment",
-        description: "Please enter a comment",
+        title: "Commentaire vide",
+        description: "Veuillez saisir un commentaire",
         variant: "destructive"
       });
       return;
@@ -113,8 +113,8 @@ export default function CommentSection({
 
       if (error) {
         toast({
-          title: "Error",
-          description: "Error adding comment",
+          title: "Erreur",
+          description: "Erreur lors de l'ajout du commentaire",
           variant: "destructive"
         });
         return;
@@ -136,8 +136,8 @@ export default function CommentSection({
       await onCommentAdded();
 
       toast({
-        title: "Comment added",
-        description: "Your comment has been added successfully",
+        title: "Commentaire ajouté",
+        description: "Votre commentaire a été ajouté avec succès",
       });
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -154,8 +154,8 @@ export default function CommentSection({
   const handleLikeComment = async (commentId: string, postId: string) => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to like comments",
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour aimer les commentaires",
         variant: "destructive"
       });
       return;
@@ -193,8 +193,8 @@ export default function CommentSection({
         });
 
         toast({
-          title: "Error",
-          description: "Error liking comment",
+          title: "Erreur",
+          description: "Erreur lors de l'ajout du j'aime",
           variant: "destructive"
         });
         return;
@@ -292,7 +292,7 @@ export default function CommentSection({
                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-primary"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Reply</span>
+                <span>Répondre</span>
               </button>
             </div>
           </div>

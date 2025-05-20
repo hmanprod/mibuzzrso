@@ -188,7 +188,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
         </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-2 ml-4">
+          <div className="flex items-center gap-4 mt-2 ml-4 mb-3">
             <button
               className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
               onClick={handleLike}

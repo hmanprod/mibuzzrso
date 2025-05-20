@@ -11,9 +11,9 @@ export default function Sidebar() {
   const pathname = usePathname();
   
   // Use FeedSidebar for /feed routes, LibrarySidebar for /musics routes
-  if (pathname?.startsWith('/feed')) {
-    return <FeedSidebar />;
+  if (pathname?.startsWith('/musics')) {
+    return <LibrarySidebar />;
   }
   
-  return <LibrarySidebar />;
+  return <FeedSidebar />;
 }

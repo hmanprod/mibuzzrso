@@ -40,11 +40,14 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       : file.type.startsWith('video/');
 
     if (!isValidType) {
-      setError(`Please select a valid ${activeTab} file`);
+      setError(`Veuillez sélectionner un fichier ${activeTab === 'audio' ? 'audio' : 'vidéo'} valide`);
       return;
     }
 
     setSelectedFile(file);
+    // Remove the file extension when setting the title
+    const fileNameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
+    setTitle(fileNameWithoutExtension);
   }, [activeTab]);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -73,7 +76,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedFile || !title.trim()) {
-      setError('Please fill in all required fields');
+      setError('Veuillez remplir tous les champs requis');
       return;
     }
 
@@ -84,7 +87,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       // Upload media to Cloudinary (keep this client-side)
       const mediaUpload = await uploadToCloudinary(selectedFile, activeTab);
       if (!mediaUpload) {
-        throw new Error('Failed to upload media');
+        throw new Error('Échec du téléchargement du média');
       }
 
       setCurrentStep('creating');
@@ -103,7 +106,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       });
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to create post');
+        throw new Error(result.error || 'Échec de la création du post');
       }
 
       // Reset form
@@ -117,7 +120,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       onSubmit?.();
     } catch (error) {
       console.error('Error creating post:', error);
-      setError('Failed to create post. Please try again.');
+      setError('Échec de la création du post. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
       setCurrentStep(null);
@@ -128,7 +131,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Post</DialogTitle>
+          <DialogTitle>Créer un nouveau post</DialogTitle>
         </DialogHeader>
 
         {isSubmitting ? (
@@ -149,12 +152,12 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
             </div>
             <div className="text-center space-y-2">
               <p className="text-lg font-medium text-gray-900">
-                {currentStep === 'upload' ? 'Uploading your media...' : 'Creating your post...'}
+                {currentStep === 'upload' ? 'Téléchargement de votre média...' : 'Création de votre post...'}
               </p>
               {currentStep === 'upload' && (
                 <>
                   <p className="text-sm text-gray-500">
-                    {progress}% complete
+                    {progress}% terminé
                   </p>
                   <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div 
@@ -168,15 +171,6 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Content Field */}
-            <div className="space-y-4">
-              <textarea
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-                placeholder="What's on your mind?"
-                className="w-full min-h-[100px] resize-none focus:outline-none text-lg"
-              />
-            </div>
 
             {/* Media Type Selection */}
             <div className="flex gap-4 p-4 bg-gray-50 rounded-lg hidden">
@@ -198,7 +192,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                 }`}
               >
                 <Video className="w-5 h-5" />
-                <span>Video</span>
+                <span>Vidéo</span>
               </button>
             </div>
 
@@ -228,50 +222,51 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                   <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
                     <Upload className="w-8 h-8" />
                     <p className="text-sm font-medium">
-                      Drag and drop your {activeTab} file here, or click to select
+                      Glissez-déposez votre fichier {activeTab === 'audio' ? 'audio' : 'vidéo'} ici, ou cliquez pour sélectionner
                     </p>
                     <p className="text-xs">
-                      Supported formats: {activeTab === 'audio' ? 'MP3, WAV, AAC' : 'MP4, WebM, MOV'}
+                      Formats supportés : {activeTab === 'audio' ? 'MP3, WAV, AAC' : 'MP4, WebM, MOV'}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1 space-y-2">
-                      <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder={`${activeTab === 'audio' ? 'Audio' : 'Video'} title`}
-                        className="w-full px-3 py-2 border rounded-md"
-                      />
+                    <div className="flex gap-2 flex-1">
                       {activeTab === 'audio' && (
                         <input
                           type="text"
                           value={author}
                           onChange={(e) => setAuthor(e.target.value)}
-                          placeholder="Artist name"
-                          className="w-full px-3 py-2 border rounded-md"
+                          placeholder="Nom de l'artiste"
+                          className="w-[150px] px-3 py-2 border rounded-md"
                         />
                       )}
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={`Titre ${activeTab === 'audio' ? 'audio' : 'vidéo'}`}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
                     </div>
-                    <Button
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {selectedFile.name}
+                  </p>
+                  <div className='flex justify-end'>
+                  <Button
                       type="button"
-                      variant="destructive"
-                      size="icon"
+                      variant="outline"
                       onClick={() => {
                         setSelectedFile(null);
                         setTitle('');
                         setAuthor('');
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                     </Button>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    Selected file: {selectedFile.name}
-                  </p>
                   {isUploading && (
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div
@@ -288,15 +283,25 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
               )}
             </div>
 
+            {/* Content Field */}
+            <div className="space-y-4">
+              <textarea
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                placeholder="Parle-nous de ce projet ..."
+                className="w-full min-h-[100px] resize-none focus:outline-none text-lg"
+              />
+            </div>
+
             <div className="flex justify-end gap-3">
               <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
+                Annuler
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting || (!selectedFile || !title.trim())}
               >
-                Create Post
+                Créer le post
               </Button>
             </div>
           </form>
