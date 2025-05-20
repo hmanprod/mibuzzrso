@@ -1,8 +1,5 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { getLikedMedia } from './actions/likes';
 import { LikedList } from './components';
 
@@ -44,19 +41,18 @@ async function MediaList() {
 
 export default function LikedPage() {
   return (
-    <AuthGuard>
+   
       <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="flex">
-          <Sidebar />
+       
+       
           <main className="flex-1 px-8 py-6">
             <h1 className="text-2xl font-bold mb-8">Musiques aimées</h1>
             <Suspense fallback={<LoadingSpinner />}>
               <MediaList />
             </Suspense>
           </main>
-        </div>
+       
       </div>
-    </AuthGuard>
+   
   );
 }
