@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
-import { Trophy, Heart, Users } from 'lucide-react';
+import { Trophy, Heart, Users, Lightbulb } from 'lucide-react';
 
 export default function FeedSidebar() {
   const pathname = usePathname();
@@ -40,6 +40,17 @@ export default function FeedSidebar() {
         >
           <Users className="w-6 h-6" />
           <span className="font-medium">Abonnements</span>
+        </Link>
+
+        <Link
+          href="/feedbacks"
+          className={twMerge(
+            'flex items-center gap-3 px-4 py-4 text-gray-600 hover:bg-gray-100 transition-colors rounded-[12px]',
+            pathname === '/feedback' && 'bg-gray-100'
+          )}
+        >
+          <Lightbulb className="w-6 h-6" />
+          <span className="font-medium">Feedback & Idées</span>
         </Link>
       </nav>
     </aside>
