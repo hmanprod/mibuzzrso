@@ -25,7 +25,7 @@ export async function signInWithGoogle() {
   const supabase = await createClient()
   
   // Use the simplest possible OAuth configuration with explicit redirectTo
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
