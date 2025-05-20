@@ -24,14 +24,17 @@ export async function login(formData: FormData) {
 export async function signInWithGoogle() {
   const supabase = await createClient()
   
+  // Use the simplest possible OAuth configuration with explicit redirectTo
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     },
   })
 
   if (error) {
+    console.error('OAuth error:', error);
     return { error: error.message }
   }
 

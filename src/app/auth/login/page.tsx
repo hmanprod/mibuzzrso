@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
@@ -9,9 +10,18 @@ import { login, signInWithGoogle } from './actions';
 
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    // Check for error parameters in the URL
+    const urlError = searchParams.get('error');
+    if (urlError === 'state_validation_failed') {
+      setError('Votre session a expiré. Veuillez vous connecter à nouveau.');
+    }
+  }, [searchParams]);
   
 
   async function handleGoogleSignIn() {

@@ -23,7 +23,7 @@ export function Avatar({ src, stageName, fallback, size = 40, className }: Avata
   }
 
   // If no image, show fallback or first letter of stage name on black background
-  const initial = fallback || (stageName ? stageName.charAt(0).toUpperCase() : '?');
+  const initial = fallback || (stageName ? stageName.charAt(0).toUpperCase() : 'U');
 
   return (
     <div
