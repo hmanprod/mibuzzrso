@@ -109,7 +109,7 @@ export default function Navbar({ className }: NavbarProps) {
           </button> */}
           <div className="flex items-center gap-2">
             <div className="relative" ref={dropdownRef}>
-              <div className="flex items-center gap-2 bg-primary/20 rounded-full p-1">
+              <div className="flex items-center gap-2 bg-primary/20 rounded-full p-1 pr-2">
                 <div className="hidden md:flex  items-end gap-0.5 bg-primary/80 rounded-full text-white p-1">
                   {profile?.points !== undefined && profile.points > 0 && (
                     <PointsBadge points={profile.points} />
