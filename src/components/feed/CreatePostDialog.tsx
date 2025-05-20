@@ -179,7 +179,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
             </div>
 
             {/* Media Type Selection */}
-            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg hidden">
               <button
                 type="button"
                 onClick={() => setActiveTab('audio')}
