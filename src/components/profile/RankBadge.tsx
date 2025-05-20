@@ -42,7 +42,7 @@ export default function RankBadge({ points }: RankBadgeProps) {
   if (!rankInfo) return null;
 
   return (
-    <div className={`flex items-center px-1 ${rankInfo.color} font-medium`}>
+    <div className={`flex items-center pl-1 ${rankInfo.color} font-medium`}>
       <span className="text-xl">{rankInfo.icon}</span>
       {/* <span>{rankInfo.name}</span> */}
     </div>
