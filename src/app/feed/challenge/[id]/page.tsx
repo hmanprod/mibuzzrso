@@ -86,7 +86,7 @@ export default function ChallengePage() {
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [selectedParticipation, setSelectedParticipation] = useState<Participation | null>(null);
   const [showVoteModal, setShowVoteModal] = useState(false);
-  const [hasListenedFully, setHasListenedFully] = useState<{[key: string]: boolean}>({});
+  // const [hasListenedFully, setHasListenedFully] = useState<{[key: string]: boolean}>({});
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
     if (currentPlaybackTime > 0) {
@@ -480,14 +480,14 @@ export default function ChallengePage() {
                       postId={participation.id}
                       audioUrl={mediaItem.media.media_url}
                       comments={[]}
-                      onTimeUpdate={(time) => {
-                        if (time >= (mediaItem.media.duration || 0)) {
-                          setHasListenedFully(prev => ({
-                            ...prev,
-                            [participation.id]: true
-                          }));
-                        }
-                      }}
+                      // onTimeUpdate={(time) => {
+                      //   if (time >= (mediaItem.media.duration || 0)) {
+                      //     setHasListenedFully(prev => ({
+                      //       ...prev,
+                      //       [participation.id]: true
+                      //     }));
+                      //   }
+                      // }}
                       downloadable={false}
                     />
                   ) : (
@@ -496,14 +496,14 @@ export default function ChallengePage() {
                       postId={participation.id}
                       videoUrl={mediaItem.media.media_url}
                       comments={[]}
-                      onTimeUpdate={(time) => {
-                        if (time >= (mediaItem.media.duration || 0)) {
-                          setHasListenedFully(prev => ({
-                            ...prev,
-                            [participation.id]: true
-                          }));
-                        }
-                      }}
+                      // onTimeUpdate={(time) => {
+                      //   if (time >= (mediaItem.media.duration || 0)) {
+                      //     setHasListenedFully(prev => ({
+                      //       ...prev,
+                      //       [participation.id]: true
+                      //     }));
+                      //   }
+                      // }}
                       downloadable={false}
                     />
                   )}

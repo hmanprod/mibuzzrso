@@ -48,6 +48,8 @@ export default function VoteModal({ open, onClose, onVote, participation }: Vote
       });
       onClose();
     } catch (error) {
+      console.log(error);
+      
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors du vote",
@@ -86,7 +88,7 @@ export default function VoteModal({ open, onClose, onVote, participation }: Vote
 
         {!hasListenedFully ? (
           <p className="text-red-500 mb-4">
-            Écoutez la participation jusqu'à la fin pour pouvoir voter
+            Écoutez la participation jusqu&apos;à la fin pour pouvoir voter
           </p>
         ) : (
           <div className="flex flex-col items-center space-y-4">

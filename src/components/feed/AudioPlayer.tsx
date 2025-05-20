@@ -26,7 +26,7 @@ interface AudioPlayerProps {
       username: string;
     };
   }[];
-  onCommentAdded?: () => Promise<void>;
+  onCommentAdded?: (content: string, timestamp: number) => Promise<void>;
   onTimeUpdate?: (time: number) => void;
   downloadable?: boolean;
 }
