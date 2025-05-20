@@ -10,6 +10,7 @@ type SessionContextType = {
   profile: Profile | null;
   isLoading: boolean;
   updateProfile: (profile: Partial<Profile>) => Promise<void>;
+  admin: boolean
 };
 
 const SessionContext = createContext<SessionContextType>({
@@ -17,6 +18,7 @@ const SessionContext = createContext<SessionContextType>({
   profile: null,
   isLoading: true,
   updateProfile: async () => {},
+  admin: true
 });
 
 export function useSession() {
@@ -34,6 +36,7 @@ export function SessionProvider({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClientComponentClient();
+  const [admin, setAdmin] = useState(false)
 
   // Effet pour récupérer le profil si initialUser existe
   useEffect(() => {
@@ -51,6 +54,9 @@ export function SessionProvider({
           .select('*')
           .eq('id', initialUser.id)
           .single();
+
+       setAdmin(data.is_admin)
+        
 
         if (error) {
           console.error('Error fetching profile:', error);
@@ -101,7 +107,7 @@ export function SessionProvider({
   };
 
   return (
-    <SessionContext.Provider value={{ user, profile, isLoading, updateProfile }}>
+    <SessionContext.Provider value={{ user, profile, admin, isLoading, updateProfile }}>
       {children}
     </SessionContext.Provider>
   );

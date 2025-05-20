@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar } from 'lucide-react';
+import { Heart, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar, Star } from 'lucide-react';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
@@ -17,6 +17,8 @@ import ParticipateModal from '@/components/feed/ParticipateModal';
 import { TimeAgo } from '@/components/ui/TimeAgo';
 import WinnerCard from '@/components/challenge/WinnerCard';
 import ChallengeSkeleton from '@/components/challenge/ChallengeSkeleton';
+import VoteModal from '@/components/challenge/VoteModal';
+import { voteForParticipation } from '../../actions/vote';
 
 interface MediaPlayerRef {
   seekToTime: (time: number) => void;
@@ -68,6 +70,8 @@ interface Participation {
       duration?: number;
     };
   }>;
+  has_voted?: boolean;
+  vote_points?: number;
 }
 
 export default function ChallengePage() {
@@ -80,6 +84,9 @@ export default function ChallengePage() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
+  const [selectedParticipation, setSelectedParticipation] = useState<Participation | null>(null);
+  const [showVoteModal, setShowVoteModal] = useState(false);
+  const [hasListenedFully, setHasListenedFully] = useState<{[key: string]: boolean}>({});
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
     if (currentPlaybackTime > 0) {
@@ -473,7 +480,14 @@ export default function ChallengePage() {
                       postId={participation.id}
                       audioUrl={mediaItem.media.media_url}
                       comments={[]}
-                      onTimeUpdate={() => {}}
+                      onTimeUpdate={(time) => {
+                        if (time >= (mediaItem.media.duration || 0)) {
+                          setHasListenedFully(prev => ({
+                            ...prev,
+                            [participation.id]: true
+                          }));
+                        }
+                      }}
                       downloadable={false}
                     />
                   ) : (
@@ -482,12 +496,39 @@ export default function ChallengePage() {
                       postId={participation.id}
                       videoUrl={mediaItem.media.media_url}
                       comments={[]}
-                      onTimeUpdate={() => {}}
+                      onTimeUpdate={(time) => {
+                        if (time >= (mediaItem.media.duration || 0)) {
+                          setHasListenedFully(prev => ({
+                            ...prev,
+                            [participation.id]: true
+                          }));
+                        }
+                      }}
                       downloadable={false}
                     />
                   )}
                 </div>
               ))}
+              <div className="mt-4 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  {participation.has_voted ? (
+                    <div className="flex items-center gap-1 text-yellow-500">
+                      <Star className="w-5 h-5 fill-yellow-400 stroke-yellow-400" />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSelectedParticipation(participation);
+                        setShowVoteModal(true);
+                      }}
+                      className="px-4 py-2 bg-[#E94135] text-white rounded-full hover:bg-red-600"
+                    >
+                      Voter
+                    </button>
+                  )}
+                </div>
+
+              </div>
             </div>
           ))
         ) : (
@@ -504,6 +545,43 @@ export default function ChallengePage() {
       challengeTitle={challenge?.title || ''}
       challengeId={challenge.id}
     />
+    
+    {selectedParticipation && (
+      <VoteModal
+        open={showVoteModal}
+        onClose={() => {
+          setShowVoteModal(false);
+          setSelectedParticipation(null);
+        }}
+        onVote={async (points: number) => {
+          if (!user?.id || !selectedParticipation) return;
+          
+          const result = await voteForParticipation({
+            challengeId: challenge.id,
+            participationId: selectedParticipation.id,
+            voterId: user.id,
+            points,
+          });
+
+          if (!result.success) {
+            toast({
+              title: "Erreur",
+              description: result.error,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // Mise à jour locale de la participation
+          setParticipations(prev => prev.map(p => 
+            p.id === selectedParticipation.id
+              ? { ...p, has_voted: true, vote_points: points }
+              : p
+          ));
+        }}
+        participation={selectedParticipation}
+      />
+    )}
     </>
   );
 }

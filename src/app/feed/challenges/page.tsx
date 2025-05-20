@@ -24,9 +24,9 @@ export default function ChallengesPage() {
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const router = useRouter();
-  const { user } = useSession()
+  const { user, admin } = useSession()
 
-  // console.log("the user is ", user);
+
   
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function ChallengesPage() {
 
       <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
       <div className="flex justify-between items-center gap-2">
-        {user && (
+        {admin && (
           <button
             onClick={() => setShowCreateChallenge(true)}
             className="px-4 py-2 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition"

@@ -360,21 +360,48 @@ export async function getChallengeParticipations(challengeId: string) {
   const supabase = await createClient();
 
   try {
+    // 1. Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    // 2. Get posts with their media and votes
     const { data: posts, error } = await supabase
       .from('posts')
       .select(`
         *,
         profile:user_id (*),
-        medias:posts_medias!inner (id, position, media:media_id (*))
+        medias:posts_medias!inner (id, position, media:media_id (*)),
+        votes:challenge_votes(points)
       `)
       .eq('post_type', 'challenge_participation')
       .eq('challenge_id', challengeId)
       .order('created_at', { ascending: false });
 
-      console.log("posts", posts);
-      
-
     if (error) throw error;
+
+    // 3. If user is logged in, check their votes
+    if (userId && posts) {
+      const { data: userVotes } = await supabase
+        .from('challenge_votes')
+        .select('participation_id, points')
+        .eq('voter_id', userId)
+        .in(
+          'participation_id',
+          posts.map(p => p.id)
+        );
+
+      // 4. Add vote information to each post
+      const postsWithVotes = posts.map(post => {
+        const userVote = userVotes?.find(v => v.participation_id === post.id);
+        return {
+          ...post,
+          has_voted: !!userVote,
+          vote_points: userVote?.points || null
+        };
+      });
+
+      return { posts: postsWithVotes, error: null };
+    }
 
     return { posts, error: null };
   } catch (error) {
