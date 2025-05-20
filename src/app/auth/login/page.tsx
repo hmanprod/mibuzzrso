@@ -147,6 +147,13 @@ export default function LoginPage() {
             S&apos;inscrire
           </Link>
         </p>
+        {/* Privacy Policy Link */}
+        <p className="text-center text-xs text-gray-400 mt-4">
+          En continuant, vous acceptez notre{' '}
+          <Link href="/privacy-policy" className="underline hover:text-primary">
+            politique de confidentialité
+          </Link>.
+        </p>
       </form>
     </AuthLayout>
   );

@@ -140,6 +140,9 @@ export default function RegisterPage() {
           />
           <label htmlFor="acceptTerms" className="text-sm text-gray-600">
             J&apos;accepte les{' '}
+            <Link href="/privacy-policy" className="text-primary hover:text-primary/80">
+              politique de confidentialité
+            </Link> et les{' '}
             <Link href="/terms" className="text-primary hover:text-primary/80">
               conditions d&apos;utilisation
             </Link>
