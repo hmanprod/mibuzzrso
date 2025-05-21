@@ -2,16 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import AuthLayout from '@/components/auth/AuthLayout';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    // TODO: Implémenter la logique de réinitialisation
+    
+    try {
+      const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const supabase = await createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origin}/auth/update-password`,
+      });
+      
+      if (error) {
+        console.error('Erreur lors de la réinitialisation du mot de passe:', error.message);
+      }
+      
+      // Même en cas d'erreur, on affiche le message de confirmation pour des raisons de sécurité
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Erreur inattendue:', error);
+      setIsSubmitted(true); // Toujours afficher le succès pour ne pas exposer l'existence du compte
+    }
   };
 
   if (isSubmitted) {

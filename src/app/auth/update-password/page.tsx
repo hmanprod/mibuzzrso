@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import AuthLayout from '@/components/auth/AuthLayout';
 
 export default function NewPasswordPage() {
@@ -10,11 +11,43 @@ export default function NewPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    // TODO: Implémenter la logique de changement de mot de passe
+    setError('');
+    
+    // Vérifier que les mots de passe correspondent
+    if (password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      return;
+    }
+    
+    // Vérifier que le mot de passe respecte les critères minimums
+    if (password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+    
+    try {
+      const supabase = await createClient();
+      
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      if (error) {
+        console.error('Erreur lors de la mise à jour du mot de passe:', error.message);
+        setError(error.message);
+        return;
+      }
+      
+      // Si tout s'est bien passé, afficher le message de succès
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Erreur inattendue:', err);
+      setError('Une erreur est survenue. Veuillez réessayer.');
+    }
   };
 
   if (isSubmitted) {
@@ -46,6 +79,11 @@ export default function NewPasswordPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="p-3 bg-red-50 text-red-700 rounded-lg border border-red-100">
+            {error}
+          </div>
+        )}
         {/* Nouveau mot de passe */}
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-medium text-[#2D2D2D]">
