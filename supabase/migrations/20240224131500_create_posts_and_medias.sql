@@ -1,5 +1,9 @@
 -- Create enum types
-CREATE TYPE post_type AS ENUM ('post', 'challenge', 'feedback');
+-- First drop existing enum type if it exists
+DROP TYPE IF EXISTS post_type CASCADE;
+
+-- Recreate the enum with all values
+CREATE TYPE post_type AS ENUM ('post', 'challenge', 'challenge_participation', 'feedback');
 CREATE TYPE media_type AS ENUM ('audio', 'video');
 CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read', 'comment');
 

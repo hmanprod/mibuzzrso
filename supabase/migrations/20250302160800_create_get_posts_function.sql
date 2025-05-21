@@ -125,7 +125,10 @@ BEGIN
         JOIN filtered_posts fp ON p.id = fp.post_id
         JOIN profiles pr ON p.user_id = pr.id
         JOIN posts_medias pm ON p.id = pm.post_id
-        WHERE (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
+        WHERE CASE 
+            WHEN p_post_type = 'feed' THEN p.post_type IN ('post', 'challenge_participation')
+            ELSE p_post_type IS NULL OR p.post_type = p_post_type::post_type
+        END
         GROUP BY p.id, pr.id, fp.match_source
         ORDER BY p.created_at DESC
         LIMIT p_limit
@@ -188,7 +191,10 @@ BEGIN
         JOIN posts_medias pm ON p.id = pm.post_id
         WHERE i.user_id = p_current_user_id
         AND i.type = 'like'
-        AND (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
+        AND CASE 
+            WHEN p_post_type = 'feed' THEN p.post_type IN ('post', 'challenge_participation')
+            ELSE p_post_type IS NULL OR p.post_type = p_post_type::post_type
+        END
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
         LIMIT p_limit
@@ -260,7 +266,10 @@ BEGIN
         JOIN posts_medias pm ON p.id = pm.post_id
         JOIN medias m ON pm.media_id = m.id
         WHERE p.user_id = p_profile_id
-        AND (p_post_type IS NULL OR p.post_type = p_post_type::post_type)
+        AND CASE 
+            WHEN p_post_type = 'feed' THEN p.post_type IN ('post', 'challenge_participation')
+            ELSE p_post_type IS NULL OR p.post_type = p_post_type::post_type
+        END
         AND (p_media_type IS NULL OR m.media_type::TEXT = p_media_type)
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
@@ -330,7 +339,10 @@ BEGIN
         FROM posts p
         JOIN profiles pr ON p.user_id = pr.id
         JOIN posts_medias pm ON p.id = pm.post_id
-        WHERE p.post_type = p_post_type::post_type
+        WHERE CASE 
+            WHEN p_post_type = 'feed' THEN p.post_type IN ('post', 'challenge_participation')
+            ELSE p_post_type IS NULL OR p.post_type = p_post_type::post_type
+        END
         GROUP BY p.id, pr.id
         ORDER BY p.created_at DESC
         LIMIT p_limit

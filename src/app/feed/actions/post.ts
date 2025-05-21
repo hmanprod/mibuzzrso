@@ -26,7 +26,7 @@ interface CreatePostData {
 export async function fetchPosts({
   page = 1,
   limit = 10,
-  postType = 'post',
+  postType = 'feed',
   profileId = null,
   likedOnly = false,
   mediaType = null,
@@ -34,7 +34,7 @@ export async function fetchPosts({
 }: {
   page?: number;
   limit?: number;
-  postType?: 'post' | 'challenge' | 'feedback';
+  postType?: 'post' | 'challenge_participation' | 'feedback' | 'feed';
   profileId?: string | null;
   likedOnly?: boolean;
   mediaType?: 'audio' | 'video' | null;
@@ -119,7 +119,7 @@ export async function fetchPosts({
   }
 }
 
-export async function getPosts(page: number = 1, limit: number = 5, postType: 'post' | 'challenge' | 'feedback' = 'post') {
+export async function getPosts(page: number = 1, limit: number = 5, postType: 'feed' = 'feed') {
   return fetchPosts({ page, limit, postType });
 }
 

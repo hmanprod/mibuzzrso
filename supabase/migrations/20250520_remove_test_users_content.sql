@@ -1,14 +1,17 @@
 -- Liste des utilisateurs à nettoyer
-CREATE TEMP TABLE users_to_clean (
-    user_id UUID
-);
+create table if not exists public.users_to_clean (
+  user_id uuid not null,
+  name text null,
+  constraint users_to_clean_pkey primary key (user_id),
+  constraint users_to_clean_user_id_key unique (user_id)
+) TABLESPACE pg_default;
 
-INSERT INTO users_to_clean (user_id) VALUES
-    ('c4ca416b-b666-45c1-8830-0730b20e472d')
-    -- ('2380b68d-d2bb-460a-ba84-2ac15b778e5a'),
-    -- ('15e035de-9c9b-4b54-92ce-a036d17a351e'),
-    -- ('a9343b56-87ee-4e7a-9585-195380330638'),
-    -- ('582cc679-61ef-4c5d-823e-a228a369b00e');
+-- INSERT INTO users_to_clean (user_id, name) VALUES
+--     ('c4ca416b-b666-45c1-8830-0730b20e472d', 'Ronal')
+--     -- ('2380b68d-d2bb-460a-ba84-2ac15b778e5a', 'Ronal'),
+--     -- ('15e035de-9c9b-4b54-92ce-a036d17a351e', 'Ronal'),
+--     -- ('a9343b56-87ee-4e7a-9585-195380330638', 'Ronal'),
+--     -- ('582cc679-61ef-4c5d-823e-a228a369b00e', 'Ronal');
 
 -- Commencer une transaction
 BEGIN;
@@ -91,9 +94,6 @@ WHERE m.user_id IN (SELECT user_id FROM users_to_clean);
 -- 10. Supprimer les posts
 DELETE FROM posts p
 WHERE p.user_id IN (SELECT user_id FROM users_to_clean);
-
--- Nettoyer la table temporaire
-DROP TABLE users_to_clean;
 
 -- Rafraîchir les classements
 SELECT refresh_weekly_rankings();

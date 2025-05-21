@@ -181,12 +181,12 @@ export default function FollowedPage() {
                       <p className="text-gray-600 max-w-md mx-auto">
                         Commencez à suivre des créateurs pour voir leur contenu dans votre fil d&apos;actualité.
                       </p>
-                      <Button
+                      {/* <Button
                         onClick={() => router.push('/discover')}
                         className="mt-4"
                       >
                         Découvrir des créateurs
-                      </Button>
+                      </Button> */}
                     </div>
                   ) : (
                     <div className="space-y-4">
