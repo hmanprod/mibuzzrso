@@ -3,7 +3,7 @@
 DROP TYPE IF EXISTS post_type CASCADE;
 
 -- Recreate the enum with all values
-CREATE TYPE post_type AS ENUM ('post', 'challenge', 'challenge_participation', 'feedback');
+CREATE TYPE post_type AS ENUM ('post', 'challenge', 'challenge_participation', 'feedback','feed');
 CREATE TYPE media_type AS ENUM ('audio', 'video');
 CREATE TYPE interaction_type AS ENUM ('like', 'share', 'save', 'comment_like', 'read', 'comment');
 
