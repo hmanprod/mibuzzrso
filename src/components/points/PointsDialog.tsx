@@ -1,6 +1,7 @@
 'use client';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LEVELS, getUserLevel, getPointsForNextLevel } from '@/lib/points';
 
 interface PointsDialogProps {
   open: boolean;
@@ -9,20 +10,14 @@ interface PointsDialogProps {
 }
 
 export default function PointsDialog({ open, onClose, points }: PointsDialogProps) {
-  const getRank = (points: number) => {
-    if (points >= 1800) return { name: '👑 Légende', color: 'text-yellow-500' };
-    if (points >= 800) return { name: '🏆 Maitre', color: 'text-yellow-400' };
-    if (points >= 400) return { name: '🥇 Or', color: 'text-yellow-400' };
-    if (points >= 150) return { name: '🥈 Argent', color: 'text-gray-400' };
-    return { name: '🥉 Bronze', color: 'text-amber-700' };
+  const currentLevel = getUserLevel(points);
+  const nextLevelPoints = getPointsForNextLevel(points);
+  
+  // Formatage pour l'affichage
+  const currentRank = {
+    name: `${currentLevel.badge} ${currentLevel.name}`,
+    color: currentLevel.color
   };
-
-  const currentRank = getRank(points);
-  const nextRank = points < 150 ? 150 
-    : points < 400 ? 400 
-    : points < 800 ? 800 
-    : points < 1800 ? 1800 
-    : null;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -40,9 +35,9 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
               <div className={`text-3xl font-semibold ${currentRank.color}`}>
                 {currentRank.name}
               </div>
-              {nextRank && (
+              {nextLevelPoints && (
                 <div className="text-sm text-gray-600">
-                  Plus que {nextRank - points} points pour le prochain niveau
+                  Plus que {nextLevelPoints - points} points pour le prochain niveau
                 </div>
               )}
             </div>
@@ -91,41 +86,19 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
           <div className="space-y-3">
             <h3 className="font-semibold text-lg">Paliers et récompenses</h3>
             <div className="grid gap-3 bg-white rounded-lg border p-4">
-              <div className="p-3 border rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">🥉 Bronze</span>
-                  <span className="text-sm text-gray-600">0-149 pts</span>
+              {LEVELS.map((level, index) => (
+                <div key={index} className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-semibold">{level.badge} {level.name}</span>
+                    <span className="text-sm text-gray-600">
+                      {level.maxPoints 
+                        ? `${level.minPoints}-${level.maxPoints} pts` 
+                        : `${level.minPoints}+ pts`}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">{level.rewards}</p>
                 </div>
-                <p className="text-sm text-gray-600">Badge + classement hebdomadaire</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">🥈 Argent</span>
-                  <span className="text-sm text-gray-600">150-399 pts</span>
-                </div>
-                <p className="text-sm text-gray-600">Accès à un sample pack ou défi privé</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">🥇 Or</span>
-                  <span className="text-sm text-gray-600">400-799 pts</span>
-                </div>
-                <p className="text-sm text-gray-600">Plugin, pack physique ou boost visibilité</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">🏆 Maitre</span>
-                  <span className="text-sm text-gray-600">800-1799 pts</span>
-                </div>
-                <p className="text-sm text-gray-600">Accès prioritaire aux événements + mentorat</p>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold">👑 Légende</span>
-                  <span className="text-sm text-gray-600">1800+ pts</span>
-                </div>
-                <p className="text-sm text-gray-600">Interview, collab spéciale ou gros lot symbolique</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
