@@ -157,7 +157,7 @@ export function LibraryAudioPlayer({ media, onClose }: LibraryAudioPlayerProps) 
               {media.title || "Untitled"}
             </h4>
             <p className="text-xs text-white/75 truncate font-inter">
-              {media.author || "Unknown Artist"}
+              {media.profile?.stage_name || "Unknown Artist"}
             </p>
           </div>
         </div>

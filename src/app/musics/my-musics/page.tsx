@@ -1,13 +1,9 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { getMediaLibrary } from './actions/library';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
-import PageContainer from '@/components/layouts/PageContainer';
-import MainContent from '@/components/layouts/MainContent';
+
 
 function LoadingSpinner() {
   return (
@@ -47,12 +43,8 @@ async function MediaList() {
 
 export default function MyMusicsPage() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <PageContainer>
-          <Sidebar />
-          <MainContent>
+    <div>
+
             <div className="flex items-center justify-between mb-8">
               <h1 className="text-2xl font-bold">Ma bibliothèque</h1>
               <Link 
@@ -65,9 +57,6 @@ export default function MyMusicsPage() {
             <Suspense fallback={<LoadingSpinner />}>
               <MediaList />
             </Suspense>
-          </MainContent>
-        </PageContainer>
-      </div>
-    </AuthGuard>
+    </div>
   );
 }

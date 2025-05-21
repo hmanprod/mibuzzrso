@@ -239,6 +239,8 @@ export default function FeedPost({ post }: FeedPostProps) {
   if(post.medias[0].title === "123"){
     console.log("affichage post un a un ", post.medias[0].title , " et sa duration est ", post.medias[0].duration);
   }
+
+  console.log("hte post", post)
   
 
   return (
@@ -247,7 +249,7 @@ export default function FeedPost({ post }: FeedPostProps) {
       <div className="flex justify-between w-full items-center p-4">
         <div className="flex items-center w-full space-x-3 text-sm">
           <div>
-            <Link href={`/profile/${post.profile.id}`}>
+            <Link href={`/profile/${post.profile.pseudo_url}`}>
               <Avatar
                 src={post.profile.avatar_url}
                 stageName={post.profile.stage_name?.[0] || 'U'}
@@ -329,9 +331,6 @@ export default function FeedPost({ post }: FeedPostProps) {
       {mediaItem && (
         <div className="px-4">
           <h2 className="text-base font-semibold text-[#2D2D2D]">{mediaItem?.title || 'Untitled'}</h2>
-          {mediaItem.description && (
-            <p className="mt-1 text-gray-600">{mediaItem.description}</p>
-          )}
         </div>
       )}
 

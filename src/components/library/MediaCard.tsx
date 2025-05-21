@@ -130,7 +130,7 @@ export function MediaCard({ media, onPlay }: MediaCardProps) {
           <div className="flex items-center justify-between">
             <div>
           <h3 className="text-sm font-medium opacity-75 ">{media.title}</h3>
-          <h3 className="text-sm font-medium opacity-75 ">{media.author}</h3>
+          <h3 className="text-sm font-medium opacity-75 ">{media.profile?.stage_name || 'Unknown Artist'}</h3>
             </div>
             <span className="text-sm font-medium opacity-75">
               {media.media_type === 'audio' ? 'Audio' : 'Vidéo'}

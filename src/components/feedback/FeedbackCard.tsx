@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreVertical, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { deletePost } from '@/app/feed/actions/post';
 import { Feedback } from '@/types/feedback';
+import { cn } from '@/lib/utils';
 
 interface FeedbackCardProps {
   feedback: Feedback;
@@ -23,6 +24,27 @@ interface FeedbackCardProps {
 export default function FeedbackCard({ feedback, onDelete }: FeedbackCardProps) {
   const { user } = useSession();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleLike = () => {
+    toast({
+      title: "Bientôt disponible",
+      description: "La fonctionnalité de like sera disponible prochainement",
+    });
+  };
+
+  const handleComment = () => {
+    toast({
+      title: "Bientôt disponible",
+      description: "La fonctionnalité de commentaire sera disponible prochainement",
+    });
+  };
+
+  const handleShare = () => {
+    toast({
+      title: "Bientôt disponible",
+      description: "La fonctionnalité de partage sera disponible prochainement",
+    });
+  };
 
   const handleDelete = async () => {
     if (!user?.id || user.id !== feedback.user_id) return;
@@ -100,7 +122,38 @@ export default function FeedbackCard({ feedback, onDelete }: FeedbackCardProps) 
 
       {/* Content */}
       <div className="px-4 pb-4">
-        <p className="text-gray-600 whitespace-pre-wrap">{feedback.content}</p>
+        <p className="text-[#2D2D2D] whitespace-pre-wrap mb-4">{feedback.content}</p>
+
+        {/* Actions */}
+        <div className="flex items-center gap-6 mt-2">
+          <button
+            onClick={handleLike}
+            className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors"
+          >
+            <Heart
+              className={cn(
+                "w-5 h-5",
+                "hover:fill-primary"
+              )}
+            />
+            <span className="text-sm">0</span>
+          </button>
+
+          <button
+            onClick={handleComment}
+            className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-sm">0</span>
+          </button>
+
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </article>
   );

@@ -189,7 +189,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
           <form onSubmit={handleSubmit} className="space-y-6">
 
             {/* Media Type Selection */}
-            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg hidden">
+            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
               <button
                 type="button"
                 onClick={() => setActiveTab('audio')}
@@ -249,15 +249,13 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 flex-1">
-                      {activeTab === 'audio' && (
-                        <input
-                          type="text"
-                          value={author}
-                          onChange={(e) => setAuthor(e.target.value)}
-                          placeholder="Nom de l'artiste"
-                          className="w-[150px] px-3 py-2 border rounded-md"
-                        />
-                      )}
+                      <input
+                        type="text"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                        placeholder="Nom de l'artiste"
+                        className="w-[150px] px-3 py-2 border rounded-md"
+                      />
                       <input
                         type="text"
                         value={title}
@@ -270,8 +268,8 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                   <p className="text-sm text-gray-500">
                     {selectedFile.name}
                   </p>
-                  <div className='flex justify-end'>
-                  <Button
+                  <div className="flex justify-end">
+                    <Button
                       type="button"
                       variant="outline"
                       onClick={() => {
@@ -288,7 +286,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                       <div
                         className="bg-primary h-2.5 rounded-full"
                         style={{ width: `${progress}%` }}
-                      ></div>
+                      />
                     </div>
                   )}
                 </div>

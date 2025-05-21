@@ -1,6 +1,5 @@
 'use server';
 
-import { Media } from '@/types/database';
 import { createClient } from '@/lib/supabase/server';
 
 export async function getMyMedia() {
@@ -20,14 +19,12 @@ export async function getMyMedia() {
       .select(`
         id,
         title,
-        description,
         media_url,
         media_type,
-        media_cover_url,
+        duration,
         media_public_id,
-        created_at,
-        updated_at,
-        user_id
+        media_cover_url,
+        created_at
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -38,7 +35,7 @@ export async function getMyMedia() {
     // Fetch profile information
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stage_name')
+      .select('id, stage_name, avatar_url, pseudo_url')
       .eq('id', user.id)
       .single();
 
@@ -46,12 +43,27 @@ export async function getMyMedia() {
 
     // Transform the data to match Media type
     const transformedMedia = media.map(item => ({
-      ...item,
-      author: profile?.stage_name || 'Unknown'
+      id: item.id,
+      title: item.title || '',
+      media_url: item.media_url,
+      media_type: item.media_type,
+      duration: item.duration || 0,
+      media_public_id: item.media_public_id,
+      media_cover_url: item.media_cover_url,
+      created_at: item.created_at,
+      profile: {
+        id: profile.id,
+        stage_name: profile.stage_name || '',
+        avatar_url: profile.avatar_url || '',
+        pseudo_url: profile.pseudo_url || ''
+      },
+      likes: 0, // Par défaut pour mes médias
+      is_liked: false,
+      is_followed: false
     }));
 
     return {
-      media: transformedMedia as Media[],
+      media: transformedMedia,
       hasMore: false as const, // Pour l'instant, pas de pagination
       error: null as string | null
     };
