@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import PointsDialog from '@/components/points/PointsDialog';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, LogOut, Search, ShieldCheck, Trophy } from 'lucide-react';
@@ -19,6 +20,7 @@ interface NavbarProps {
 
 export default function Navbar({ className }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showPointsDialog, setShowPointsDialog] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -110,14 +112,24 @@ export default function Navbar({ className }: NavbarProps) {
           <div className="flex items-center gap-2">
             <div className="relative" ref={dropdownRef}>
               <div className="flex items-center gap-2 bg-primary/20 rounded-full p-1">
-                <div className="hidden md:flex  items-end gap-0.5 bg-primary/80 rounded-full text-white p-1 pr-3">
-                  {/* {profile?.points !== undefined && profile.points > 0 && ( */}
+                <div 
+                  className="hidden md:flex items-end gap-0.5 bg-primary/80 rounded-full text-white p-1 pr-3 cursor-pointer hover:bg-primary transition-colors"
+                  onClick={() => setShowPointsDialog(true)}
+                >
                     <PointsBadge points={profile?.points || 0} />
-                  {/* )} */}
                   {profile?.points !== undefined && profile.points >= 150 && (
                     <RankBadge points={profile.points} />
                   )}
                 </div>
+
+                {/* Points Dialog */}
+                {profile?.points !== undefined && (
+                  <PointsDialog 
+                    open={showPointsDialog} 
+                    onClose={() => setShowPointsDialog(false)} 
+                    points={profile.points} 
+                  />
+                )}
                 <button
                   onClick={toggleDropdown}
                   className="rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
