@@ -75,10 +75,10 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
                   <span>Commenter une création</span>
                   <span className="font-semibold text-primary">+2 pts</span>
                 </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                {/* <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                   <span>Partage réseau social</span>
                   <span className="font-semibold text-primary">+5 pts</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between items-center p-2">
                   <span>Inviter un utilisateur actif</span>
                   <span className="font-semibold text-primary">+20 pts</span>
