@@ -11,10 +11,10 @@ interface PointsDialogProps {
 export default function PointsDialog({ open, onClose, points }: PointsDialogProps) {
   const getRank = (points: number) => {
     if (points >= 1800) return { name: '👑 Légende', color: 'text-yellow-500' };
-    if (points >= 800) return { name: '🥇 Or', color: 'text-yellow-400' };
-    if (points >= 400) return { name: '🥈 Argent', color: 'text-gray-400' };
-    if (points >= 150) return { name: '🥉 Bronze', color: 'text-amber-700' };
-    return { name: 'Débutant', color: 'text-gray-600' };
+    if (points >= 800) return { name: '🏆 Maitre', color: 'text-yellow-400' };
+    if (points >= 400) return { name: '🥇 Or', color: 'text-yellow-400' };
+    if (points >= 150) return { name: '🥈 Argent', color: 'text-gray-400' };
+    return { name: '🥉 Bronze', color: 'text-amber-700' };
   };
 
   const currentRank = getRank(points);
