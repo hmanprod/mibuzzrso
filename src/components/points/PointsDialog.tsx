@@ -94,28 +94,35 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
               <div className="p-3 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">🥉 Bronze</span>
-                  <span className="text-sm text-gray-600">150 pts</span>
+                  <span className="text-sm text-gray-600">0-149 pts</span>
                 </div>
                 <p className="text-sm text-gray-600">Badge + classement hebdomadaire</p>
               </div>
               <div className="p-3 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">🥈 Argent</span>
-                  <span className="text-sm text-gray-600">400 pts</span>
+                  <span className="text-sm text-gray-600">150-399 pts</span>
                 </div>
                 <p className="text-sm text-gray-600">Accès à un sample pack ou défi privé</p>
               </div>
               <div className="p-3 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">🥇 Or</span>
-                  <span className="text-sm text-gray-600">800 pts + Top 1 du mois</span>
+                  <span className="text-sm text-gray-600">400-799 pts</span>
                 </div>
                 <p className="text-sm text-gray-600">Plugin, pack physique ou boost visibilité</p>
               </div>
               <div className="p-3 border rounded-lg">
                 <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">🏆 Maitre</span>
+                  <span className="text-sm text-gray-600">800-1799 pts</span>
+                </div>
+                <p className="text-sm text-gray-600">Accès prioritaire aux événements + mentorat</p>
+              </div>
+              <div className="p-3 border rounded-lg">
+                <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold">👑 Légende</span>
-                  <span className="text-sm text-gray-600">1800 pts + Top 1 sur 3 mois</span>
+                  <span className="text-sm text-gray-600">1800+ pts</span>
                 </div>
                 <p className="text-sm text-gray-600">Interview, collab spéciale ou gros lot symbolique</p>
               </div>
