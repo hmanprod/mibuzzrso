@@ -20,21 +20,21 @@ export function OnboardingModal() {
   const { profile, updateProfile, isLoading: sessionLoading } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [formData, setFormData] = useState<Partial<Profile>>({
-    stage_name: profile?.stage_name || '',
-    musical_interests: profile?.musical_interests || [],
-    talents: profile?.talents || [],
-    country: profile?.country || '',
-    label: profile?.label || '',
+    stage_name: profile?.stage_name ?? '',
+    musical_interests: Array.isArray(profile?.musical_interests) ? profile.musical_interests : [],
+    talents: Array.isArray(profile?.talents) ? profile.talents : [],
+    country: profile?.country ?? '',
+    label: profile?.label ?? '',
   });
 
   useEffect(() => {
     if (profile) {
       setFormData({
-        stage_name: profile.stage_name || '',
-        musical_interests: profile.musical_interests || [],
-        talents: profile.talents || [],
-        country: profile.country || '',
-        label: profile.label || '',
+        stage_name: profile.stage_name ?? '',
+        musical_interests: Array.isArray(profile.musical_interests) ? profile.musical_interests : [],
+        talents: Array.isArray(profile.talents) ? profile.talents : [],
+        country: profile.country ?? '',
+        label: profile.label ?? '',
       });
 
       // Check if profile is complete to control modal visibility
