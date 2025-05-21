@@ -18,13 +18,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 export function OnboardingModal() {
   const { profile, updateProfile, isLoading: sessionLoading } = useSession();
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
     stage_name: profile?.stage_name ?? '',
     musical_interests: Array.isArray(profile?.musical_interests) ? profile.musical_interests : [],
     talents: Array.isArray(profile?.talents) ? profile.talents : [],
     country: profile?.country ?? '',
     label: profile?.label ?? '',
+    points: profile?.points ?? 5,
+    
   });
 
   useEffect(() => {
@@ -35,14 +37,13 @@ export function OnboardingModal() {
         talents: Array.isArray(profile.talents) ? profile.talents : [],
         country: profile.country ?? '',
         label: profile.label ?? '',
+        points: profile.points ?? 5,
       });
 
-      // Check if profile is complete to control modal visibility
+      // Check if profile is complete
       const requiredFields: (keyof Profile)[] = ['stage_name', 'talents', 'musical_interests', 'country'];
       const isComplete = requiredFields.every(field => Boolean(profile[field]));
-      if (isComplete) {
-        setIsModalOpen(false);
-      }
+      setIsProfileComplete(isComplete);
     }
   }, [profile]);
 
@@ -50,16 +51,24 @@ export function OnboardingModal() {
     e.preventDefault();
     try {
       await updateProfile(formData);
-      setIsModalOpen(false);
+      const updatedFields: (keyof Profile)[] = ['stage_name', 'talents', 'musical_interests', 'country'];
+      const isComplete = updatedFields.every(field => {
+        const value = formData[field];
+        return Array.isArray(value) ? value.length > 0 : Boolean(value);
+      });
+      setIsProfileComplete(isComplete);
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+    <Dialog open={!isProfileComplete} onOpenChange={() => {}} modal>
       <DialogContent
         className="sm:max-w-[425px] relative"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        hideCloseButton
       >
         <DialogHeader>
           <DialogTitle>Compléter votre profil</DialogTitle>

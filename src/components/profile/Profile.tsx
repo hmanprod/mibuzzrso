@@ -11,10 +11,8 @@ import { getProfilePosts } from '@/app/feed/actions/post';
 import { 
   getTalentLabel, 
   getGenreLabel, 
-  getCountryLabel,
   TALENT_BADGE_COLOR,
   GENRE_BADGE_COLOR,
-  COUNTRY_BADGE_COLOR
 } from '@/constants/options';
 import FeedPostSkeleton from '../feed/FeedPostSkeleton';
 import FeedPost from '../feed/FeedPost';
@@ -24,14 +22,12 @@ import { AvatarUploadModal } from './AvatarUploadModal';
 import { CoverPhotoUploadModal } from './CoverPhotoUploadModal';
 import { useSession } from '@/components/providers/SessionProvider';
 import ProfileSkeleton from './ProfileSkeleton';
-import { followUser, isFollowing } from '@/app/profile/actions/follower';
+import { followUser, isFollowing, getFollowersCount } from '@/app/profile/actions/follower';
 import { toast } from '@/components/ui/use-toast';
-import UserLevel from './UserLevel';
-import RankBadge from './RankBadge';
 
 interface ProfileProps {
     userProfile?: ProfileType | null;
-    userStats?: { totalReads: number };
+    userStats?: { totalReads: number; followersCount: number };
     isLoading?: boolean;
 }
 
@@ -105,27 +101,27 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
     }, [userProfile?.id, loadPosts]);
 
     // Check if the current user is following the profile
+    const checkFollowStatus = useCallback(async () => {
+        if (!user || !userProfile?.id || user.id === userProfile.id) {
+            setIsFollowChecked(true);
+            return;
+        }
+
+        try {
+            const result = await isFollowing(user.id, userProfile.id);
+            setIsFollowed(result.isFollowing || false);
+        } catch (error) {
+            console.error('Error checking follow status:', error);
+        } finally {
+            setIsFollowChecked(true);
+        }
+    }, [user, userProfile, setIsFollowed, setIsFollowChecked]);
+
     useEffect(() => {
-        const checkFollowStatus = async () => {
-            if (!user || !userProfile?.id || user.id === userProfile.id) {
-                setIsFollowChecked(true);
-                return;
-            }
-
-            try {
-                const result = await isFollowing(user.id, userProfile.id);
-                setIsFollowed(result.isFollowing || false);
-            } catch (error) {
-                console.error('Error checking follow status:', error);
-            } finally {
-                setIsFollowChecked(true);
-            }
-        };
-
         if (user && userProfile && !isFollowChecked) {
             checkFollowStatus();
         }
-    }, [user, userProfile, isFollowChecked]);
+    }, [user, userProfile, isFollowChecked, checkFollowStatus]);
 
     // Function to handle following a user
     const handleFollow = async () => {
@@ -178,7 +174,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
     <>
     <div className="min-h-screen bg-white">
         {/* Cover Image */}
-        <div className="relative h-48 bg-gray-200 rounded-t-lg overflow-hidden">
+        <div className="relative h-48 bg-gray-200 overflow-hidden">
           {userProfile.cover_url ? (
             <Image
               src={userProfile.cover_url}
@@ -257,23 +253,26 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                   )}
                 </div>
 
-                {userProfile.country && (
-                  <div className="mt-2">
-                    <span className={`py-1 text-sm rounded-full ${COUNTRY_BADGE_COLOR}`}>
-                    {userProfile.label && (userProfile.label + ' - ')} {getCountryLabel(userProfile.country)}
+                {userProfile.label && (
+                  <div className="mt-0">
+                    <span className={`text-sm rounded-full`}>
+                    {userProfile.label}
                     </span>
                   </div>
                 )}
 
-                {/* Niveau utilisateur */}
-                <UserLevel points={userProfile.points || 0} />
+                {userProfile.country && ( 
+                  <div className="flex items-center gap-2">
+                    <small className="text-gray-600">{userProfile.country?.toUpperCase()}</small>
+                  </div>
+                )}
 
-                {/* Badge de rang */}
+                {/* Badge de rang
               {userProfile.points > 0 && (
                 <div className="mt-4">
                   <RankBadge points={userProfile.points} />
                 </div>
-              )}
+              )} */}
 
               {userProfile.bio && (
                 <div className="mt-4 relative text-gray-700 italic">
@@ -309,12 +308,12 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
               {/* Statistiques */}
               <div className="flex gap-6 mt-4">
                 <div className="text-center">
-                  <div className="text-xl font-bold">0</div>
-                  <div className="text-sm text-gray-600">Abonné</div>
+                  <div className="text-xl font-bold">{userProfile.points || 0}</div>
+                  <div className="text-sm text-gray-600">Points</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold">0</div>
-                  <div className="text-sm text-gray-600">Suivi</div>
+                  <div className="text-xl font-bold">{userStats?.followersCount || 0}</div>
+                  <div className="text-sm text-gray-600">Abonné</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold">{userStats?.totalReads || 0}</div>

@@ -19,64 +19,51 @@ export async function getUserProfile(profileId: string) {
 
   try {
     // Get the profile data with points
-    const { data, error } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*, points')
       .eq('id', profileId)
       .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
       return { error: 'Failed to load profile' };
     }
 
-    // First get all media IDs for this user
-    const { data: mediaData, error: mediaError } = await supabase
-      .from('medias')
-      .select('id')
-      .eq('user_id', profileId);
+    // Get followers count
+    const { count: followersCount, error: followersError } = await supabase
+      .from('followers')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', profileId);
 
-    if (mediaError) {
-      console.error('Error fetching user media:', mediaError);
-      return { 
-        profile: data,
-        totalReads: 0
-      };
+    if (followersError) {
+      console.error('Error fetching followers count:', followersError);
+      return { error: 'Failed to load followers count' };
     }
 
-    // If user has no media, return 0 reads
-    if (!mediaData || mediaData.length === 0) {
-      return { 
-        profile: data,
-        totalReads: 0
-      };
-    }
-
-    // Extract the media IDs
-    const mediaIds = mediaData.map(media => media.id);
-
-    // Get the total read count for all media associated with this user
+    // Get total reads
     const { count: totalReads, error: readsError } = await supabase
       .from('interactions')
-      .select('*', { count: 'exact', head: true})
+      .select('*', { count: 'exact', head: true })
       .eq('type', 'read')
-      .in('media_id', mediaIds);
+      .eq('target_profile_id', profileId);
 
     if (readsError) {
       console.error('Error fetching read count:', readsError);
-      // Continue with profile data even if read count fails
       return { 
-        profile: data,
-        totalReads: 0
+        profile,
+        totalReads: 0,
+        followersCount: followersCount || 0
       };
     }
 
     return { 
-      profile: data,
-      totalReads: totalReads || 0
+      profile,
+      totalReads: totalReads || 0,
+      followersCount: followersCount || 0
     };
   } catch (error) {
-    console.error('Error in getUserProfile:', error);
+    console.error('Unexpected error:', error);
     return { error: 'An unexpected error occurred' };
   }
 }

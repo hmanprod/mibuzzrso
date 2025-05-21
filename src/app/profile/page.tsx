@@ -12,22 +12,24 @@ export default function ProfilePage() {
   const { profile: sessionProfile } = useSession();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userStats, setUserStats] = useState<{totalReads: number}>({totalReads: 0});
+  const [userStats, setUserStats] = useState<{totalReads: number, followersCount: number}>({totalReads: 0, followersCount: 0});
 
   useEffect(() => {
     async function fetchUserProfile() {
       try {
         if (!sessionProfile?.id) return;
         
-        const { profile, totalReads, error } = await getUserProfile(sessionProfile.id as string);
-
-        if (error) {
-          console.error('Error fetching profile:', error);
+        const response = await getUserProfile(sessionProfile.id as string);
+        
+        if ('error' in response) {
+          console.error('Error fetching profile:', response.error);
           return;
         }
 
+        const { profile, totalReads, followersCount } = response;
+
         setUserProfile(profile);
-        setUserStats({totalReads: totalReads || 0});
+        setUserStats({totalReads, followersCount});
       } catch (error) {
         console.error('Error:', error);
       } finally {

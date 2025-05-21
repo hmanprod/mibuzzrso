@@ -1,4 +1,6 @@
 import { getUserLevel } from '@/lib/points';
+import PointsBadge from '../ui/PointsBadge';
+import RankBadge from './RankBadge';
 
 type UserLevelProps = {
   points: number;
@@ -11,16 +13,25 @@ export default function UserLevel({ points }: UserLevelProps) {
     : null;
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="max-w-[200px]">
+      {/* <div className="flex items-center gap-3 mb-4">
         <span className="text-3xl">{level.badge}</span>
         <div>
           <h3 className={`font-semibold ${level.color}`}>{level.name}</h3>
           <p className="text-sm text-gray-600">{points} points</p>
         </div>
+      </div> */}
+
+      <div className="flex gap-0.5 bg-primary/80 rounded-full text-white p-1 pr-3">
+        {/* {profile?.points !== undefined && profile.points > 0 && ( */}
+          <PointsBadge points={points || 0} />
+        {/* )} */}
+        {points !== undefined && points >= 150 && (
+          <RankBadge points={points} />
+        )}
       </div>
       
-      {nextLevel && (
+      {/* {nextLevel && (
         <div className="mt-2">
           <div className="text-xs text-gray-500 mb-1">
             Prochain niveau : {nextLevel.name} {nextLevel.badge}
@@ -34,7 +45,7 @@ export default function UserLevel({ points }: UserLevelProps) {
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
