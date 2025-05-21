@@ -41,18 +41,11 @@ async function MediaList() {
 
 export default function LikedPage() {
   return (
-   
-      <div className="min-h-screen bg-white">
-       
-       
-          <main className="flex-1 px-8 py-6">
-            <h1 className="text-2xl font-bold mb-8">Musiques aimées</h1>
-            <Suspense fallback={<LoadingSpinner />}>
-              <MediaList />
-            </Suspense>
-          </main>
-       
-      </div>
-   
+    <div>
+      <h1 className="text-2xl font-bold mb-8">Musiques aimées</h1>
+      <Suspense fallback={<LoadingSpinner />}>
+        <MediaList />
+      </Suspense>
+    </div>
   );
 }

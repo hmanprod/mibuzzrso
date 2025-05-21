@@ -60,6 +60,7 @@ export async function fetchPosts({
         p_limit: limit
       });
 
+
     if (error) {
       console.error('Error fetching posts:', error);
       return { error: 'Failed to load posts' };
@@ -68,6 +69,9 @@ export async function fetchPosts({
     if (!postsData || postsData.length === 0) {
       return { posts: [], total: 0, page, limit };
     }
+
+    console.log("the post data", postsData);
+    
 
     // Get total count for pagination
     let total = 0;

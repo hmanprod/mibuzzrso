@@ -1,6 +1,17 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+
+const MAINTENANCE_ROUTES = process.env.NEXT_PUBLIC_MAINTENANCE_ROUTES
+  ? process.env.NEXT_PUBLIC_MAINTENANCE_ROUTES.split(',')
+  : [];
+
 export async function middleware(request: NextRequest) {
+  // Vérifier si la route actuelle est en maintenance
+  const path = request.nextUrl.pathname;
+  if (MAINTENANCE_ROUTES.some(route => path.startsWith(route))) {
+    return NextResponse.rewrite(new URL('/maintenance', request.url));
+  }
+
   return await updateSession(request)
 }
 export const config = {

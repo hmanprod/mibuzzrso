@@ -34,16 +34,34 @@ export default function SearchBar({
       if (onSearch) {
         onSearch(inputValue);
       } else {
-        // Default behavior: navigate to search page
-        router.push(`/feed/search?q=${encodeURIComponent(inputValue)}`);
+        // Get current path
+        const currentPath = window.location.pathname;
+        let searchPath: string;
+
+        // Determine search path based on current location
+        if (currentPath.startsWith('/musics')) {
+          searchPath = `/musics/all/search?q=${encodeURIComponent(inputValue)}`;
+        } else {
+          // Default to feed search
+          searchPath = `/feed/search?q=${encodeURIComponent(inputValue)}`;
+        }
+
+        router.push(searchPath);
       }
     }
   };
 
   const clearSearch = () => {
-    // setInputValue('');
-    // setSearchTerm('');
-    router.push('/feed');
+    setInputValue('');
+    setSearchTerm('');
+    
+    // Get current path and redirect accordingly
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/musics/all')) {
+      router.push('/musics/all');
+    } else {
+      router.push('/feed');
+    }
   };
 
   return (

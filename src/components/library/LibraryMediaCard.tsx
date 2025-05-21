@@ -127,7 +127,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1 ml-4">
-            <h3 className="font-semibold text-base text-[#333333] truncate">{media.author} {media.author ? ' - ' : ''} {media.title || 'Untitled'}</h3>
+            <h3 className="font-semibold text-base text-[#333333] truncate">{media.profile?.stage_name} {media.profile?.stage_name ? ' - ' : ''} {media.title || 'Untitled'}</h3>
             <p className="text-xs text-[#666666] truncate">publié par <span className='font-bold'>{media.profile?.stage_name || 'Utilisateur inconnu'}</span></p>
           </div>
           {/* {!media.media_cover_url && (

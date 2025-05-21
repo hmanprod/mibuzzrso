@@ -5,19 +5,22 @@ export type ChallengeStatus = 'draft' | 'active' | 'completed';
 
 export interface Media {
   id: string;
-  created_at: string;
-  updated_at: string;
-  media_type: MediaType;
+  title: string;
   media_url: string;
-  media_cover_url: string;
+  media_type: MediaType;
+  duration: number;
   media_public_id: string;
-  duration?: number;
-  title?: string;
-  author?: string;
-  description?: string;
-  user_id: string;
-  likes_count?: number;
-  is_liked?: boolean;
+  media_cover_url?: string;
+  created_at: string;
+  profile: {
+    id: string;
+    stage_name: string;
+    avatar_url: string;
+    pseudo_url: string;
+  };
+  likes: number;
+  is_liked: boolean;
+  is_followed: boolean;
 }
 
 export interface Post {
