@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 
+
 export interface WeeklyPointsRecord {
   user_id: string;
   points_change: number;
