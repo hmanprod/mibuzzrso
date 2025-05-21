@@ -63,8 +63,20 @@ export async function addPointsForMedia(mediaId: string) {
       .rpc('add_points_for_media', {
         p_media_id: mediaId
       });
-      
+
+
     if (error) throw error;
+    
+    // Rafraîchir directement les classements
+    const { error: refreshError } = await supabase
+      .rpc('refresh_weekly_rankings');
+
+    if (refreshError) {
+      console.error("Error refreshing rankings:", refreshError);
+      throw refreshError;
+    }
+      
+    
     
     // // Mettre à jour le classement avec les points fixes (5 points pour un media)
     // if (mediaData?.user_id) {

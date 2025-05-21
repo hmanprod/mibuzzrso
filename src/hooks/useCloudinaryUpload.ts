@@ -50,11 +50,38 @@ export const useCloudinaryUpload = () => {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             const response = JSON.parse(xhr.responseText);
-            resolve({
-              url: response.secure_url,
-              publicId: response.public_id,
-              duration: response.duration,
-            });
+            
+            // Vérifier si la durée est disponible
+            if (!response.duration && (mediaType === 'audio' || mediaType === 'video')) {
+              // Faire une requête séparée pour obtenir les détails du média
+              fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/details/${response.public_id}`, {
+                headers: {
+                  'Authorization': `Basic ${btoa(`${cloudName}:${getUploadPreset()}`)}`
+                }
+              })
+              .then(res => res.json())
+              .then(details => {
+                resolve({
+                  url: response.secure_url,
+                  publicId: response.public_id,
+                  duration: details.duration || response.duration,
+                });
+              })
+              .catch(() => {
+                // En cas d'échec, on renvoie quand même le résultat initial
+                resolve({
+                  url: response.secure_url,
+                  publicId: response.public_id,
+                  duration: response.duration,
+                });
+              });
+            } else {
+              resolve({
+                url: response.secure_url,
+                publicId: response.public_id,
+                duration: response.duration,
+              });
+            }
           } else {
             reject(new Error('Upload failed'));
           }

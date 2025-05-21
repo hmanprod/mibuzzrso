@@ -51,12 +51,28 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
   const waveformUrl = getWaveformUrl(audioUrl);
 
   useEffect(() => {
-    
-    if (audioRef.current) {
-      audioRef.current.addEventListener('loadedmetadata', () => {
-        setDuration(audioRef.current?.duration || 0);
-      });
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadedMetadata = () => {
+      const duration = audio.duration;
+      if (Number.isFinite(duration)) {
+        setDuration(duration);
+      }
+    };
+
+    // Vérifier si l'audio est déjà chargé
+    if (audio.readyState >= 2) {
+      handleLoadedMetadata();
     }
+
+    // Ajouter l'event listener
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    // Cleanup function
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
 
     if (!/\.wav$/i.test(audioUrl)) {
       processedAudioUrlRef.current = audioUrl.replace('.mp3', '.wav');

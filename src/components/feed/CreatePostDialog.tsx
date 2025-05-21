@@ -90,6 +90,21 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
         throw new Error('Échec du téléchargement du média');
       }
 
+      // Vérifier que la durée est disponible
+      if (!mediaUpload.duration) {
+        // Attendre que la durée soit disponible (max 5 secondes)
+        let attempts = 0;
+        const maxAttempts = 10;
+        while (!mediaUpload.duration && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          attempts++;
+        }
+        
+        if (!mediaUpload.duration) {
+          throw new Error('Could not get media duration');
+        }
+      }
+
       setCurrentStep('creating');
 
       // Use the server action to handle database operations
@@ -104,6 +119,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
         content: postText.trim() || null,
         userId: user.id
       });
+      
 
       if (!result.success) {
         throw new Error(result.error || 'Échec de la création du post');

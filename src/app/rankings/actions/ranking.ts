@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-// import { cookies } from 'next/headers';
+import { cookies } from 'next/headers';
 
 export interface WeeklyPointsRecord {
   user_id: string;

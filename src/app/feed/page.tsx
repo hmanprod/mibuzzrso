@@ -89,7 +89,7 @@ export default function Home() {
       await loadPosts();
       setShowCreatePost(false);
   };
-
+  
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <div className="max-w-[1300px] mx-auto">

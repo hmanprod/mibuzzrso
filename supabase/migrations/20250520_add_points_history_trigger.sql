@@ -51,7 +51,7 @@ CREATE TRIGGER trigger_refresh_rankings
   AFTER INSERT OR UPDATE OR DELETE
   ON points_history
   FOR EACH STATEMENT
-  EXECUTE FUNCTION handle_rankings_refresh();
+  EXECUTE FUNCTION handle_rankings_refresh();XECUTE FUNCTION handle_rankings_refresh();
 
 -- Commentaire explicatif
 COMMENT ON TRIGGER trigger_refresh_rankings ON points_history IS 

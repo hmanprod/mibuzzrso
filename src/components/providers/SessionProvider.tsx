@@ -18,7 +18,7 @@ const SessionContext = createContext<SessionContextType>({
   profile: null,
   isLoading: true,
   updateProfile: async () => {},
-  admin: true
+  admin: false
 });
 
 export function useSession() {

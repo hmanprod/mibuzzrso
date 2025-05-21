@@ -53,6 +53,7 @@ export default function FeedPost({ post }: FeedPostProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Define proper types for the refs
   interface MediaPlayerRef {
@@ -235,6 +236,11 @@ export default function FeedPost({ post }: FeedPostProps) {
     // This depends on how your feed is implemented
   };
 
+  if(post.medias[0].title === "123"){
+    console.log("affichage post un a un ", post.medias[0].title , " et sa duration est ", post.medias[0].duration);
+  }
+  
+
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4">
       {/* Post header */}
@@ -287,20 +293,28 @@ export default function FeedPost({ post }: FeedPostProps) {
           </div>
         </div>
         {isAuthor && (
-          <DropdownMenu>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <button className="text-gray-400 hover:text-gray-600 transition-colors">
                 <MoreHorizontal className="w-6 h-6" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setShowEditDialog(true);
+                  setDropdownOpen(false);
+                }}
+              >
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit Post
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
+                onClick={() => {
+                  setShowDeleteDialog(true);
+                  setDropdownOpen(false);
+                }}
                 className="text-red-500 focus:text-red-500"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -411,7 +425,10 @@ export default function FeedPost({ post }: FeedPostProps) {
       {mediaItem && (
         <EditPostDialog
           open={showEditDialog}
-          onClose={() => setShowEditDialog(false)}
+          onClose={() => {
+            setShowEditDialog(false);
+            setDropdownOpen(false);
+          }}
           postId={post.id}
           mediaId={mediaItem.id}
           initialContent={post.content}
