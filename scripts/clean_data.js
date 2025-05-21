@@ -19,8 +19,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Initialiser le client Supabase
-const supabaseUrl = 'https://jocbyjlmdcptqdqjsycz.supabase.co/'
-const supabaseServiceKey = 'peyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvY2J5amxtZGNwdHFkcWpzeWN6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNjEwMDM1OSwiZXhwIjoyMDUxNjc2MzU5fQ.7WJhWhuYtW-HXqPeSQqn6yF60JOrP7dGKoQf-VllwwI'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase URL or service role key');

@@ -16,8 +16,8 @@ const cloudinary = require('cloudinary').v2;
 dotenv.config();
 
 // Initialiser le client Supabase
-const supabaseUrl = 'https://jocbyjlmdcptqdqjsycz.supabase.co/'
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvY2J5amxtZGNwdHFkcWpzeWN6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNjEwMDM1OSwiZXhwIjoyMDUxNjc2MzU5fQ.7WJhWhuYtW-HXqPeSQqn6yF60JOrP7dGKoQf-VllwwI'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase URL or service role key');
@@ -25,9 +25,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 // Initialiser Cloudinary
-const cloudinaryCloudName = 'dzqqbqsiw';
-const cloudinaryApiKey = '697727939938564';
-const cloudinaryApiSecret = '1GatAZsrR00SJikW3OEF9nbgbdw';
+const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const cloudinaryApiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+const cloudinaryApiSecret = process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET;
 
 if (!cloudinaryCloudName || !cloudinaryApiKey || !cloudinaryApiSecret) {
   console.error('Missing Cloudinary configuration');
