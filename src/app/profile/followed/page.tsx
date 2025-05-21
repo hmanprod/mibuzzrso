@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { useRouter } from 'next/navigation';
 import { useSession } from '@/components/providers/SessionProvider';
 import { getFollowedUsers, followUser } from '../actions/follower';
 import { Avatar } from '@/components/ui/Avatar';
@@ -32,7 +31,6 @@ interface PaginationState {
 }
 
 export default function FollowedPage() {
-  const router = useRouter();
   const { user } = useSession();
   const [followedUsers, setFollowedUsers] = useState<FollowedUser[]>([]);
   const [loading, setLoading] = useState(true);
