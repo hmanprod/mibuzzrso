@@ -22,7 +22,7 @@ import { AvatarUploadModal } from './AvatarUploadModal';
 import { CoverPhotoUploadModal } from './CoverPhotoUploadModal';
 import { useSession } from '@/components/providers/SessionProvider';
 import ProfileSkeleton from './ProfileSkeleton';
-import { followUser, isFollowing, getFollowersCount } from '@/app/profile/actions/follower';
+import { followUser, isFollowing } from '@/app/profile/actions/follower';
 import { toast } from '@/components/ui/use-toast';
 
 interface ProfileProps {

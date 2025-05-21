@@ -509,6 +509,7 @@ export default function ChallengePage() {
                   )}
                 </div>
               ))}
+              {challenge.status === 'active' && (
               <div className="mt-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   {participation.has_voted ? (
@@ -529,6 +530,7 @@ export default function ChallengePage() {
                 </div>
 
               </div>
+            )}
             </div>
           ))
         ) : (

@@ -1,4 +1,3 @@
-import { getUserLevel } from '@/lib/points';
 import PointsBadge from '../ui/PointsBadge';
 import RankBadge from './RankBadge';
 
@@ -7,10 +6,10 @@ type UserLevelProps = {
 };
 
 export default function UserLevel({ points }: UserLevelProps) {
-  const level = getUserLevel(points);
-  const nextLevel = level.name !== 'Elite' 
-    ? getUserLevel(level.minPoints + 1) 
-    : null;
+  // const level = getUserLevel(points);
+  // const nextLevel = level.name !== 'Elite' 
+  //   ? getUserLevel(level.minPoints + 1) 
+  //   : null;
 
   return (
     <div className="max-w-[200px]">

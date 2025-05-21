@@ -8,15 +8,11 @@ import { Profile } from '@/types/database';
 import ProfileComponent from '@/components/profile/Profile';
 import { getUserProfileByPseudoUrl } from '@/app/profile/actions/profile';
 
-interface UserStats {
-  totalReads: number;
-}
-
 export default function ProfilePage() {
   const params = useParams();
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userStats, setUserStats] = useState<UserStats>({totalReads: 0});
+  const [userStats, setUserStats] = useState<{totalReads: number, followersCount: number}>({totalReads: 0, followersCount: 0});
 
   useEffect(() => {
     async function fetchUserProfile() {
@@ -29,7 +25,7 @@ export default function ProfilePage() {
         }
 
         setUserProfile(profile);
-        setUserStats({totalReads: totalReads || 0});
+        setUserStats({totalReads: totalReads || 0, followersCount: profile.followers_count || 0});
       } catch (error) {
         console.error('Error:', error);
       } finally {

@@ -49,6 +49,8 @@ export async function getChallenges(page: number = 1, limit: number = 5, status:
 
     if (status !== 'all') {
       query = query.eq('status', status);
+    }else{
+      query = query.neq('status', 'draft');
     }
 
     const { data: challenges, error } = await query;
