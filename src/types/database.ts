@@ -52,6 +52,7 @@ export interface ProfilePublic {
   stage_name: string | null;
   avatar_url: string | null;
   pseudo_url: string;
+  is_admin?: boolean;
 }
 
 export interface Profile {

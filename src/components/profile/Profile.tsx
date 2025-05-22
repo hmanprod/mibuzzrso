@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Camera, Music, Plus, Settings, Video, UserPlus, Check } from 'lucide-react';
+import { Camera, Music, Plus, Settings, Video, UserPlus, Check, Facebook, Instagram, Youtube, Globe, Music2 } from 'lucide-react';
 import { ExtendedPost, Profile as ProfileType } from '@/types/database';
 import { NotFound } from '../ui/not-found';
 import CreatePostBlock from '../feed/CreatePostBlock';
@@ -223,7 +223,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
               <div className="mt-4">
                 <h1 className="text-2xl font-bold mb-0">{userProfile.stage_name || `${userProfile.first_name} ${userProfile.last_name}`}</h1>
                 <div className="flex items-center gap-2">
-                  <small className="text-gray-600">@{userProfile.id}</small>
+                  <small className="text-gray-600">@{userProfile.pseudo_url}</small>
                 </div>
 
                 <div className='mt-4'>
@@ -282,22 +282,48 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
 
 
                 {userProfile.social_links && Object.keys(userProfile.social_links).length > 0 && (
-                  <div className="mt-6wswWwww">
-                    <h3 className="font-semibold mb-2">Social Links</h3>
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-2">Réseaux sociaux</h3>
                     <div className="flex flex-wrap gap-3">
-                      {Object.entries(userProfile.social_links).map(([platform, url]) => (
-                        url && (
+                      {Object.entries(userProfile.social_links).map(([platform, url]) => {
+                        if (!url) return null;
+                        
+                        // Get the appropriate icon based on platform name
+                        const getPlatformIcon = () => {
+                          const platformLower = platform.toLowerCase();
+                          
+                          switch(platformLower) {
+                            case 'facebook':
+                              return <Facebook className="w-4 h-4 mr-1" />;
+                            case 'instagram':
+                              return <Instagram className="w-4 h-4 mr-1" />;
+                            case 'youtube':
+                              return <Youtube className="w-4 h-4 mr-1" />;
+                            case 'spotify':
+                              return <Music2 className="w-4 h-4 mr-1" />;
+                            case 'moozik':
+                              return <Music className="w-4 h-4 mr-1" />;
+                            case 'tiktok':
+                              return <Video className="w-4 h-4 mr-1" />;
+                            case 'website':
+                            default:
+                              return <Globe className="w-4 h-4 mr-1" />;
+                          }
+                        };
+                        
+                        return (
                           <a
                             key={platform}
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
+                            className="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-800 transition-colors"
                           >
+                            {getPlatformIcon()}
                             {platform.charAt(0).toUpperCase() + platform.slice(1)}
                           </a>
-                        )
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -329,7 +355,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                     userProfile.talents.map((talent, index) => (
                       <span 
                         key={index} 
-                        className={`px-3 py-1 bg-gray-100 rounded-full text-sm ${TALENT_BADGE_COLOR}`}
+                        className={`px-3 py-1 bg-gray-100 rounded-full font-medium text-sm ${TALENT_BADGE_COLOR}`}
                       >
                         {getTalentLabel(talent)}
                       </span>
@@ -359,7 +385,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                     userProfile.musical_interests.map((genre, index) => (
                       <span 
                         key={index} 
-                        className={`px-3 py-1 bg-gray-100 rounded-full text-sm ${GENRE_BADGE_COLOR}`}
+                        className={`px-3 py-1 bg-gray-100 rounded-full font-medium text-sm ${GENRE_BADGE_COLOR}`}
                       >
                         {getGenreLabel(genre)}
                       </span>

@@ -60,6 +60,8 @@ export async function fetchPosts({
         p_limit: limit
       });
 
+    
+
 
     if (error) {
       console.error('Error fetching posts:', error);

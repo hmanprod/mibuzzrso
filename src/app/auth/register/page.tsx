@@ -18,6 +18,7 @@ export default function RegisterPage() {
     setError(null);
     
     try {
+      
       const result = await signInWithGoogle();
       if (result.error) {
         setError(result.error);
@@ -37,10 +38,14 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError(null);
 
+    console.log("the form data", event.currentTarget)
+
     const formData = new FormData(event.currentTarget);
+    
 
     try {
       const result = await register(formData);
+      console.log("the result", result)
       if (result?.error) {
         setError(result.error);
       }

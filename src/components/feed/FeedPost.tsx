@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { Flame, MessageCircle, MoreHorizontal, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
 import type { ExtendedPost } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
@@ -41,6 +41,96 @@ interface Comment {
     pseudo_url: string;
   };
 }
+
+// Function to check if a URL is from a trusted domain
+const isTrustedDomain = (url: string): boolean => {
+  try {
+    const hostname = new URL(url).hostname;
+    
+    // List of trusted domains
+    const trustedDomains = [
+      'youtube.com', 'youtu.be', 'www.youtube.com',
+      'facebook.com', 'www.facebook.com', 'fb.com',
+      'instagram.com', 'www.instagram.com',
+      'twitter.com', 'www.twitter.com', 'x.com',
+      'tiktok.com', 'www.tiktok.com',
+      'linkedin.com', 'www.linkedin.com',
+      'spotify.com', 'open.spotify.com',
+      'soundcloud.com', 'www.soundcloud.com',
+      'apple.com', 'music.apple.com',
+      'deezer.com', 'www.deezer.com'
+    ];
+    
+    return trustedDomains.some(domain => hostname.endsWith(domain));
+  } catch (e) {
+    console.error('Invalid URL format:', e);
+    return false; // Invalid URL format
+  }
+};
+
+// Function to render content with clickable links
+const renderContentWithLinks = (content: string): ReactNode[] => {
+  if (!content) return [content];
+  
+  // Regular expression to find URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  
+  // Create a temporary array to hold all matches
+  const matches: { index: number; url: string }[] = [];
+  let match;
+  
+  // Find all URL matches with their positions
+  while ((match = urlRegex.exec(content)) !== null) {
+    matches.push({
+      index: match.index,
+      url: match[0]
+    });
+  }
+  
+  // If no URLs found, return the content as is
+  if (matches.length === 0) {
+    return [content];
+  }
+  
+  // Process the content with URLs
+  const result: ReactNode[] = [];
+  let lastIndex = 0;
+  
+  matches.forEach((match, i) => {
+    // Add text before the URL
+    if (match.index > lastIndex) {
+      result.push(content.substring(lastIndex, match.index));
+    }
+    
+    // Add the URL as a link or text based on trust
+    if (isTrustedDomain(match.url)) {
+      result.push(
+        <a 
+          key={`link-${i}`}
+          href={match.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline"
+        >
+          {match.url}
+        </a>
+      );
+    } else {
+      // For untrusted URLs, just show as text
+      result.push(match.url);
+    }
+    
+    // Update the last index to after this URL
+    lastIndex = match.index + match.url.length;
+  });
+  
+  // Add any remaining text after the last URL
+  if (lastIndex < content.length) {
+    result.push(content.substring(lastIndex));
+  }
+  
+  return result;
+};
 
 export default function FeedPost({ post }: FeedPostProps) {
   const { user } = useSession();
@@ -239,8 +329,6 @@ export default function FeedPost({ post }: FeedPostProps) {
   // if(post.medias[0].title === "123"){
   //   console.log("affichage post un a un ", post.medias[0].title , " et sa duration est ", post.medias[0].duration);
   // }
-
-  // console.log("hte post", post)
   
 
   return (
@@ -249,24 +337,41 @@ export default function FeedPost({ post }: FeedPostProps) {
       <div className="flex justify-between w-full items-center p-4">
         <div className="flex items-center w-full space-x-3 text-sm">
           <div>
-            <Link href={`/profile/${post.profile.pseudo_url}`}>
+            {post.profile.is_admin === true ? (
               <Avatar
                 src={post.profile.avatar_url}
                 stageName={post.profile.stage_name?.[0] || 'U'}
                 size={40}
               />
-            </Link>
+            ) : (
+              <Link href={`/profile/${post.profile.pseudo_url}`}>
+                <Avatar
+                  src={post.profile.avatar_url}
+                  stageName={post.profile.stage_name?.[0] || 'U'}
+                  size={40}
+                />
+              </Link>
+            )}
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2">
             <div className="flex flex-1 items-center justify-between space-x-2">
-              <Link href={`/profile/${post.profile.pseudo_url}`}>
+              {post.profile.is_admin === true ? (
                 <div className="flex flex-col items-start">
                   <h3 className="font-semibold text-[#2D2D2D]">
                     {post.profile.stage_name || 'Unknown Artist'}
                   </h3>
                   <TimeAgo date={post.created_at} defaultLanguage="fr" />
                 </div>
-              </Link>
+              ) : (
+                <Link href={`/profile/${post.profile.pseudo_url}`}>
+                  <div className="flex flex-col items-start">
+                    <h3 className="font-semibold text-[#2D2D2D]">
+                      {post.profile.stage_name || 'Unknown Artist'}
+                    </h3>
+                    <TimeAgo date={post.created_at} defaultLanguage="fr" />
+                  </div>
+                </Link>
+              )}
               {!isAuthor && (
                 <button
                   className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
@@ -336,10 +441,12 @@ export default function FeedPost({ post }: FeedPostProps) {
 
       {/* Title and description */}
       {post.content && (
-           <div className="px-4 pb-4">
-          <p className="text-gray-600 text-sm">{post.content}</p>
-          </div>
-        )}
+        <div className="px-4 pb-4">
+          <p className="text-gray-600 text-sm">
+            {renderContentWithLinks(post.content)}
+          </p>
+        </div>
+      )}
       
 
       {/* Media player */}

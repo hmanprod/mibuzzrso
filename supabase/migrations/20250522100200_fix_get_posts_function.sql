@@ -75,7 +75,8 @@ BEGIN
                 'id', pr.id,
                 'stage_name', pr.stage_name,
                 'avatar_url', pr.avatar_url,
-                'pseudo_url', pr.pseudo_url
+                'pseudo_url', pr.pseudo_url,
+                'is_admin', pr.is_admin
             ) AS profile,
             COALESCE(
                 (SELECT ARRAY_AGG(
@@ -149,7 +150,8 @@ BEGIN
                 'id', pr.id,
                 'stage_name', pr.stage_name,
                 'avatar_url', pr.avatar_url,
-                'pseudo_url', pr.pseudo_url
+                'pseudo_url', pr.pseudo_url,
+                'is_admin', pr.is_admin
             ) AS profile,
             COALESCE(
                 (SELECT ARRAY_AGG(
@@ -216,7 +218,8 @@ BEGIN
                 'id', pr.id,
                 'stage_name', pr.stage_name,
                 'avatar_url', pr.avatar_url,
-                'pseudo_url', pr.pseudo_url
+                'pseudo_url', pr.pseudo_url,
+                'is_admin', pr.is_admin
             ) AS profile,
             COALESCE(
                 (SELECT ARRAY_AGG(
@@ -293,7 +296,8 @@ BEGIN
                 'id', pr.id,
                 'stage_name', pr.stage_name,
                 'avatar_url', pr.avatar_url,
-                'pseudo_url', pr.pseudo_url
+                'pseudo_url', pr.pseudo_url,
+                'is_admin', pr.is_admin
             ) AS profile,
             COALESCE(
                 (SELECT ARRAY_AGG(

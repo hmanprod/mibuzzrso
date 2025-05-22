@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import PointsDialog from '@/components/points/PointsDialog';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, Search, ShieldCheck, Trophy } from 'lucide-react';
+import { User, LogOut, Search, ShieldCheck } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { Avatar } from './ui/Avatar';
 import Image from 'next/image';
@@ -167,7 +167,7 @@ export default function Navbar({ className }: NavbarProps) {
                     <span>Mon compte</span>
                   </button>
 
-                  {profile?.points && profile.points >= 150 && (
+                  {/* {profile?.points && profile.points >= 150 && (
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
@@ -178,7 +178,7 @@ export default function Navbar({ className }: NavbarProps) {
                       <Trophy className="w-4 h-4" />
                       <span>Classement</span>
                     </button>
-                  )}
+                  )} */}
 
                   <div className="h-[1px] bg-gray-100 my-1" />
 
