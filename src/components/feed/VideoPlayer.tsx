@@ -225,7 +225,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   return (
     <div
       ref={containerRef}
-      className="relative bg-black rounded-[18px] overflow-hidden group"
+      className="relative bg-black rounded-[18px] overflow-hidden group mb-4"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
