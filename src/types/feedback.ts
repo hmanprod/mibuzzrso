@@ -9,4 +9,7 @@ export interface Feedback {
     stage_name: string;
     avatar_url: string | null;
   };
+  is_liked?: boolean;
+  likes?: number;
+  comments_count?: number;
 }

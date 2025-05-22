@@ -454,6 +454,29 @@ export async function deletePost(postId: string, userId: string) {
     if (postMedia && postMedia.length > 0) {
       const mediaIds = postMedia.map(pm => pm.media_id);
       
+      // 4.1 D'abord, supprimer les entrées dans daily_media_uploads
+      const { error: deleteDailyUploadsError } = await supabase
+        .from('daily_media_uploads')
+        .delete()
+        .in('media_id', mediaIds);
+        
+      if (deleteDailyUploadsError) {
+        console.error('Error deleting from daily_media_uploads:', deleteDailyUploadsError);
+        throw deleteDailyUploadsError;
+      }
+      
+      // 4.2 Ensuite, supprimer les entrées dans interactions liées aux médias
+      const { error: deleteInteractionsError } = await supabase
+        .from('interactions')
+        .delete()
+        .in('media_id', mediaIds);
+        
+      if (deleteInteractionsError) {
+        console.error('Error deleting from interactions:', deleteInteractionsError);
+        // Continue même en cas d'erreur, car certaines interactions peuvent ne pas exister
+      }
+      
+      // 4.3 Enfin, supprimer les médias eux-mêmes
       const { error: deleteMediaError } = await supabase
         .from('medias')
         .delete()

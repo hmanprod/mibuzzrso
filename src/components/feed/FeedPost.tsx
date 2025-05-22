@@ -169,6 +169,15 @@ export default function FeedPost({ post }: FeedPostProps) {
     setIsLiked(newIsLiked);
     setLikesCount(prev => newIsLiked ? prev + 1 : prev - 1);
     
+    // Si l'utilisateur aime le post, montrer automatiquement la section commentaires
+    if (newIsLiked && !showComments) {
+      setShowComments(true);
+      // Précharger les commentaires si nécessaire
+      if (comments.length === 0) {
+        fetchComments();
+      }
+    }
+    
     // Marquer comme en cours de traitement en arrière-plan
     setIsLikeProcessing(true);
     
@@ -184,6 +193,13 @@ export default function FeedPost({ post }: FeedPostProps) {
           title: "Erreur",
           description: "Impossible de mettre à jour le statut du like.",
           variant: "destructive"
+        });
+      } else if (newIsLiked) {
+        // Si le like a réussi et que c'est un nouveau like, encourager l'utilisateur à commenter
+        toast({
+          title: "Vous aimez ce contenu !",
+          description: "Partagez votre avis en laissant un commentaire.",
+          variant: "default"
         });
       }
     } catch (error) {
@@ -307,13 +323,15 @@ export default function FeedPost({ post }: FeedPostProps) {
   };
 
   // Function to handle post deletion
+  const [isDeleted, setIsDeleted] = useState(false);
+  
   const handlePostDeleted = () => {
     toast({
       title: "Post deleted",
       description: "Your post has been deleted successfully."
     });
-    // You might want to refresh the feed or remove this post from the UI
-    // This depends on how your feed is implemented
+    // Marquer le post comme supprimé pour le masquer de l'UI
+    setIsDeleted(true);
   };
 
   // Function to handle post update
@@ -331,6 +349,11 @@ export default function FeedPost({ post }: FeedPostProps) {
   // }
   
 
+  // Si le post est supprimé, ne pas le rendre
+  if (isDeleted) {
+    return null;
+  }
+  
   return (
     <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4">
       {/* Post header */}

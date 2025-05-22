@@ -43,6 +43,13 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       setError(`Veuillez sélectionner un fichier ${activeTab === 'audio' ? 'audio' : 'vidéo'} valide`);
       return;
     }
+    
+    // Vérifier la taille du fichier (limite de 100 Mo)
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 Mo en octets
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Le fichier est trop volumineux. La taille maximale autorisée est de 100 Mo.`);
+      return;
+    }
 
     setSelectedFile(file);
     // Remove the file extension when setting the title
@@ -242,6 +249,9 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                     </p>
                     <p className="text-xs">
                       Formats supportés : {activeTab === 'audio' ? 'MP3, WAV, AAC' : 'MP4, WebM, MOV'}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Taille maximale : 100 Mo
                     </p>
                   </div>
                 </div>
