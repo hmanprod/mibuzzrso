@@ -24,6 +24,8 @@ export async function getCommentsByMediaId(mediaId: string) {
       return { comments: [] }
     }
 
+    // console.log("the comments data", commentsData);
+
     // Get all user IDs from comments
     const userIds = commentsData.map(comment => comment.user_id)
 
@@ -37,6 +39,8 @@ export async function getCommentsByMediaId(mediaId: string) {
       console.error('Error fetching profiles:', profilesError)
       return { error: 'Failed to load user profiles' }
     }
+
+    
 
     // Create a map of user_id to profile for easy lookup
     const profilesMap = (profilesData || []).reduce((acc, profile) => {
@@ -58,7 +62,8 @@ export async function getCommentsByMediaId(mediaId: string) {
           id: profile.id || comment.user_id,
           stage_name: profile.stage_name || '',
           avatar_url: profile.avatar_url,
-          username: profile.email || 'User'
+          username: profile.email || 'User',
+          pseudo_url: profile.pseudo_url || 'User'
         }
       }
     })

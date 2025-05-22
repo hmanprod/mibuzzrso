@@ -238,6 +238,8 @@ export async function getTopInteractingUsers() {
       limit_count: 10
     })
 
+  
+
     if (error) {
       console.error('Error fetching top interacting users:', error)
       return { data: null, error }

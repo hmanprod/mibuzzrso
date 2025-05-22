@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Send, MessageSquare, ThumbsUp } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
@@ -22,6 +23,7 @@ interface Comment {
     stage_name: string;
     avatar_url: string | null;
     username: string;
+    pseudo_url: string;
   };
 }
 
@@ -250,15 +252,19 @@ export default function CommentSection({
   const CommentItem = ({ comment, level = 0 }: { comment: Comment, level?: number }) => {
     const likes = commentLikes[comment.id] || { count: 0, isLiked: false };
     
+    console.log("the comment", comment);
+    
     return (
       <div className={`flex flex-col ${level === 1 ? 'ml-8 mt-3' : 'mt-3'}`}>
         <div className="flex items-start gap-2">
           <div className="flex-shrink-0">
-            <Avatar 
-              src={comment.author.avatar_url || null} 
-              stageName={comment.author.stage_name || null}
-              size={25}
-            />
+            <Link href={`/profile/${comment.author.pseudo_url || ''}`}>
+              <Avatar 
+                src={comment.author.avatar_url || null} 
+                stageName={comment.author.stage_name || null}
+                size={25}
+              />
+            </Link>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
@@ -328,11 +334,13 @@ export default function CommentSection({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <Avatar 
-            src={profile?.avatar_url || null} 
-            stageName={profile?.stage_name || null}
-            size={25}
-          />
+          <Link href={`/profile/${profile?.pseudo_url || ''}`}>
+            <Avatar 
+              src={profile?.avatar_url || null} 
+              stageName={profile?.stage_name || null}
+              size={25}
+            />
+          </Link>
           <input 
             id="comment-input"
             type="text" 

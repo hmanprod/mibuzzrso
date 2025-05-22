@@ -19,6 +19,21 @@ export async function register(formData: FormData) {
 
   const supabase = await createClient()
 
+  // Tenter de se connecter avec l'email pour voir s'il existe
+  // Cette méthode ne révèle pas si l'email existe mais nous pouvons détecter certains cas
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password: 'test-password-that-probably-doesnt-match'
+  });
+
+  // Si l'erreur indique que l'email n'existe pas, c'est bon
+  // Si l'erreur indique un mot de passe incorrect, alors l'email existe déjà
+  if (signInError && signInError.message.includes('Invalid login credentials')) {
+    // L'email existe probablement, mais le mot de passe est incorrect
+    return { error: 'Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.' }
+  }
+
+  // Procéder à l'inscription
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -27,11 +42,20 @@ export async function register(formData: FormData) {
     },
   });
 
-  console.log(data);
-  console.error(error);
+  // Si l'inscription renvoie "Email already registered", c'est un autre moyen de détecter
+  if (error && error.message.includes('Email already registered')) {
+    return { error: 'Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.' }
+  }
 
+  // Autres erreurs d'inscription
   if (error) {
+    console.error(error);
     return { error: error.message }
+  }
+
+  // Vérifier si l'utilisateur a été créé mais nécessite une confirmation d'email
+  if (data?.user?.identities?.length === 0) {
+    return { error: 'Un compte avec cet email existe déjà mais n\'a pas été confirmé. Veuillez vérifier votre boîte mail.' }
   }
 
   redirect('/auth/verify-email')

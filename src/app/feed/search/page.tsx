@@ -41,7 +41,7 @@ export default function SearchPage() {
     );
   }
 
-  console.log("search result", searchResults);
+  // console.log("search result", searchResults);
   
 
   return (

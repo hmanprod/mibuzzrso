@@ -56,6 +56,8 @@ export function SessionProvider({
           .single();
 
        setAdmin(data.is_admin)
+      //  console.log("the admin is ", data);
+       
         
 
         if (error) {

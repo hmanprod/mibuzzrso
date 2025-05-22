@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { Flame, MessageCircle, Share2, Bookmark } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import Image from 'next/image';
 
@@ -78,7 +78,7 @@ export default function Feed({ className }: FeedProps) {
 
             <div className="flex items-center gap-4">
               <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors">
-                <Heart className="h-5 w-5" />
+                <Flame className="h-5 w-5" />
                 <span className="text-sm">{post.likes}</span>
               </button>
               <button className="flex items-center gap-1 text-[#666666] hover:text-primary transition-colors">

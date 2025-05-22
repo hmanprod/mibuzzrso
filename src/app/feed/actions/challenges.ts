@@ -89,7 +89,7 @@ export async function getChallenges(page: number = 1, limit: number = 5, status:
 
 export async function getChallenge(id: string) {
   const supabase = await createClient();
-  console.log('Fetching challenge with ID:', id);
+  // console.log('Fetching challenge with ID:', id);
 
   try {
     // 1. Récupérer le challenge
@@ -177,7 +177,7 @@ interface ChallengeMediasResponse {
 
 export async function getChallengeMedias(challengeId: string): Promise<ChallengeMediasResponse> {
   const supabase = await createClient();
-  console.log('Fetching medias for challenge:', challengeId);
+  // console.log('Fetching medias for challenge:', challengeId);
 
   try {
     const { data: rawMedias, error } = await supabase

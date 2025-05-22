@@ -30,6 +30,8 @@ export function OnboardingModal() {
   });
 
   useEffect(() => {
+    
+    
     if (profile) {
       setFormData({
         stage_name: profile.stage_name ?? '',
@@ -61,6 +63,9 @@ export function OnboardingModal() {
       console.error('Failed to update profile:', error);
     }
   };
+
+  // console.log('the profiles is complete', isProfileComplete);
+  
 
   return (
     <Dialog open={!isProfileComplete} onOpenChange={() => {}} modal>

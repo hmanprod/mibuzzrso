@@ -152,7 +152,8 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full bg-primary text-white py-2.5 rounded-[18px] font-semibold hover:bg-primary/80 transition-colors ${
+          className={`w-full bg-primary t
+            ext-white py-2.5 rounded-[18px] font-semibold hover:bg-primary/80 transition-colors ${
             isLoading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >

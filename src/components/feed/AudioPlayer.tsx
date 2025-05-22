@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
+import Link from 'next/link';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { getWaveformUrl } from '@/lib/cloudinary';
@@ -354,11 +355,13 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
             >
               <div className="flex gap-2">
                 <div className="flex items-center gap-2">
-                  <Avatar
-                    src={comment.author.avatar_url || null}
-                    stageName={comment.author.stage_name || null}
-                    size={20}
-                  />
+                  <Link href={`/profile/${comment.author.username || ''}`}>
+                    <Avatar
+                      src={comment.author.avatar_url || null}
+                      stageName={comment.author.stage_name || null}
+                      size={20}
+                    />
+                  </Link>
                   <span className="text-sm font-medium">{comment.author.stage_name || comment.author.username}</span>
                 </div>
                 <p className="text-sm text-gray-600">

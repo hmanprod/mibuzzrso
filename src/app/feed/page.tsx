@@ -89,6 +89,9 @@ export default function Home() {
       await loadPosts();
       setShowCreatePost(false);
   };
+
+
+  
   
   return (
     <div className="min-h-screen bg-[#FAFAFA]">

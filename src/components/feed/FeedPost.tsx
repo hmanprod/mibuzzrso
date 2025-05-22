@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
+import { Flame, MessageCircle, MoreHorizontal, Pencil, Trash2, UserPlus, Check } from 'lucide-react';
 import type { ExtendedPost } from '@/types/database';
 import AudioPlayer from './AudioPlayer';
 import VideoPlayer from './VideoPlayer';
@@ -38,6 +38,7 @@ interface Comment {
     stage_name: string;
     avatar_url: string | null;
     username: string;
+    pseudo_url: string;
   };
 }
 
@@ -70,38 +71,35 @@ export default function FeedPost({ post }: FeedPostProps) {
 
 
   const handleLike = async () => {
+    // Empêcher les clics multiples rapides
     if (isLikeProcessing) return;
-
+    
+    // Appliquer immédiatement le like pour une meilleure UX
+    const newIsLiked = !isLiked;
+    setIsLiked(newIsLiked);
+    setLikesCount(prev => newIsLiked ? prev + 1 : prev - 1);
+    
+    // Marquer comme en cours de traitement en arrière-plan
+    setIsLikeProcessing(true);
+    
     try {
-      setIsLikeProcessing(true);
-      
-      // Optimistic update
-      const newIsLiked = !isLiked;
-      setIsLiked(newIsLiked);
-      setLikesCount(prev => newIsLiked ? prev + 1 : prev - 1);
-
-      // Make API call
+      // Faire l'appel API en arrière-plan
       const result = await togglePostLike(post.id);
-
+      
+      // En cas d'erreur, annuler l'optimistic update
       if (result.error) {
-        // Revert optimistic update if there's an error
         setIsLiked(!newIsLiked);
         setLikesCount(prev => newIsLiked ? prev - 1 : prev + 1);
         toast({
-          title: "Error",
-          description: "Failed to update like status. Please try again.",
+          title: "Erreur",
+          description: "Impossible de mettre à jour le statut du like.",
           variant: "destructive"
         });
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setIsLiked(!isLiked);
-      setLikesCount(prev => isLiked ? prev + 1 : prev - 1);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      // En cas d'erreur, annuler l'optimistic update
+      setIsLiked(!newIsLiked);
+      setLikesCount(prev => newIsLiked ? prev - 1 : prev + 1);
       console.error(error);
     } finally {
       setIsLikeProcessing(false);
@@ -121,6 +119,8 @@ export default function FeedPost({ post }: FeedPostProps) {
 
     try {
       const { comments: fetchedComments, error } = await getCommentsByMediaId(mediaItem.id);
+
+    
       
       if (error) {
         console.error('Error fetching comments:', error);
@@ -236,11 +236,11 @@ export default function FeedPost({ post }: FeedPostProps) {
     // This depends on how your feed is implemented
   };
 
-  if(post.medias[0].title === "123"){
-    console.log("affichage post un a un ", post.medias[0].title , " et sa duration est ", post.medias[0].duration);
-  }
+  // if(post.medias[0].title === "123"){
+  //   console.log("affichage post un a un ", post.medias[0].title , " et sa duration est ", post.medias[0].duration);
+  // }
 
-  console.log("hte post", post)
+  // console.log("hte post", post)
   
 
   return (
@@ -373,14 +373,14 @@ export default function FeedPost({ post }: FeedPostProps) {
       <div className="flex items-center gap-3 px-4 pb-4">
         {/* Like button */}
         <button 
-          className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
+          className="flex items-center gap-2"
           onClick={handleLike}
           disabled={isLikeProcessing}
         >
-          <Heart 
+          <Flame 
             className={cn(
               "w-6 h-6 transition-colors",
-              isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500 hover:stroke-gray-700"
+              isLiked ? "fill-orange-500 stroke-orange-500" : "stroke-gray-500 hover:stroke-gray-700"
             )}
           />
           <span className="text-gray-500">{likesCount}</span>

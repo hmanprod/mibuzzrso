@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreVertical, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, MessageCircle, Share2, MoreVertical, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -90,11 +91,13 @@ export default function PostCard({ post, onDelete }: PostCardProps) {
       {/* Header */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center space-x-3">
-          <Avatar
-            src={post.profile.avatar_url}
-            stageName={post.profile.stage_name[0]}
-            size={40}
-          />
+          <Link href={`/profile/${post.profile.stage_name || ''}`}>
+            <Avatar
+              src={post.profile.avatar_url}
+              stageName={post.profile.stage_name[0]}
+              size={40}
+            />
+          </Link>
           <div>
             <h3 className="font-semibold text-[#2D2D2D]">
               {post.profile.stage_name}
@@ -148,10 +151,10 @@ export default function PostCard({ post, onDelete }: PostCardProps) {
           className="flex items-center gap-2"
           onClick={handleLike}
         >
-          <Heart 
+          <Flame 
             className={cn(
               "w-6 h-6 transition-colors",
-              isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500 hover:stroke-gray-700"
+              isLiked ? "fill-orange-500 stroke-orange-500" : "stroke-gray-500 hover:stroke-gray-700"
             )}
           />
           <span className="text-gray-500">{likesCount}</span>

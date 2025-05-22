@@ -34,7 +34,8 @@ export default function SearchLayout({
           avatar_url: user.avatar_url,
           stage_name: user.stage_name,
           interaction_score: user.interaction_score,
-          is_followed: user.is_followed
+          is_followed: user.is_followed,
+          pseudo_url: user.pseudo_url
         }));
         
         setTopUsers(formattedUsers.slice(0, 3));

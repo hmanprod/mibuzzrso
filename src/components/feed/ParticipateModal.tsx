@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
@@ -143,12 +144,14 @@ export default function ParticipateModal({
         </DialogTitle>
         <div className="space-y-6 p-6 bg-white">
           <div className="flex items-center gap-3">
-            <Avatar
-              src={profile?.avatar_url || null}
-              stageName={profile?.stage_name}
-              size={40}
-              className="rounded-full"
-            />
+            <Link href={`/profile/${profile?.pseudo_url || ''}`}>
+              <Avatar
+                src={profile?.avatar_url || null}
+                stageName={profile?.stage_name?.[0] || 'U'}
+                size={40}
+                className="rounded-full"
+              />
+            </Link>
             <div>
               <h3 className="text-lg font-semibold">Participer au challenge</h3>
               <p className="text-sm text-gray-500">{challengeTitle}</p>

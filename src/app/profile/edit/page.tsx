@@ -16,6 +16,7 @@ interface SocialLink {
   platform: string;
   url: string;
   icon: React.ReactNode;
+  label: string;
 }
 
 export default function EditProfilePage() {
@@ -84,13 +85,13 @@ export default function EditProfilePage() {
       setLoading(false);
       console.error('Erreur lors de la mise à jour du profil:', error);
     }
-  };
+  };    
 
   const socialLinks: SocialLink[] = [
-    { platform: 'Instagram', url: formData.social_links.instagram, icon: <BsInstagram className="w-5 h-5" /> },
-    { platform: 'Spotify', url: formData.social_links.spotify, icon: <BsSpotify className="w-5 h-5" /> },
-    { platform: 'YouTube', url: formData.social_links.youtube, icon: <BsYoutube className="w-5 h-5" /> },
-    { platform: 'Site web', url: formData.social_links.website, icon: <BsGlobe2 className="w-5 h-5" /> },
+    { platform: 'instagram', url: formData.social_links.instagram, icon: <BsInstagram className="w-5 h-5" />, label: 'Instagram' },
+    { platform: 'spotify', url: formData.social_links.spotify, icon: <BsSpotify className="w-5 h-5" />, label: 'Spotify' },
+    { platform: 'youtube', url: formData.social_links.youtube, icon: <BsYoutube className="w-5 h-5" />, label: 'YouTube' },
+    { platform: 'website', url: formData.social_links.website, icon: <BsGlobe2 className="w-5 h-5" />, label: 'Site web' },
   ];
 
   return (
@@ -213,11 +214,11 @@ export default function EditProfilePage() {
                             ...formData,
                             social_links: {
                               ...formData.social_links,
-                              [link.platform.toLowerCase()]: e.target.value
+                              [link.platform]: e.target.value
                             }
                           })}
                           className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                          placeholder={`Ajouter un lien ${link.platform}`}
+                          placeholder={`Ajouter un lien ${link.label}`}
                         />
                       </div>
                     ))}

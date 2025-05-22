@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar, Star } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar, Star } from 'lucide-react';
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
@@ -58,7 +59,7 @@ interface Participation {
   content: string;
   created_at: string;
   user: { id: string; email: string };
-  profile: { id: string; username: string; stage_name: string; avatar_url: string | null };
+  profile: { id: string; username: string; stage_name: string; avatar_url: string | null, pseudo_url: string };
   medias: Array<{
     id: string;
     position: number;
@@ -92,7 +93,7 @@ export default function ChallengePage() {
     if (currentPlaybackTime > 0) {
       // On pourrait utiliser cette valeur pour synchroniser
       // d'autres éléments de l'interface avec la progression
-      console.log('Playback time:', currentPlaybackTime);
+      // console.log('Playback time:', currentPlaybackTime);
     }
   }, [currentPlaybackTime]);
   const [isFollowLoading] = useState(false);
@@ -125,7 +126,7 @@ export default function ChallengePage() {
 
         // Charger les médias
         const mediasResult = await getChallengeMedias(params.id as string);
-        console.log("Medias result:", mediasResult);
+        // console.log("Medias result:", mediasResult);
 
         if (mediasResult.error) {
           console.error('Error loading medias:', mediasResult.error);
@@ -154,7 +155,7 @@ export default function ChallengePage() {
 
         // Charger les participations
         const participationsResult = await getChallengeParticipations(params.id as string);
-        console.log("challenge participation results", participationsResult);
+        // console.log("challenge participation results", participationsResult);
         
         if (participationsResult.error) {
           console.error('Error loading participations:', participationsResult.error);
@@ -199,7 +200,7 @@ export default function ChallengePage() {
       const mediaType = file.type.startsWith('audio/') ? 'audio' : 'video';
       const uploadData = await uploadToCloudinary(file, mediaType);
 
-      console.log('Cloudinary upload successful:', uploadData);
+      // console.log('Cloudinary upload successful:', uploadData);
 
       // 2. Get file duration if it's an audio file
       let duration;
@@ -275,18 +276,23 @@ export default function ChallengePage() {
     );
   }
 
+  // console.log("les participations", participations);
+  
+
   return (
     <>
     {/* Participate section */}
     {challenge.status === 'active' ? (
       <div className="bg-white rounded-[18px] p-4 space-y-4 mb-4">
         <div className="flex items-center gap-3">
-          <Avatar
-            src={profile?.avatar_url || null}
-            stageName={profile?.stage_name || profile?.email?.[0]}
-            size={40}
-            className="rounded-full"
-          />
+          <Link href={`/profile/${profile?.pseudo_url || ''}`}>
+            <Avatar
+              src={profile?.avatar_url || null}
+              stageName={profile?.stage_name || profile?.email?.[0]}
+              size={40}
+              className="rounded-full"
+            />
+          </Link>
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex-1 h-12 px-4 rounded-[18px] bg-gray-50 hover:bg-gray-100 text-left text-gray-500 transition-colors"
@@ -308,11 +314,13 @@ export default function ChallengePage() {
       {/* Challenge header */}
       <div className="flex justify-between flex-1 items-center p-4">
         <div className="flex items-center flex-1 space-x-3">
-          <Avatar
-            src={challenge.creator?.profile?.avatar_url || ''}
-            stageName={(challenge.creator?.profile?.stage_name || 'C')[0]}
-            size={40}
-          />
+          <Link href={`/profile/${challenge.creator?.profile?.pseudo_url || ''}`}>
+            <Avatar
+              src={challenge.creator?.profile?.avatar_url || ''}
+              stageName={(challenge.creator?.profile?.stage_name || 'C')[0]}
+              size={40}
+            />
+          </Link>
           <div className="flex items-center flex-1 justify-between space-x-2">
             <div className="flex flex-col items-start">
               <h3 className="font-semibold text-sm text-[#2D2D2D]">
@@ -423,10 +431,10 @@ export default function ChallengePage() {
           className="flex items-center gap-2"
           onClick={handleLike}
         >
-          <Heart 
+          <Flame 
             className={cn(
               "w-6 h-6 transition-colors",
-              isLiked ? "fill-red-500 stroke-red-500" : "stroke-gray-500 hover:stroke-gray-700"
+              isLiked ? "fill-orange-500 stroke-orange-500" : "stroke-gray-500 hover:stroke-gray-700"
             )}
           />
           <span className="text-gray-500">{likesCount}</span>
@@ -457,11 +465,13 @@ export default function ChallengePage() {
           participations.map((participation) => (
             <div key={participation.id} className="bg-white rounded-[18px] p-4 shadow-sm">
               <div className="flex items-center space-x-3 mb-4">
-                <Avatar
-                  src={participation.profile.avatar_url}
-                  stageName={participation.profile.stage_name || participation.profile.username}
-                  size={40}
-                />
+                <Link href={`/profile/${participation.profile.pseudo_url || ''}`}>
+                  <Avatar
+                    src={participation.profile.avatar_url}
+                    stageName={participation.profile.stage_name || participation.profile.username}
+                    size={40}
+                  />
+                </Link>
                 <div>
                   <h4 className="font-semibold text-sm">{participation.profile.stage_name || participation.profile.username}</h4>
                   <TimeAgo date={participation.created_at} defaultLanguage="fr" />

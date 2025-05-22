@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreVertical, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, MessageCircle, Share2, MoreVertical, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -80,11 +81,13 @@ export default function FeedbackCard({ feedback, onDelete }: FeedbackCardProps) 
       {/* Header */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center space-x-3">
-          <Avatar
-            src={feedback.profile.avatar_url}
-            stageName={feedback.profile.stage_name[0]}
-            size={40}
-          />
+          <Link href={`/profile/${feedback.profile.stage_name || ''}`}>
+            <Avatar
+              src={feedback.profile.avatar_url}
+              stageName={feedback.profile.stage_name[0]}
+              size={40}
+            />
+          </Link>
           <div>
             <h3 className="font-semibold text-[#2D2D2D]">
               {feedback.profile.stage_name}
@@ -130,7 +133,7 @@ export default function FeedbackCard({ feedback, onDelete }: FeedbackCardProps) 
             onClick={handleLike}
             className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors"
           >
-            <Heart
+            <Flame
               className={cn(
                 "w-5 h-5",
                 "hover:fill-primary"

@@ -6,12 +6,16 @@ create table if not exists public.users_to_clean (
   constraint users_to_clean_user_id_key unique (user_id)
 ) TABLESPACE pg_default;
 
--- INSERT INTO users_to_clean (user_id, name) VALUES
---     ('c4ca416b-b666-45c1-8830-0730b20e472d', 'Ronal')
---     -- ('2380b68d-d2bb-460a-ba84-2ac15b778e5a', 'Ronal'),
---     -- ('15e035de-9c9b-4b54-92ce-a036d17a351e', 'Ronal'),
---     -- ('a9343b56-87ee-4e7a-9585-195380330638', 'Ronal'),
---     -- ('582cc679-61ef-4c5d-823e-a228a369b00e', 'Ronal');
+-- Vider la table users_to_clean pour éviter les doublons
+TRUNCATE TABLE users_to_clean;
+
+-- Insérer l'utilisateur à nettoyer
+INSERT INTO users_to_clean (user_id, name) VALUES
+    ('c4ca416b-b666-45c1-8830-0730b20e472d', 'Ronal');
+    -- ('2380b68d-d2bb-460a-ba84-2ac15b778e5a', 'Ronal'),
+    -- ('15e035de-9c9b-4b54-92ce-a036d17a351e', 'Ronal'),
+    -- ('a9343b56-87ee-4e7a-9585-195380330638', 'Ronal'),
+    -- ('582cc679-61ef-4c5d-823e-a228a369b00e', 'Ronal');
 
 -- Commencer une transaction
 BEGIN;

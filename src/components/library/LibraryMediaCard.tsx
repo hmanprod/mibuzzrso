@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { Heart, Pause, Play, MessageCircle } from 'lucide-react';
+import { Flame, Pause, Play, MessageCircle } from 'lucide-react';
 import type { Media } from '@/types/database';
 import { cn } from '@/lib/utils';
 import AudioPlayer from '../feed/AudioPlayer';
@@ -194,7 +194,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
               onClick={handleLike}
               disabled={isLikeProcessing}
             >
-              <Heart
+              <Flame
                 className={cn(
                   "w-5 h-5 transition-colors",
                   isLiked ? "fill-[#E94135] stroke-[#E94135]" : "stroke-gray-500 hover:stroke-gray-700"

@@ -1,6 +1,6 @@
 import { Media } from '@/types/database';
 import { TimeAgo } from '../ui/TimeAgo';
-import { Heart, PlayCircle } from "lucide-react";
+import { Flame, PlayCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -123,7 +123,7 @@ export function MediaCard({ media, onPlay }: MediaCardProps) {
               className="flex items-center gap-1 text-white hover:text-[#E94135] transition-colors"
               disabled={loading}
             >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-[#E94135] text-[#E94135]' : ''}`} />
+              <Flame className={`w-4 h-4 ${isLiked ? 'fill-[#E94135] text-[#E94135]' : ''}`} />
               <span>{likesCount}</span>
             </button>
           </div>

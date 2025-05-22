@@ -70,7 +70,7 @@ export async function fetchPosts({
       return { posts: [], total: 0, page, limit };
     }
 
-    console.log("the post data", postsData);
+    // console.log("the post data", postsData);
     
 
     // Get total count for pagination
@@ -266,7 +266,7 @@ export async function createPostWithMedia(data: CreatePostData) {
     if (postError) throw postError;
     
     // 3. Link post and media
-    const { data: pmdta, error: linkError } = await supabase
+    const { error: linkError } = await supabase
       .from('posts_medias')
       .insert({
         post_id: postData.id,
@@ -274,7 +274,7 @@ export async function createPostWithMedia(data: CreatePostData) {
         position: 1 // First position since it's a new post
       });
       
-    console.log("post media data", pmdta);
+    // console.log("post media data", pmdta);
     
     
     if (linkError) throw linkError;
@@ -294,7 +294,7 @@ export async function createPostWithMedia(data: CreatePostData) {
 
 export async function createPostWithMediaCP(data: Omit<CreatePostData, 'challengeId'>, challengeId: string) {
   const supabase = await createClient();
-  console.log("the challenge id is ", challengeId);
+  // console.log("the challenge id is ", challengeId);
   
   
   try {
@@ -327,7 +327,7 @@ export async function createPostWithMediaCP(data: Omit<CreatePostData, 'challeng
       .select()
       .single();
 
-    console.log("les postData", postData, "and mediadtat", mediaData);
+    // console.log("les postData", postData, "and mediadtat", mediaData);
     
       
     if (postError) throw postError;
@@ -342,7 +342,7 @@ export async function createPostWithMediaCP(data: Omit<CreatePostData, 'challeng
       });
 
 
-      console.log("les pmdatas sont", linkError);
+      // console.log("les pmdatas sont", linkError);
       
       
     if (linkError) throw linkError;
