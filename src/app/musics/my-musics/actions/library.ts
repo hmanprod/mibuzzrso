@@ -1,15 +1,33 @@
-import { createClient } from '@/lib/supabase/client';
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
 import { Media } from '@/types/database';
 import { PostgrestError } from '@supabase/supabase-js';
 
-type MediaWithLikes = Media & {
-  likes_count: number;
-  is_liked?: boolean;
+type DbMedia = {
+  id: string;
+  created_at: string;
+  title: string;
+  media_url: string;
+  media_type: string;
+  duration: string;
+  media_public_id: string;
+  media_cover_url: string;
+  user_id: string;
+  profile: {
+    id: string;
+    stage_name: string;
+    avatar_url: string;
+    pseudo_url: string;
+  };
+  likes: number;
+  is_liked: boolean;
+  is_followed: boolean;
   total_count: number;
 };
 
 type MediaQueryResult = {
-  data: MediaWithLikes[] | null;
+  data: DbMedia[] | null;
   error: PostgrestError | null;
 };
 export type MediaResponse = {
@@ -27,7 +45,7 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 
-    console.log("the user in music is ", supabase);
+    console.log("the user id is", userId);
     
 
     // Call the get_media_with_likes function
@@ -50,8 +68,22 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
     // Get the first item to get total_count
     const total = mediaData.length > 0 ? mediaData[0].total_count : 0;
 
-    // Remove total_count from the media objects
-    const cleanedMediaData = mediaData.map(({  ...rest }) => rest);
+    // Transform the data to match the Media type
+    const cleanedMediaData = mediaData.map((item) => ({
+      id: item.id,
+      created_at: item.created_at,
+      title: item.title,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      duration: parseFloat(item.duration),
+      media_public_id: item.media_public_id,
+      media_cover_url: item.media_cover_url,
+      user_id: item.user_id,
+      likes: item.likes,
+      is_liked: item.is_liked,
+      is_followed: item.is_followed,
+      profile: item.profile
+    })) as Media[];
 
     return {
       media: cleanedMediaData,
@@ -61,6 +93,71 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
     };
   } catch (error) {
     console.error('Error in getMediaLibrary:', error);
+    return {
+      media: [],
+      total: 0,
+      hasMore: false,
+      error: 'An unexpected error occurred'
+    };
+  }
+}
+
+export async function getUserMediaLibrary(limit = 12, page = 1): Promise<MediaResponse> {
+  const supabase = await createClient();
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { media: [], total: 0, hasMore: false, error: 'Non authentifié' };
+    }
+
+    // Call the get_user_media_with_likes function
+    const { data: mediaData, error } = await supabase
+      .rpc('get_user_media_with_likes', {
+        p_current_user_id: user.id,
+        p_limit: limit,
+        p_offset: offset
+      }) as MediaQueryResult;
+
+    if (error) {
+      console.error('Error fetching user media:', error);
+      return { media: [], total: 0, hasMore: false, error: 'Failed to load media' };
+    }
+
+    if (!mediaData || mediaData.length === 0) {
+      return { media: [], total: 0, hasMore: false, error: null };
+    }
+
+    // Get the first item to get total_count
+    const total = mediaData[0]?.total_count || 0;
+
+    // Transform the data to match the Media type
+    const cleanedMediaData = mediaData.map((item) => ({
+      id: item.id,
+      created_at: item.created_at,
+      title: item.title,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      duration: parseFloat(item.duration),
+      media_public_id: item.media_public_id,
+      media_cover_url: item.media_cover_url,
+      user_id: item.user_id,
+      likes: item.likes,
+      is_liked: item.is_liked,
+      is_followed: item.is_followed,
+      profile: item.profile
+    })) as Media[];
+
+    return {
+      media: cleanedMediaData,
+      total,
+      hasMore: total > (page * limit),
+      error: null
+    };
+  } catch (error) {
+    console.error('Error in getUserMediaLibrary:', error);
     return {
       media: [],
       total: 0,
@@ -99,8 +196,22 @@ export async function getMoreMedia(page: number, limit = 12): Promise<MediaRespo
     // Get the first item to get total_count
     const total = mediaData.length > 0 ? mediaData[0].total_count : 0;
 
-    // Remove total_count from the media objects
-    const cleanedMediaData = mediaData.map(({ ...rest }) => rest);
+    // Transform the data to match the Media type
+    const cleanedMediaData = mediaData.map((item) => ({
+      id: item.id,
+      created_at: item.created_at,
+      title: item.title,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      duration: parseFloat(item.duration),
+      media_public_id: item.media_public_id,
+      media_cover_url: item.media_cover_url,
+      user_id: item.user_id,
+      likes: item.likes,
+      is_liked: item.is_liked,
+      is_followed: item.is_followed,
+      profile: item.profile
+    })) as Media[];
 
     return {
       media: cleanedMediaData,

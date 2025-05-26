@@ -75,6 +75,7 @@ export interface Profile {
   is_admin: boolean | null;
   points: number;
   pseudo_url: string;
+  status: 'active' | 'blocked';
   social_links: {
     instagram?: string;
     facebook?: string;

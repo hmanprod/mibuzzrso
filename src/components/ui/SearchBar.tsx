@@ -40,7 +40,15 @@ export default function SearchBar({
 
         // Determine search path based on current location
         if (currentPath.startsWith('/musics')) {
-          searchPath = `/musics/all/search?q=${encodeURIComponent(inputValue)}`;
+          // Déterminer le type de recherche de musique
+          if (currentPath.includes('/my-musics')) {
+            searchPath = `/musics/my-musics/search?q=${encodeURIComponent(inputValue)}`;
+          } else if (currentPath.includes('/abonnements')) {
+            searchPath = `/musics/abonnements/search?q=${encodeURIComponent(inputValue)}`;
+          } else {
+            // Par défaut, rechercher dans toutes les musiques
+            searchPath = `/musics/all/search?q=${encodeURIComponent(inputValue)}`;
+          }
         } else {
           // Default to feed search
           searchPath = `/feed/search?q=${encodeURIComponent(inputValue)}`;
@@ -57,8 +65,15 @@ export default function SearchBar({
     
     // Get current path and redirect accordingly
     const currentPath = window.location.pathname;
-    if (currentPath.startsWith('/musics/all')) {
-      router.push('/musics/all');
+    if (currentPath.startsWith('/musics')) {
+      // Rediriger vers la section appropriée
+      if (currentPath.includes('/my-musics')) {
+        router.push('/musics/my-musics');
+      } else if (currentPath.includes('/abonnements')) {
+        router.push('/musics/abonnements');
+      } else {
+        router.push('/musics/all');
+      }
     } else {
       router.push('/feed');
     }

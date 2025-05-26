@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { OnboardingModal } from '../onboarding/OnboardingModal';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -18,25 +18,24 @@ const PUBLIC_ROUTES = [
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isLoading } = useSession();
-  const [isLocalLoading, setIsLocalLoading] = useState(true);
+  const { user, isLoading, profile } = useSession();
 
   const isPublicRoute = PUBLIC_ROUTES.some(route => 
     pathname.startsWith(route) || pathname === route
   );
 
+  console.log("from authGuard: the user is ", profile);
+  
   useEffect(() => {
-    // Only proceed with authentication check when session loading is complete
-    if (!isLoading) {
-      if (!user && !isPublicRoute) {
-        router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
-      }
-      setIsLocalLoading(false);
+    if (profile?.status === 'blocked' && pathname !== '/account-blocked') {
+      router.push('/account-blocked');
+    } else if (!user && !isPublicRoute) {
+      router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [user, router, pathname, isPublicRoute, isLoading]);
+  }, [user, router, pathname, isPublicRoute, profile]);
 
-  // Show loading spinner while session is loading or local loading state is true
-  if (isLoading || isLocalLoading) {
+  // Show loading spinner only while session is loading
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

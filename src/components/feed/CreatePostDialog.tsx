@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Music, Video, Trash2, Upload, Loader2 } from 'lucide-react';
+import { Music, Video, Trash2, Upload, Loader2, AlertTriangle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
@@ -25,11 +26,13 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'creating' | null>(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useSession();
-  const { uploadToCloudinary, isUploading, progress } = useCloudinaryUpload();
+  const { uploadToCloudinary, isUploading, progress, cancelUpload } = useCloudinaryUpload();
 
   const handleFileSelect = useCallback((file: File | null) => {
     if (!file) return;
@@ -90,11 +93,15 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
     try {
       setIsSubmitting(true);
       setCurrentStep('upload');
+      
+      // Create new AbortController for this upload
+      abortControllerRef.current = new AbortController();
 
       // Upload media to Cloudinary (keep this client-side)
-      const mediaUpload = await uploadToCloudinary(selectedFile, activeTab);
-      if (!mediaUpload) {
-        throw new Error('Échec du téléchargement du média');
+      const mediaUpload = await uploadToCloudinary(selectedFile, activeTab, abortControllerRef.current.signal);
+      if (!mediaUpload || mediaUpload.cancelled) {
+        setError('Téléchargement annulé');
+        return;
       }
 
       // Vérifier que la durée est disponible
@@ -150,12 +157,59 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
     }
   };
 
+  const handleClose = useCallback(() => {
+    if (isSubmitting && currentStep === 'upload') {
+      setShowConfirmClose(true);
+      return;
+    }
+    // Reset state
+    setTitle('');
+    setPostText('');
+    setSelectedFile(null);
+    setError(null);
+    setCurrentStep(null);
+    setIsSubmitting(false);
+    onClose();
+  }, [isSubmitting, currentStep, onClose]);
+
+  const handleConfirmClose = useCallback(() => {
+    setError('Téléchargement annulé');
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    cancelUpload();
+    setShowConfirmClose(false);
+    handleClose();
+  }, [cancelUpload, handleClose]);
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Créer un nouveau post</DialogTitle>
-        </DialogHeader>
+    <>
+      <AlertDialog open={showConfirmClose} onOpenChange={setShowConfirmClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Annuler le téléchargement ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Si vous fermez maintenant, le téléchargement sera annulé et le post ne sera pas créé.
+              Êtes-vous sûr de vouloir annuler ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmClose(false)}>Continuer le téléchargement</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Oui, annuler
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Créer un nouveau post</DialogTitle>
+          </DialogHeader>
 
         {isSubmitting ? (
           <div className="py-12 flex flex-col items-center justify-center space-y-4">
@@ -330,7 +384,8 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
             </div>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

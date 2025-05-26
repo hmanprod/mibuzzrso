@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { getMediaLibrary } from './actions/library';
+import { getUserMediaLibrary } from './actions/library';
+import { Media } from '@/types/database';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 
 
@@ -14,7 +15,7 @@ function LoadingSpinner() {
 }
 
 async function MediaList() {
-  const result = await getMediaLibrary();
+  const result = await getUserMediaLibrary();
 
   if (result.error) {
     return (
@@ -34,7 +35,7 @@ async function MediaList() {
 
   return (
     <div className="flex flex-col space-y-4">
-      {result.media.map((item) => (
+      {result.media.map((item: Media) => (
         <LibraryMediaCard key={item.id} media={item} />
       ))}
     </div>
