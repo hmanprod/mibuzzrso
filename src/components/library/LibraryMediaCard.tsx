@@ -93,7 +93,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
   //   // Add share functionality here
   // };
 
-  console.log("the media", media);
+  // console.log("the media", media);
   
 
   return (

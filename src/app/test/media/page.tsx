@@ -4,7 +4,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 
 export default function AuthTestage() {
   const { user, profile, isLoading } = useSession();
-  console.log('🔄 Current AuthTestage user:', user);
+  // console.log('🔄 Current AuthTestage user:', user);
   if (isLoading) {
     return <div>Loading...</div>;
   }

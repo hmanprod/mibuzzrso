@@ -32,7 +32,7 @@ export async function getWeeklyRankings() {
     .order('rank', { ascending: true })
     .throwOnError();
 
-    console.log("the ranking is ", rankings)
+    // console.log("the ranking is ", rankings)
 
   if (error) {
     console.error('Error fetching rankings:', error);

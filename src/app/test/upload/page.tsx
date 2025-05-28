@@ -18,7 +18,7 @@ export default function TestPage() {
       
       const result = await uploadToCloudinary(file, 'audio');
       setUploadedUrl(result.url);
-      console.log('Upload result:', result);
+      // console.log('Upload result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       console.error('Upload error:', err);

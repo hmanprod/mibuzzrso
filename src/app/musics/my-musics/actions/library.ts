@@ -44,8 +44,6 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
-
-    console.log("the user id is", userId);
     
 
     // Call the get_media_with_likes function
@@ -56,6 +54,7 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
         p_offset: 0
       }) as MediaQueryResult;
 
+      // console.log("mediaData", mediaData);
     if (error) {
       console.error('Error fetching media:', error);
       return { media: [], total: 0, hasMore: false, error: 'Failed to load media' };

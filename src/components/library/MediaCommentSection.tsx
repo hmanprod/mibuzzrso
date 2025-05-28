@@ -76,7 +76,7 @@ export default function MediaCommentSection({
   const organizedComments = organizeComments(comments);
 
   const handleAddComment = async (e: React.FormEvent) => {
-    console.log("submitting comment");
+    // console.log("submitting comment");
     
     e.preventDefault();
     

@@ -33,9 +33,19 @@ async function MediaList() {
     );
   }
 
+  const audioMedia = result.media.filter(item => item.media_type === 'audio');
+
+  if (!audioMedia.length) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Vous n&apos;avez pas encore uploadé de musique
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-4">
-      {result.media.map((item: Media) => (
+      {audioMedia.map((item: Media) => (
         <LibraryMediaCard key={item.id} media={item} />
       ))}
     </div>

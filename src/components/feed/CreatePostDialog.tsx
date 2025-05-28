@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Music, Video, Trash2, Upload, Loader2, AlertTriangle } from 'lucide-react';
+import { Music, Video, Trash2, Upload, Loader2, AlertTriangle, ImagePlus } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
@@ -24,12 +24,14 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
   const [author, setAuthor] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCover, setSelectedCover] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'creating' | null>(null);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const { user } = useSession();
   const { uploadToCloudinary, isUploading, progress, cancelUpload } = useCloudinaryUpload();
@@ -85,8 +87,8 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedFile || !title.trim()) {
-      setError('Veuillez remplir tous les champs requis');
+    if (!user || !selectedFile || !title.trim() || !selectedCover) {
+      setError('Veuillez remplir tous les champs requis (y compris le cover)');
       return;
     }
 
@@ -97,9 +99,13 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
       // Create new AbortController for this upload
       abortControllerRef.current = new AbortController();
 
-      // Upload media to Cloudinary (keep this client-side)
-      const mediaUpload = await uploadToCloudinary(selectedFile, activeTab, abortControllerRef.current.signal);
-      if (!mediaUpload || mediaUpload.cancelled) {
+      // Upload media and cover to Cloudinary (keep this client-side)
+      const [mediaUpload, coverUpload] = await Promise.all([
+        uploadToCloudinary(selectedFile, activeTab, abortControllerRef.current.signal),
+        uploadToCloudinary(selectedCover, 'cover', abortControllerRef.current.signal)
+      ]);
+      
+      if (!mediaUpload || mediaUpload.cancelled || !coverUpload || coverUpload.cancelled) {
         setError('Téléchargement annulé');
         return;
       }
@@ -128,6 +134,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
         mediaType: activeTab,
         mediaUrl: mediaUpload.url,
         mediaPublicId: mediaUpload.publicId,
+        mediaCoverUrl: coverUpload.url,
         title: title.trim(),
         duration: mediaUpload.duration ? Number(mediaUpload.duration.toFixed(2)) : null,
         content: postText.trim() || null,
@@ -261,16 +268,23 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                 <Music className="w-5 h-5" />
                 <span>Audio</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('video')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md ${
-                  activeTab === 'video' ? 'bg-primary text-white' : 'bg-white'
-                }`}
-              >
-                <Video className="w-5 h-5" />
-                <span>Vidéo</span>
-              </button>
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('video')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md ${
+                    activeTab === 'video' ? 'bg-primary text-white' : 'bg-white'
+                  }`}
+                >
+                  <Video className="w-5 h-5" />
+                  <span>Vidéo</span>
+                </button>
+                {activeTab === 'video' && (
+                  <p className="text-xs text-amber-600 mt-1 ml-1">
+                    Note : Les vidéos n&apos;apparaîtront pas dans la bibliothèque musicale
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Media Upload and Preview */}
@@ -327,7 +341,34 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                         placeholder={`Titre ${activeTab === 'audio' ? 'audio' : 'vidéo'}`}
                         className="w-full px-3 py-2 border rounded-md"
                       />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="flex-shrink-0 border-dashed"
+                        onClick={() => coverInputRef.current?.click()}
+                      >
+                        <ImagePlus className="w-4 h-4" />
+                      </Button>
                     </div>
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedCover(file);
+                          setError(null);
+                        }
+                      }}
+                    />
+                    {selectedCover && (
+                      <p className="text-sm text-gray-500">
+                        Cover sélectionné : {selectedCover.name}
+                      </p>
+                    )}
                   </div>
                   <p className="text-sm text-gray-500">
                     {selectedFile.name}
@@ -338,6 +379,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                       variant="outline"
                       onClick={() => {
                         setSelectedFile(null);
+                        setSelectedCover(null);
                         setTitle('');
                         setAuthor('');
                       }}
@@ -377,7 +419,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || (!selectedFile || !title.trim())}
+                disabled={isSubmitting || (!selectedFile || !selectedCover || !title.trim())}
               >
                 Créer le post
               </Button>

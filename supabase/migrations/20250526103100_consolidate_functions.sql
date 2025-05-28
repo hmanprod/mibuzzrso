@@ -186,6 +186,7 @@ BEGIN
     FROM public.medias m
     LEFT JOIN public.profiles p ON m.user_id = p.id
     LEFT JOIN public.interactions l ON l.media_id = m.id AND l.type = 'like'
+    WHERE m.media_type = 'audio'::media_type
     GROUP BY m.id, m.created_at, m.title, m.media_url, m.media_type, 
              m.duration, m.media_public_id, m.media_cover_url, m.user_id,
              p.id, p.stage_name, p.avatar_url, p.pseudo_url;

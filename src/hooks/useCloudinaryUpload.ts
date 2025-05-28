@@ -23,7 +23,7 @@ export function useCloudinaryUpload() {
 
   const uploadToCloudinary = async (
     file: File,
-    mediaType: MediaType | 'avatar',
+    mediaType: MediaType | 'avatar' | 'cover',
     signal?: AbortSignal
   ): Promise<UploadResult> => {
     setIsUploading(true);
@@ -42,7 +42,7 @@ export function useCloudinaryUpload() {
       formData.append('upload_preset', getUploadPreset());
       formData.append('cloud_name', cloudName);
 
-      const resourceType = mediaType === 'avatar' ? 'image' : 'video';
+      const resourceType = mediaType === 'avatar' || mediaType === 'cover' ? 'image' : 'video';
       const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
       const xhr = new XMLHttpRequest();

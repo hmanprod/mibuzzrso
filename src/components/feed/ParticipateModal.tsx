@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
-import { Music2, Upload } from 'lucide-react';
+import {  Upload, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { createPostWithMediaCP } from '@/app/feed/actions/post';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
@@ -27,10 +27,12 @@ export default function ParticipateModal({
 }: ParticipateModalProps) {
   const { profile } = useSession();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCover, setSelectedCover] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [content, setContent] = useState('');
   const [activeTab, setActiveTab] = useState<'audio' | 'video'>('audio');
   const { uploadToCloudinary, progress } = useCloudinaryUpload();
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,8 +72,8 @@ export default function ParticipateModal({
   };
 
   const handleSubmit = async () => {
-    console.log('Selected file:', selectedFile);
-    console.log('Profile:', profile);
+    // console.log('Selected file:', selectedFile);
+    // console.log('Profile:', profile);
 
     if (!selectedFile) {
       toast({
@@ -94,9 +96,22 @@ export default function ParticipateModal({
     try {
       setIsUploading(true);
 
-      // Upload du fichier
-      const uploadResult = await uploadToCloudinary(selectedFile, selectedFile.type.startsWith('video/') ? 'video' : 'audio');
-      if (!uploadResult) throw new Error("Échec de l'upload du média");
+      if (!selectedCover) {
+        toast({
+          title: "Image de couverture manquante",
+          description: "Veuillez sélectionner une image de couverture",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Upload du fichier et de la couverture
+      const [uploadResult, coverUpload] = await Promise.all([
+        uploadToCloudinary(selectedFile, selectedFile.type.startsWith('video/') ? 'video' : 'audio'),
+        uploadToCloudinary(selectedCover, 'cover')
+      ]);
+
+      if (!uploadResult || !coverUpload) throw new Error("Échec de l'upload des fichiers");
 
       // Création du post
       await createPostWithMediaCP(
@@ -109,12 +124,13 @@ export default function ParticipateModal({
           mediaUrl: uploadResult.url,
           mediaPublicId: uploadResult.publicId,
           duration: uploadResult.duration || null,
-          author: null
+          author: null,
+          mediaCoverUrl: coverUpload.url
         },
         challengeId
       );
 
-      console.log();
+      // console.log();
       
 
       toast({
@@ -207,31 +223,58 @@ export default function ParticipateModal({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <input
-              type="file"
-              id="file-upload"
-              accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                {selectedFile ? (
-                  <Music2 className="h-12 w-12 text-green-500" />
-                ) : (
-                  <Upload className="h-12 w-12 text-gray-400" />
-                )}
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div>
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    <Upload className="w-5 h-5" />
+                    {selectedFile ? 'Changer de fichier' : `Sélectionner un ${activeTab}`}
+                  </label>
+                </div>
+                
+                <div>
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedCover(file);
+                      }
+                    }}
+                    className="hidden"
+                    id="cover-upload"
+                  />
+                  <label
+                    htmlFor="cover-upload"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <ImagePlus className="w-5 h-5" />
+                    {selectedCover ? 'Changer la couverture' : 'Ajouter une couverture'}
+                  </label>
+                </div>
               </div>
-              {selectedFile ? (
-                <div>
-                  <p className="text-green-600 font-medium">{selectedFile.name}</p>
-                  <p className="text-sm text-green-500">Fichier sélectionné</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-gray-600">Cliquez pour sélectionner un fichier</p>
-                  <p className="text-sm text-gray-500">ou glissez-déposez votre fichier {activeTab} ici</p>
-                </div>
+              
+              {selectedFile && (
+                <p className="text-sm text-gray-600">
+                  Fichier sélectionné : {selectedFile.name}
+                </p>
+              )}
+              {selectedCover && (
+                <p className="text-sm text-gray-600">
+                  Couverture sélectionnée : {selectedCover.name}
+                </p>
               )}
             </div>
           </div>

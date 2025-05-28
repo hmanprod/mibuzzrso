@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     pathname.startsWith(route) || pathname === route
   );
 
-  console.log("from authGuard: the user is ", profile);
+  // console.log("from authGuard: the user is ", profile);
   
   useEffect(() => {
     if (profile?.status === 'blocked' && pathname !== '/account-blocked') {

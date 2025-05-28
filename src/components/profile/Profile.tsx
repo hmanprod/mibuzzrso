@@ -24,6 +24,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 import ProfileSkeleton from './ProfileSkeleton';
 import { followUser, isFollowing } from '@/app/profile/actions/follower';
 import { toast } from '@/components/ui/use-toast';
+import { ImpersonateButton } from './ImpersonateButton';
 
 interface ProfileProps {
     userProfile?: ProfileType | null;
@@ -53,7 +54,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
     const router = useRouter();
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
-    const { user } = useSession();
+    const { user, admin } = useSession();
     const isCurrentUser = user && userProfile?.id === user.id;
     const [isFollowed, setIsFollowed] = useState(false);
     const [isFollowChecked, setIsFollowChecked] = useState(false);
@@ -226,9 +227,9 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                   <small className="text-gray-600">@{userProfile.pseudo_url}</small>
                 </div>
 
-                <div className='mt-4'>
+                <div className='mt-4 flex flex-col gap-2'>
                   {/* Follow button - only show if not the current user and if follow status has been checked */}
-                {user && user.id !== userProfile.id && isFollowChecked && (
+                  {user && user.id !== userProfile.id && isFollowChecked && (
                     <button 
                       onClick={handleFollow}
                       disabled={isFollowed}
@@ -251,6 +252,12 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
                       )}
                     </button>
                   )}
+                  <ImpersonateButton
+                    stageName={userProfile.stage_name || userProfile.first_name || 'Utilisateur'}
+                    userId={userProfile.id}
+                    isAdmin={!!admin}
+                    isCurrentUser={!!isCurrentUser}
+                  />
                 </div>
 
                 {userProfile.label && (

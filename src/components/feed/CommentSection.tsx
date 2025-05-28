@@ -252,7 +252,7 @@ export default function CommentSection({
   const CommentItem = ({ comment, level = 0 }: { comment: Comment, level?: number }) => {
     const likes = commentLikes[comment.id] || { count: 0, isLiked: false };
     
-    console.log("the comment", comment);
+    // console.log("the comment", comment);
     
     return (
       <div className={`flex flex-col ${level === 1 ? 'ml-8 mt-3' : 'mt-3'}`}>

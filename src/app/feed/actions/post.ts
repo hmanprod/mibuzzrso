@@ -10,6 +10,7 @@ interface CreatePostData {
   mediaType: 'audio' | 'video';
   mediaUrl: string;
   mediaPublicId: string;
+  mediaCoverUrl: string;
   title: string;
   author?: string | null;
   duration: number | null;
@@ -245,6 +246,7 @@ export async function createPostWithMedia(data: CreatePostData) {
         media_type: data.mediaType,
         media_url: data.mediaUrl,
         media_public_id: data.mediaPublicId,
+        media_cover_url: data.mediaCoverUrl,
         title: data.title,
         author: data.author,
         duration: data.duration,
@@ -307,6 +309,7 @@ export async function createPostWithMediaCP(data: Omit<CreatePostData, 'challeng
         media_type: data.mediaType,
         media_url: data.mediaUrl,
         media_public_id: data.mediaPublicId,
+        media_cover_url: data.mediaCoverUrl,
         title: data.title,
         author: data.author,
         duration: data.duration,

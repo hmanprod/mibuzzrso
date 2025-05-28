@@ -48,7 +48,7 @@ export default function SearchMyMusicsPage() {
         throw new Error(result.error);
       }
 
-      const newMedia = result.medias || [];
+      const newMedia = (result.medias || []).filter(m => m.media_type === 'audio');
 
       if (isInitial) {
         setMedia(newMedia);

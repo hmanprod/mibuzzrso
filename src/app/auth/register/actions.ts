@@ -21,7 +21,7 @@ export async function register(formData: FormData) {
 
   // Tenter de se connecter avec l'email pour voir s'il existe
   // Cette méthode ne révèle pas si l'email existe mais nous pouvons détecter certains cas
-  console.log("tentative de sign in");
+  // console.log("tentative de sign in");
 
   const { error: signInError } = await supabase.auth.signInWithPassword({
     email,
@@ -38,7 +38,7 @@ export async function register(formData: FormData) {
   // }
   
   // Procéder à l'inscription
-  console.log("tentative de sign up");
+  // console.log("tentative de sign up");
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -48,7 +48,7 @@ export async function register(formData: FormData) {
     },
   });
   
-  console.log("the sign up data", error)
+  // console.log("the sign up data", error)
   // Si l'inscription renvoie "Email already registered", c'est un autre moyen de détecter
   if (error && error.message.includes('Email already registered')) {
     return { error: 'Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.' }
@@ -61,7 +61,7 @@ export async function register(formData: FormData) {
   }
 
   // Vérifier si l'utilisateur a été créé mais nécessite une confirmation d'email
-  console.log("data is", data);
+  // console.log("data is", data);
   
   if (data?.user?.identities?.length === 0) {
     return { error: 'Un compte avec cet email existe déjà mais n\'a pas été confirmé. Veuillez vérifier votre boîte mail.' }

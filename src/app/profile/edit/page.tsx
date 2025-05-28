@@ -52,7 +52,7 @@ export default function EditProfilePage() {
     // Only update form data if profile exists and form is empty (initial load)
     if (profile && 
         (!formData.first_name && !formData.last_name && !formData.stage_name)) {
-      console.log('Loading initial profile data');
+      // console.log('Loading initial profile data');
       setFormData({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',

@@ -38,14 +38,14 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError(null);
 
-    console.log("the form data", event.currentTarget)
+    // console.log("the form data", event.currentTarget)
 
     const formData = new FormData(event.currentTarget);
     
 
     try {
       const result = await register(formData);
-      console.log("the result", result)
+      // console.log("the result", result)
       if (result?.error) {
         setError(result.error);
       }

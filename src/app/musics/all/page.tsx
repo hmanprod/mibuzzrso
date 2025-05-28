@@ -39,7 +39,7 @@ export default function AllMedia() {
         throw new Error(result.error);
       }
 
-      const newMedia = result.media || [];
+      const newMedia = (result.media || []).filter(m => m.media_type === 'audio');
 
       if (isInitial) {
         setMedia(newMedia);
