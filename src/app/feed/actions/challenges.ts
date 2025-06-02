@@ -12,6 +12,7 @@ export interface Challenge {
   description_short: string;
   status: 'draft' | 'active' | 'completed';
   type: 'remix' | 'live_mix';
+  voting_type: 'public' | 'jury';
   end_at: string;
   winner_uid?: string;
   winner_displayname?: string;
@@ -85,6 +86,19 @@ export async function getChallenges(page: number = 1, limit: number = 5, status:
     console.error('Error in getChallenges:', error);
     return { error: 'An unexpected error occurred' };
   }
+}
+
+export async function isUserJury(challengeId: string, userId: string) {
+  const supabase = await createClient();
+  const { data: jury, error } = await supabase
+    .from('challenge_jury')
+    .select('*')
+    .eq('challenge_id', challengeId)
+    .eq('user_id', userId)
+    .single();
+
+  if (error) return false;
+  return !!jury;
 }
 
 export async function getChallenge(id: string) {
@@ -239,108 +253,193 @@ export async function getChallengeMedias(challengeId: string): Promise<Challenge
   }
 }
 
-interface CreateChallengeInput {
+export interface CreateChallengeData {
+  voting_type: 'public' | 'jury';
   title: string;
   description: string;
   type: 'remix' | 'live_mix';
   endAt: string;
   winningPrize?: string;
   userId: string;
+  juryMembers: Array<{
+    id: string;
+    stage_name?: string;
+    avatar_url?: string;
+  }>;
   medias: Array<{
     url: string;
     publicId: string;
-    mediaType: 'audio' | 'video';
+    type: string;
     duration?: number;
+    cover_url: string;
   }>;
 }
 
-export async function createChallenge(input: CreateChallengeInput) {
+export async function addMediaToChallenge(challengeId: string): Promise<ChallengeMediasResponse> {
   const supabase = await createClient();
 
   try {
+    const { data: rawMedias, error } = await supabase
+      .from('challenges_medias')
+      .select(`
+        id,
+        position,
+        media:medias!inner(
+          id,
+          media_type,
+          media_url,
+          media_cover_url,
+          media_public_id,
+          duration,
+          title,
+          description,
+          user_id,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('challenge_id', challengeId)
+      .order('position');
+
+    // Transformer les données pour avoir le bon format
+    const medias = rawMedias?.map(item => {
+      const mediaData = Array.isArray(item.media) ? item.media[0] : item.media;
+
+      return {
+        id: item.id,
+        position: item.position,
+        media: {
+          id: mediaData.id,
+          media_type: mediaData.media_type as 'audio' | 'video',
+          media_url: mediaData.media_url,
+          media_cover_url: mediaData.media_cover_url,
+          media_public_id: mediaData.media_public_id,
+          duration: mediaData.duration,
+          title: mediaData.title,
+          description: mediaData.description,
+          user_id: mediaData.user_id,
+          created_at: mediaData.created_at,
+          updated_at: mediaData.updated_at
+        },
+        comments: []
+      };
+    }) as ChallengeMedia[];
+
+    if (error) {
+      console.error('Error fetching challenge medias:', error);
+      return { error: 'Failed to load challenge medias', details: error };
+    }
+
+    return { medias: medias as ChallengeMedia[] };
+  } catch (error) {
+    console.error('Error in addMediaToChallenge:', error);
+    return { error: 'An unexpected error occurred' };
+  }
+}
+
+export async function createChallenge(data: CreateChallengeData) {
+  const supabase = await createClient();
+
+  try {
+    console.log("data", data);
+    
     // 1. Create the challenge
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
       .insert({
-        title: input.title,
-        description: input.description,
-        type: input.type,
+        title: data.title,
+        description: data.description,
+        type: data.type,
+        voting_type: data.voting_type,
         status: 'active',
-        end_at: input.endAt,
-        winning_prize: input.winningPrize,
-        user_id: input.userId,
+        end_at: data.endAt,
+        winning_prize: data.winningPrize,
+        user_id: data.userId,
         participants_count: 0
       })
       .select()
       .single();
 
-    if (challengeError) {
-      console.error('Database error creating challenge:', challengeError);
+    if (challengeError || !challenge) {
+      console.error('Error creating challenge:', challengeError);
       return { 
         success: false, 
-        error: challengeError.message,
-        details: {
-          code: challengeError.code,
-          hint: challengeError.hint,
-          details: challengeError.details
-        }
+        error: 'Failed to create challenge',
+        details: challengeError
       };
     }
 
-    // 2. Create medias
-    const { data: medias, error: mediasError } = await supabase
-      .from('medias')
-      .insert(
-        input.medias.map(media => ({
-          media_type: media.mediaType,
-          media_url: media.url,
-          media_public_id: media.publicId,
-          duration: media.duration,
-          user_id: input.userId
-        }))
-      )
-      .select();
+    // 2. Add jury members if voting_type is 'jury'
+    if (data.voting_type === 'jury' && data.juryMembers?.length > 0) {
+      const { error: juryError } = await supabase
+        .from('challenge_jury')
+        .insert(
+          data.juryMembers.map(jury => ({
+            challenge_id: challenge.id,
+            user_id: jury.id
+          }))
+        );
 
-    if (mediasError) {
-      console.error('Database error creating medias:', mediasError);
-      return { 
-        success: false, 
-        error: mediasError.message,
-        details: {
-          code: mediasError.code,
-          hint: mediasError.hint,
-          details: mediasError.details
-        }
-      };
+      if (juryError) {
+        console.error('Error adding jury members:', juryError);
+        return { 
+          success: false, 
+          error: 'Failed to add jury members',
+          details: juryError
+        };
+      }
     }
 
-    // 3. Link medias to challenge
-    const { error: linkError } = await supabase
-      .from('challenges_medias')
-      .insert(
-        medias.map((media, index) => ({
-          challenge_id: challenge.id,
-          media_id: media.id,
-          position: index
-        }))
-      );
+    // 3. Add medias if any
+    if (data.medias?.length > 0) {
+      // Create media records
+      const { data: medias, error: mediasError } = await supabase
+        .from('medias')
+        .insert(
+          data.medias.map(media => ({
+            media_type: media.type as 'audio' | 'video',
+            media_url: media.url,
+            media_public_id: media.publicId,
+            media_cover_url: media.cover_url,
+            duration: media.duration,
+            user_id: data.userId
+          }))
+        )
+        .select();
 
-    if (linkError) {
-      console.error('Database error linking medias:', linkError);
-      return { 
-        success: false, 
-        error: linkError.message,
-        details: {
-          code: linkError.code,
-          hint: linkError.hint,
-          details: linkError.details
-        }
-      };
+      if (mediasError || !medias) {
+        console.error('Database error creating medias:', mediasError);
+        return { 
+          success: false, 
+          error: 'Failed to create media',
+          details: mediasError
+        };
+      }
+
+      // Link medias to challenge
+      const { error: linkError } = await supabase
+        .from('challenges_medias')
+        .insert(
+          medias.map((media, index) => ({
+            challenge_id: challenge.id,
+            media_id: media.id,
+            position: index
+          }))
+        );
+
+      if (linkError) {
+        console.error('Database error linking medias:', linkError);
+        return { 
+          success: false, 
+          error: 'Failed to link media to challenge',
+          details: linkError
+        };
+      }
     }
 
     revalidatePath('/feed/challenges');
     return { success: true, challenge };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating challenge:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create challenge';
     return { 

@@ -6,8 +6,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/use-toast';
 import { Music2, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
 import { createChallenge } from '@/app/feed/actions/challenges';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
+import { useSession } from '../providers/SessionProvider';
+import JurySelector from './JurySelector';
 
 interface CreateChallengeDialogProps {
   open: boolean;
@@ -21,24 +25,53 @@ export default function CreateChallengeDialog({
   onSubmit
 }: CreateChallengeDialogProps) {
   const { user } = useAuth();
+  const { profile } = useSession()
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'remix' | 'live_mix'>('remix');
+  const [votingType, setVotingType] = useState<'public' | 'jury'>('public');
   const [endAt, setEndAt] = useState('');
   const [winningPrize, setWinningPrize] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCover, setSelectedCover] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedJury, setSelectedJury] = useState<Array<{ id: string; stage_name?: string; avatar_url?: string; email?: string }>>([]);
   const { uploadToCloudinary,  progress } = useCloudinaryUpload();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setSelectedCover(null); // Reset cover when new file is selected
+    }
+  };
+
+  const handleCoverSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner une image",
+          variant: "destructive"
+        });
+        return;
+      }
+      setSelectedCover(file);
     }
   };
 
   const handleSubmit = async () => {
-    if (!title || !description || !endAt || !selectedFile) {
+    if (!profile) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour créer un challenge",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!title || !description || !endAt || !type) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -47,27 +80,65 @@ export default function CreateChallengeDialog({
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      
-      // Upload du fichier média
-      const uploadResult = await uploadToCloudinary(selectedFile, selectedFile.type.startsWith('video/') ? 'video' : 'audio');
-      if (!uploadResult) throw new Error("Échec de l'upload du média");
+    if (votingType === 'jury' && selectedJury.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner au moins un juré",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      // Création du challenge
+    setIsSubmitting(true);
+
+    try {
+      let uploadResult;
+      let coverUploadResult;
+
+      if (selectedFile) {
+        // Upload media file
+        const mediaType = selectedFile.type.startsWith('video/') ? 'video' : 'audio';
+        uploadResult = await uploadToCloudinary(selectedFile, mediaType);
+        if (!uploadResult) throw new Error('Failed to upload media');
+
+        // Upload or generate cover image
+        if (selectedCover) {
+          // If cover image is provided, upload it directly
+          coverUploadResult = await uploadToCloudinary(selectedCover, 'cover');
+          if (!coverUploadResult) throw new Error('Failed to upload cover image');
+        } else {
+
+          // Pour générer la cover, on doit d'abord créer un nouveau File à partir de l'URL
+          const response = await fetch(uploadResult.url);
+          const blob = await response.blob();
+          const coverFile = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+          
+          coverUploadResult = await uploadToCloudinary(coverFile, 'cover');
+          if (!coverUploadResult) throw new Error('Failed to generate cover image');
+        }
+      }
+
+      // Vérification que les uploads se sont bien passés
+      if (!uploadResult || !coverUploadResult) {
+        throw new Error('Upload results are missing');
+      }
+
       await createChallenge({
         title,
         description,
         type,
+        voting_type: votingType,
         endAt,
         winningPrize,
-        userId: user?.id || '',
-        medias: [{
+        userId: profile?.id || '',
+        juryMembers: votingType === 'jury' ? selectedJury : [],
+        medias: selectedFile ? [{
           url: uploadResult.url,
           publicId: uploadResult.publicId,
-          mediaType: selectedFile.type.startsWith('video/') ? 'video' : 'audio',
-          duration: uploadResult.duration
-        }]
+          type: selectedFile.type.startsWith('video/') ? 'video' : 'audio',
+          duration: uploadResult.duration,
+          cover_url: coverUploadResult.url
+        }] : []
       });
 
       toast({
@@ -91,6 +162,7 @@ export default function CreateChallengeDialog({
       setDescription('');
       setEndAt('');
       setWinningPrize('');
+      setSelectedJury([]);
     }
   };
 
@@ -146,6 +218,18 @@ export default function CreateChallengeDialog({
               </div>
 
               <div className="flex-1">
+                <label className="block text-sm text-gray-500 mb-1">Type de vote</label>
+                <select
+                  value={votingType}
+                  onChange={(e) => setVotingType(e.target.value as 'public' | 'jury')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="public">Vote public</option>
+                  <option value="jury">Vote jury</option>
+                </select>
+              </div>
+
+              <div className="flex-1">
                 <label className="block text-sm text-gray-500 mb-1">Date de fin</label>
                 <input
                   type="date"
@@ -155,6 +239,16 @@ export default function CreateChallengeDialog({
                 />
               </div>
             </div>
+
+            {votingType === 'jury' && (
+              <div className="space-y-2">
+                <label className="block text-sm text-gray-500">Sélectionner les jurys (4 max)</label>
+                <JurySelector
+                  selectedJury={selectedJury}
+                  onJuryChange={setSelectedJury}
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm text-gray-500 mb-1">Prix (optionnel)</label>
@@ -205,6 +299,25 @@ export default function CreateChallengeDialog({
               )}
             </div>
           </div>
+
+          {/* Sélecteur de cover image */}
+          {selectedFile && (
+            <div className="space-y-2">
+              <Label htmlFor="cover">Image de couverture (optionnel)</Label>
+              <Input
+                id="cover"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverSelect}
+                disabled={isSubmitting}
+              />
+              <p className="text-sm text-gray-500">
+                {selectedCover 
+                  ? `Image sélectionnée : ${selectedCover.name}` 
+                  : 'Si non sélectionnée, une image sera générée automatiquement'}
+              </p>
+            </div>
+          )}
 
           {/* Bouton de soumission */}
           <button

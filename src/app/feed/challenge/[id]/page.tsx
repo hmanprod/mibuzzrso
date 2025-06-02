@@ -7,7 +7,7 @@ import { Flame, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar,
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
-import { getChallenge, getChallengeMedias, participateInChallenge } from '../../actions/challenges';
+import { getChallenge, getChallengeMedias, participateInChallenge, isUserJury } from '../../actions/challenges';
 import { getChallengeParticipations } from '../../actions/post';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
@@ -19,7 +19,8 @@ import { TimeAgo } from '@/components/ui/TimeAgo';
 import WinnerCard from '@/components/challenge/WinnerCard';
 import ChallengeSkeleton from '@/components/challenge/ChallengeSkeleton';
 import VoteModal from '@/components/challenge/VoteModal';
-import { voteForParticipation } from '../../actions/vote';
+import JuryVoteModal from '@/components/challenge/JuryVoteModal';
+import { voteForParticipation, getChallengeVotes, voteAsJury } from '../../actions/vote';
 
 interface MediaPlayerRef {
   seekToTime: (time: number) => void;
@@ -52,6 +53,13 @@ interface ChallengeMedia {
       username: string;
     };
   }>;
+}
+
+interface ChallengeVote {
+  participation_id: string;
+  total_points: string;
+  voters_count: string;
+  average_points: string;
 }
 
 interface Participation {
@@ -87,6 +95,9 @@ export default function ChallengePage() {
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [selectedParticipation, setSelectedParticipation] = useState<Participation | null>(null);
   const [showVoteModal, setShowVoteModal] = useState(false);
+  const [showJuryVoteModal, setShowJuryVoteModal] = useState(false);
+  const [isJury, setIsJury] = useState(false);
+  const [votes, setVotes] = useState<{[key: string]: { total_points: number, voters_count: number, average_points: number }}>({});
   // const [hasListenedFully, setHasListenedFully] = useState<{[key: string]: boolean}>({});
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
@@ -124,6 +135,13 @@ export default function ChallengePage() {
         setLikesCount(challengeResult.challenge.likes || 0);
         setIsLiked(challengeResult.challenge.is_liked || false);
 
+        // Vérifier si l'utilisateur est jury
+        if (profile?.id) {
+          const isUserJuryResult = await isUserJury(challengeResult.challenge.id, profile.id);
+          console.log('Is user jury?', isUserJuryResult);
+          setIsJury(isUserJuryResult);
+        }
+
         // Charger les médias
         const mediasResult = await getChallengeMedias(params.id as string);
         // console.log("Medias result:", mediasResult);
@@ -155,12 +173,25 @@ export default function ChallengePage() {
 
         // Charger les participations
         const participationsResult = await getChallengeParticipations(params.id as string);
-        // console.log("challenge participation results", participationsResult);
         
         if (participationsResult.error) {
           console.error('Error loading participations:', participationsResult.error);
         } else if (participationsResult.posts) {
           setParticipations(participationsResult.posts);
+
+          // Charger les votes
+          const votesResult = await getChallengeVotes(params.id as string);
+          if (votesResult.votes) {
+            const votesMap = votesResult.votes.reduce((acc: {[key: string]: { total_points: number, voters_count: number, average_points: number }}, vote: ChallengeVote) => {
+              acc[vote.participation_id] = {
+                total_points: Number(vote.total_points),
+                voters_count: Number(vote.voters_count),
+                average_points: Number(vote.average_points)
+              };
+              return acc;
+            }, {});
+            setVotes(votesMap);
+          }
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -171,7 +202,7 @@ export default function ChallengePage() {
     };
 
     loadData();
-  }, [params.id]);
+  }, [params.id, profile?.id]);
 
   const handleLike = async () => {
     // TODO: Implement like functionality
@@ -518,27 +549,69 @@ export default function ChallengePage() {
                 </div>
               ))}
               {challenge.status === 'active' && (
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {participation.has_voted ? (
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <Star className="w-5 h-5 fill-yellow-400 stroke-yellow-400" />
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {challenge.voting_type === 'jury' ? (
+                        isJury ? (
+                          participation.has_voted ? (
+                            <div className="flex items-center gap-1 text-yellow-500">
+                              <Star className="w-5 h-5 fill-yellow-400 stroke-yellow-400" />
+                              <span className="text-sm font-medium">Vote jury soumis</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedParticipation(participation);
+                                setShowJuryVoteModal(true);
+                              }}
+                              className="px-4 py-2 bg-[#E94135] text-white rounded-full hover:bg-red-600 flex items-center gap-2"
+                            >
+                              <Star className="w-4 h-4" />
+                              Voter en tant que jury
+                            </button>
+                          )
+                        ) : (
+                          <div className="text-sm text-gray-500">
+                            Vote par jury uniquement
+                          </div>
+                        )
+                      ) : (
+                        // Vote public normal
+                        participation.has_voted ? (
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            <Star className="w-5 h-5 fill-yellow-400 stroke-yellow-400" />
+                            <span className="text-sm font-medium">Voté</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setSelectedParticipation(participation);
+                              setShowVoteModal(true);
+                            }}
+                            className="px-4 py-2 bg-[#E94135] text-white rounded-full hover:bg-red-600"
+                          >
+                            Voter
+                          </button>
+                        )
+                      )}
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setSelectedParticipation(participation);
-                        setShowVoteModal(true);
-                      }}
-                      className="px-4 py-2 bg-[#E94135] text-white rounded-full hover:bg-red-600"
-                    >
-                      Voter
-                    </button>
-                  )}
-                </div>
 
-              </div>
-            )}
+                    {votes[participation.id] && (
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-400" />
+                          <span>{votes[participation.id].average_points}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">{votes[participation.id].voters_count} vote{votes[participation.id].voters_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
             </div>
           ))
         ) : (
@@ -558,40 +631,86 @@ export default function ChallengePage() {
     />
     
     {selectedParticipation && (
-      <VoteModal
-        open={showVoteModal}
-        onClose={() => {
-          setShowVoteModal(false);
-          setSelectedParticipation(null);
-        }}
-        onVote={async (points: number) => {
-          if (!user?.id || !selectedParticipation) return;
-          
-          const result = await voteForParticipation({
-            challengeId: challenge.id,
-            participationId: selectedParticipation.id,
-            voterId: user.id,
-            points,
-          });
-
-          if (!result.success) {
-            toast({
-              title: "Erreur",
-              description: result.error,
-              variant: "destructive",
+      <>
+        <VoteModal
+          open={showVoteModal}
+          onClose={() => {
+            setShowVoteModal(false);
+            setSelectedParticipation(null);
+          }}
+          onVote={async (points: number) => {
+            if (!user?.id || !selectedParticipation) return;
+            
+            const result = await voteForParticipation({
+              challengeId: challenge.id,
+              participationId: selectedParticipation.id,
+              voterId: user.id,
+              points,
             });
-            return;
-          }
 
-          // Mise à jour locale de la participation
-          setParticipations(prev => prev.map(p => 
-            p.id === selectedParticipation.id
-              ? { ...p, has_voted: true, vote_points: points }
-              : p
-          ));
-        }}
-        participation={selectedParticipation}
-      />
+            if (!result.success) {
+              toast({
+                title: "Erreur",
+                description: result.error,
+                variant: "destructive",
+              });
+              return;
+            }
+
+            // Mise à jour locale de la participation
+            setParticipations(prev => prev.map(p => 
+              p.id === selectedParticipation.id
+                ? { ...p, has_voted: true, vote_points: points }
+                : p
+            ));
+          }}
+          participation={selectedParticipation}
+        />
+
+        <JuryVoteModal
+          open={showJuryVoteModal}
+          onClose={() => {
+            setShowJuryVoteModal(false);
+            setSelectedParticipation(null);
+          }}
+          onVote={async (criteria) => {
+            if (!user?.id || !selectedParticipation) return;
+            
+            const result = await voteAsJury({
+              challengeId: challenge.id,
+              participationId: selectedParticipation.id,
+              voterId: user.id,
+              criteria,
+            });
+
+            if (!result.success) {
+              toast({
+                title: "Erreur",
+                description: result.error,
+                variant: "destructive",
+              });
+              return;
+            }
+
+            // Mise à jour locale de la participation
+            setParticipations(prev => prev.map(p => 
+              p.id === selectedParticipation.id
+                ? { ...p, has_voted: true }
+                : p
+            ));
+
+            toast({
+              title: "Vote jury enregistré",
+              description: "Votre évaluation a bien été prise en compte",
+            });
+
+            // Fermer le modal
+            setShowJuryVoteModal(false);
+            setSelectedParticipation(null);
+          }}
+          participation={selectedParticipation}
+        />
+      </>
     )}
     </>
   );

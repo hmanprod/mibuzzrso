@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
-import {  Upload, ImagePlus } from 'lucide-react';
+import { Upload, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { createPostWithMediaCP } from '@/app/feed/actions/post';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
+import ConfirmCancelDialog from './ConfirmCancelDialog';
 
 interface ParticipateModalProps {
   open: boolean;
@@ -21,10 +22,42 @@ interface ParticipateModalProps {
 export default function ParticipateModal({
   open,
   onClose,
-  
   challengeTitle,
   challengeId
 }: ParticipateModalProps) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const resetForm = () => {
+    setSelectedFile(null);
+    setSelectedCover(null);
+    setContent('');
+    setActiveTab('audio');
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleClose = () => {
+    if (isUploading) {
+      setShowConfirmDialog(true);
+      return;
+    }
+    
+    // Vérifier si le formulaire a été modifié
+    if (selectedFile || selectedCover || content.trim()) {
+      setShowConfirmDialog(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    resetForm();
+    setShowConfirmDialog(false);
+    onClose();
+  };
   const { profile } = useSession();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCover, setSelectedCover] = useState<File | null>(null);
@@ -72,9 +105,6 @@ export default function ParticipateModal({
   };
 
   const handleSubmit = async () => {
-    // console.log('Selected file:', selectedFile);
-    // console.log('Profile:', profile);
-
     if (!selectedFile) {
       toast({
         title: "Erreur",
@@ -105,13 +135,27 @@ export default function ParticipateModal({
         return;
       }
 
-      // Upload du fichier et de la couverture
-      const [uploadResult, coverUpload] = await Promise.all([
-        uploadToCloudinary(selectedFile, selectedFile.type.startsWith('video/') ? 'video' : 'audio'),
-        uploadToCloudinary(selectedCover, 'cover')
-      ]);
+      // Créer un nouveau AbortController pour cet upload
+      abortControllerRef.current = new AbortController();
+
+      let uploadResult, coverUpload;
+      try {
+        [uploadResult, coverUpload] = await Promise.all([
+          uploadToCloudinary(selectedFile, selectedFile.type.startsWith('video/') ? 'video' : 'audio', abortControllerRef.current.signal),
+          uploadToCloudinary(selectedCover, 'cover', abortControllerRef.current.signal)
+        ]);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          // L'upload a été annulé, on sort silencieusement
+          return;
+        }
+        throw error;
+      }
 
       if (!uploadResult || !coverUpload) throw new Error("Échec de l'upload des fichiers");
+
+      // Si l'upload a été annulé entre temps, on ne crée pas le post
+      if (!abortControllerRef.current) return;
 
       // Création du post
       await createPostWithMediaCP(
@@ -130,31 +174,36 @@ export default function ParticipateModal({
         challengeId
       );
 
-      // console.log();
-      
-
-      toast({
-        title: "Succès",
-        description: "Votre participation a été publiée"
-      });
-
-      onClose();
+      // Ne montrer le toast de succès que si on n'a pas annulé entre temps
+      if (abortControllerRef.current) {
+        toast({
+          title: "Succès",
+          description: "Votre participation a été publiée"
+        });
+        onClose();
+      }
     } catch (error) {
       console.error('Error participating:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la participation",
-        variant: "destructive"
-      });
+      // Ne montrer le toast d'erreur que si on n'a pas annulé
+      if (abortControllerRef.current) {
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la participation",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsUploading(false);
       setSelectedFile(null);
+      // Réinitialiser l'AbortController
+      abortControllerRef.current = null;
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] rounded-[18px] p-0 overflow-hidden">
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[600px] rounded-[18px] p-0 overflow-hidden">
         <DialogTitle className="sr-only">
           Participer au challenge {challengeTitle}
         </DialogTitle>
@@ -223,18 +272,22 @@ export default function ParticipateModal({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-4">
                 <div>
                   <input
                     type="file"
-                    onChange={handleFileSelect}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleFileSelect(e);
+                    }}
                     accept={activeTab === 'audio' ? 'audio/*' : 'video/*'}
                     className="hidden"
                     id="file-upload"
                   />
                   <label
                     htmlFor="file-upload"
+                    onClick={(e) => e.stopPropagation()}
                     className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
                   >
                     <Upload className="w-5 h-5" />
@@ -246,11 +299,20 @@ export default function ParticipateModal({
                   <input
                     ref={coverInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
                     onChange={(e) => {
+                      e.stopPropagation();
                       const file = e.target.files?.[0];
                       if (file) {
-                        setSelectedCover(file);
+                        if (file.type.startsWith('image/')) {
+                          setSelectedCover(file);
+                        } else {
+                          toast({
+                            title: "Type de fichier incorrect",
+                            description: "Veuillez sélectionner une image",
+                            variant: "destructive"
+                          });
+                        }
                       }
                     }}
                     className="hidden"
@@ -258,6 +320,7 @@ export default function ParticipateModal({
                   />
                   <label
                     htmlFor="cover-upload"
+                    onClick={(e) => e.stopPropagation()}
                     className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                   >
                     <ImagePlus className="w-5 h-5" />
@@ -312,7 +375,19 @@ export default function ParticipateModal({
             )}
           </button>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmCancelDialog
+        open={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmCancel}
+        title="Annuler la participation ?"
+        description={isUploading 
+          ? "L'upload est en cours. Êtes-vous sûr de vouloir annuler ? L'upload sera interrompu et toutes les informations saisies seront perdues."
+          : "Êtes-vous sûr de vouloir annuler votre participation ? Toutes les informations saisies seront perdues."}
+        isUploading={isUploading}
+      />
+    </>
   );
 }

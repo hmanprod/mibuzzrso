@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
-import { Flame, Pause, Play, MessageCircle } from 'lucide-react';
+import { Flame, MessageCircle } from 'lucide-react';
 import type { Media } from '@/types/database';
 import { cn } from '@/lib/utils';
 import AudioPlayer from '../feed/AudioPlayer';
@@ -27,7 +26,6 @@ interface LibraryMediaCardProps {
 
 export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
   const audioPlayerRef = useRef<{ seekToTime: (time: number) => void } | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState<boolean>(!!media.is_liked);
   const [likesCount, setLikesCount] = useState<number>(Number(media.likes) || 0);
   const [isLikeProcessing, setIsLikeProcessing] = useState(false);
@@ -85,9 +83,9 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
     }
   };
 
-  const handlePlayClick = () => {
-    setIsPlaying(!isPlaying);
-  };
+  // const handlePlayClick = () => {
+  //   setIsPlaying(!isPlaying);
+  // };
 
   // const handleShare = () => {
   //   // Add share functionality here
@@ -97,31 +95,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
   
 
   return (
-    <div className="rounded-lg duration-200 flex">
-      {/* Left side - Cover image and play button */}
-      {media.media_cover_url && (
-        <div className="relative w-40 aspect-square flex-shrink-0">
-          <Image
-            src={media.media_cover_url}
-            alt={media.title || 'Media cover'}
-            fill
-            className="object-cover"
-          />
-          {/* Play button overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group">
-            <button
-              onClick={handlePlayClick}
-              className="p-2.5 rounded-full bg-white/90 hover:bg-white transition-colors duration-200 shadow-lg group-hover:scale-110 transform transition-transform"
-            >
-              {isPlaying ? (
-                <Pause className="w-5 h-5 text-[#E94135]" />
-              ) : (
-                <Play className="w-5 h-5 text-[#E94135]" />
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="rounded-lg duration-200 flex flex-col">
 
       {/* Right side - Title, author, media player and actions */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -150,6 +124,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
             <AudioPlayer
               audioUrl={media.media_url}
               mediaId={media.id}
+              coverUrl={media.media_cover_url}
               onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
               ref={audioPlayerRef}
               comments={comments}

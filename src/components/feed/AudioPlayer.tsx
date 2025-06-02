@@ -16,6 +16,7 @@ interface AudioPlayerProps {
   audioUrl: string;
   mediaId: string;
   postId: string;
+  coverUrl?: string;
   comments: {
     id: string;
     timestamp: number;
@@ -37,7 +38,7 @@ interface AudioPlayerRef {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
-  ({ audioUrl, mediaId, postId, comments, onTimeUpdate, downloadable }, ref) => {
+  ({ audioUrl, mediaId, postId, coverUrl, comments, onTimeUpdate, downloadable }, ref) => {
   const { user } = useSession();
   const { register, unregister, play } = useMediaControl();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -297,12 +298,26 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
           )}
       </div>
 
-      {/* Waveform with comment markers */}
-      <div 
-        ref={waveformRef} 
-        className="relative h-24 bg-gray-100 rounded-lg cursor-pointer overflow-hidden"
-        onClick={handleWaveformClick}
-      >
+      {/* Container for cover and waveform */}
+      <div className="flex gap-4">
+        {/* Cover image */}
+        <div className="relative w-24 h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
+          {coverUrl && !coverUrl.includes('cloudinary.com/video/upload/') && (
+            <Image
+              src={coverUrl}
+              alt="Cover"
+              fill
+              className="object-cover"
+            />
+          )}
+        </div>
+
+        {/* Waveform with comment markers */}
+        <div 
+          ref={waveformRef} 
+          className="relative flex-1 h-24 bg-gray-100 rounded-lg cursor-pointer overflow-hidden"
+          onClick={handleWaveformClick}
+        >
         {/* Waveform image */}
         <div className="absolute inset-0">
           <Image
@@ -373,6 +388,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   );

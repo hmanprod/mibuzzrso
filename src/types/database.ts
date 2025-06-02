@@ -31,6 +31,13 @@ export interface Post {
   user_id: string;
 }
 
+export interface ParticipationWithProfile extends Post {
+  profile: ProfilePublic;
+  medias?: PostMedia[];
+  has_voted?: boolean;
+  vote_points?: number | null;
+}
+
 export interface ExtendedPost extends Post {
   profile: ProfilePublic;
   medias: Media[];
@@ -135,4 +142,5 @@ export interface Challenge {
     created_at: string;
     media: Media;
   }[];
+  voting_type: 'jury' | 'public';
 }
