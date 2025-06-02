@@ -483,6 +483,7 @@ export default function FeedPost({ post }: FeedPostProps) {
             onCommentAdded={fetchComments}
             onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
             ref={audioPlayerRef}
+            coverUrl={mediaItem.media_cover_url}
           />
         ) : (
           <VideoPlayer 

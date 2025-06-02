@@ -30,6 +30,7 @@ export default function Home() {
       }
 
       const result = await getPosts(isInitial ? 1 : page);
+      console.log("the post data", result);
       
       if (result.error) {
         throw new Error(result.error);

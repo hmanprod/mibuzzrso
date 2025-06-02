@@ -54,7 +54,7 @@ export async function getMediaLibrary(limit = 4): Promise<MediaResponse> {
         p_offset: 0
       }) as MediaQueryResult;
 
-      // console.log("mediaData", mediaData);
+      console.log("mediaData", mediaData);
     if (error) {
       console.error('Error fetching media:', error);
       return { media: [], total: 0, hasMore: false, error: 'Failed to load media' };

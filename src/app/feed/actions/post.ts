@@ -61,6 +61,8 @@ export async function fetchPosts({
         p_limit: limit
       });
 
+      // console.log("the post data", postsData.medias);
+
     
 
 
