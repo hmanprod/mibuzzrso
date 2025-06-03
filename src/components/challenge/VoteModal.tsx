@@ -14,6 +14,7 @@ interface VoteModalProps {
         id: string;
         media_type: 'audio' | 'video';
         media_url: string;
+        media_cover_url?: string;
       };
     }>;
   };
@@ -81,6 +82,7 @@ export default function VoteModal({ open, onClose, onVote, participation }: Vote
                   }
                 }}
                 downloadable={false}
+                coverUrl={media.media.media_cover_url}
               />
             </div>
           )

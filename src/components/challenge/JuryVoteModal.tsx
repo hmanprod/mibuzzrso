@@ -25,6 +25,7 @@ interface JuryVoteModalProps {
         id: string;
         media_type: 'audio' | 'video';
         media_url: string;
+        media_cover_url?: string;
       };
     }>;
   };
@@ -167,6 +168,7 @@ export default function JuryVoteModal({ open, onClose, onVote, participation }: 
                     }
                   }}
                   downloadable={false}
+                  coverUrl={media.media.media_cover_url}
                 />
               ) : (
                 <VideoPlayer

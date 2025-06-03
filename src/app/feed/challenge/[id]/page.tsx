@@ -75,6 +75,7 @@ interface Participation {
       id: string;
       media_type: 'audio' | 'video';
       media_url: string;
+      media_cover_url?: string;
       media_public_id: string;
       duration?: number;
     };
@@ -144,11 +145,11 @@ export default function ChallengePage() {
 
         // Charger les médias
         const mediasResult = await getChallengeMedias(params.id as string);
-        // console.log("Medias result:", mediasResult);
-
+        
         if (mediasResult.error) {
           console.error('Error loading medias:', mediasResult.error);
         } else if (mediasResult.medias) {
+          
           // S'assurer que les médias sont bien typés
           const typedMedias: ChallengeMedia[] = mediasResult.medias.map(media => ({
             id: media.id,
@@ -169,6 +170,7 @@ export default function ChallengePage() {
             comments: media.comments
           }));
           setMedias(typedMedias);
+         
         }
 
         // Charger les participations
@@ -307,7 +309,7 @@ export default function ChallengePage() {
     );
   }
 
-  // console.log("les participations", participations);
+  console.log("les participations", participations);
   
 
   return (
@@ -437,6 +439,7 @@ export default function ChallengePage() {
                       audioUrl={media.media.media_url}
                       ref={audioPlayerRef}
                       downloadable={challenge.status !== 'completed'}
+                      coverUrl={media.media.media_cover_url}
                     />
                   ) : (
                     <VideoPlayer
