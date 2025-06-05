@@ -7,8 +7,8 @@ import { Flame, MessageCircle, Share2, UserPlus, Check, Trophy, Users, Calendar,
 import AudioPlayer from '@/components/feed/AudioPlayer';
 import VideoPlayer from '@/components/feed/VideoPlayer';
 import type { Challenge } from '@/types/database';
-import { getChallenge, getChallengeMedias, participateInChallenge, isUserJury } from '../../actions/challenges';
-import { getChallengeParticipations } from '../../actions/post';
+import { getChallenge, getChallengeMedias, participateInChallenge, isUserJury } from '../../../../actions/challenges/challenges';
+import { getChallengeParticipations } from '../../../../actions/posts/post';
 import { Avatar } from '@/components/ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ import WinnerCard from '@/components/challenge/WinnerCard';
 import ChallengeSkeleton from '@/components/challenge/ChallengeSkeleton';
 import VoteModal from '@/components/challenge/VoteModal';
 import JuryVoteModal from '@/components/challenge/JuryVoteModal';
-import { voteForParticipation, getChallengeVotes, voteAsJury } from '../../actions/vote';
+import { voteForParticipation, getChallengeVotes, voteAsJury } from '../../../../actions/votes/vote';
 
 interface MediaPlayerRef {
   seekToTime: (time: number) => void;

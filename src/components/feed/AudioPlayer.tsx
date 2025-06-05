@@ -8,7 +8,7 @@ import { getWaveformUrl } from '@/lib/cloudinary';
 import { Avatar } from '../ui/Avatar';
 import { LoadingAnimation } from '../ui/LoadingAnimation';
 import { formatTime } from '@/lib/utils';
-import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
+import { getMediaReadsCount, markMediaAsRead } from '@/actions/interactions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
 import { useMediaControl } from '../providers/MediaControlProvider';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { searchPosts as searchPostsAction } from '@/app/feed/actions/post';
+import { searchPosts as searchPostsAction } from '@/actions/posts/post';
 import type { ExtendedPost } from '@/types/database';
 
 interface SearchResult {

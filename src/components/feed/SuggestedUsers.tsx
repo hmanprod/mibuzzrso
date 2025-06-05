@@ -4,7 +4,7 @@ import { Check, Loader2, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { followUser } from '@/app/profile/actions/follower';
+import { followUser } from '@/actions/follower/follower';
 import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
 
@@ -27,13 +27,21 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
   const [followingStates, setFollowingStates] = useState<Record<string, { loading: boolean, followed: boolean }>>({});
 
 
+
   // Si aucun utilisateur n'est passé, ne rien afficher
   if (users.length === 0) {
     return null;
   }
 
+  // Filtrer les utilisateurs pour ne pas afficher l'utilisateur connecté
+  const filteredUsers = users.filter(u => user?.id !== u.user_id);
   // Prendre seulement les 3 premiers utilisateurs
-  const suggestedUsers = users.slice(0, 3);
+  const suggestedUsers = filteredUsers.slice(0, 3);
+
+  // Si aucun utilisateur n'est passé ou si l'utilisateur connecté est le seul, ne rien afficher
+  if (suggestedUsers.length === 0) {
+    return null;
+  }
 
   const handleFollow = async (userIdToFollow: string) => {
     if (!user) {

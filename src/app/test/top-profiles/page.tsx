@@ -1,4 +1,4 @@
-import { getTopInteractingUsers } from '@/app/profile/actions/profile'
+import { getTopInteractingUsers } from '@/actions/profile/profile'
 import Image from 'next/image'
 import Link from 'next/link'
 

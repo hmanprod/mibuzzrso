@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { PostgrestError } from '@supabase/supabase-js';
-import { addPointsForLike } from '@/app/points/actions';
+import { addPointsForLike } from '@/actions/pointss/actions';
 
 type InteractionQueryResult = {
   data: Interaction | null;

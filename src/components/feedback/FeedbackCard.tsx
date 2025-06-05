@@ -13,9 +13,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { deletePost } from '@/app/feed/actions/post';
-import { togglePostLike } from '@/app/feed/actions/interaction';
-import { getFeedbackComments } from '@/app/feedbacks/actions/comment';
+import { deletePost } from '@/actions/posts/post';
+import { togglePostLike } from '@/actions/interactions/interaction';
+import { getFeedbackComments } from '@/actions/comment/comment';
 import FeedbackCommentSection from './FeedbackCommentSection';
 import { Feedback } from '@/types/feedback';
 import { cn } from '@/lib/utils';

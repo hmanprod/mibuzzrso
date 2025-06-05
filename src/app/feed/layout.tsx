@@ -4,7 +4,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { useCallback, useEffect, useState } from 'react';
-import { getTopInteractingUsers } from '../profile/actions/profile';
+import { getTopInteractingUsers } from '../../actions/profile/profile';
 import RightSidebar from '@/components/RightSidebar';
 
 interface TopUser {

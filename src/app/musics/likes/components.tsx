@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 import { Media } from '@/types/database';
-import { getLikedMedia } from './actions/likes';
+import { getLikedMedia } from '../../../actions/interactions/likes';
 
 interface LikedListProps {
   initialMedia: Media[];

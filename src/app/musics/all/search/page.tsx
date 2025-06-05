@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSearch } from '@/components/providers/SearchProvider';
-import { searchMedias } from '../actions/media';
+import { searchMedias } from '../../../../actions/media/media';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 import { Media } from '@/types/database';
 

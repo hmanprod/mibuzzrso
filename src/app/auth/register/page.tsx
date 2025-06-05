@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
-import { register, signInWithGoogle } from './actions';
+import { register, signInWithGoogle } from '../../../actions/register/actions';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);

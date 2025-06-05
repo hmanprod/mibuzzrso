@@ -6,7 +6,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useParams } from 'next/navigation';
 import { Profile } from '@/types/database';
 import ProfileComponent from '@/components/profile/Profile';
-import { getUserProfileByPseudoUrl } from '@/app/profile/actions/profile';
+import { getUserProfileByPseudoUrl } from '@/actions/profile/profile';
 
 export default function ProfilePage() {
   const params = useParams();

@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { deletePost } from '@/app/feed/actions/post';
+import { deletePost } from '@/actions/posts/post';
 
 interface Post {
   id: string;

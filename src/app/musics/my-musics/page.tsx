@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { getUserMediaLibrary } from './actions/library';
+import { getUserMediaLibrary } from '../../../actions/library/library';
 import { Media } from '@/types/database';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 

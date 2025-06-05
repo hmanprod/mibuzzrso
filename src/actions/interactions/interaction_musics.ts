@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { addPointsForLike } from '@/app/points/actions'
+import { addPointsForLike } from '@/actions/pointss/actions'
 import type { Profile } from '@/types/database'
 
 export type Comment = {

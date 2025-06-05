@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import AuthLayout from '@/components/auth/AuthLayout';
-import { login, signInWithGoogle } from './actions';
+import { login, signInWithGoogle } from '../../../actions/login/actions';
 
 
 export default function LoginPage() {
@@ -44,6 +44,7 @@ export default function LoginPage() {
   }
 
   async function handleSubmit(formData: FormData) {
+    console.log("the form data", formData)
     setIsLoading(true);
     setError(null);
 

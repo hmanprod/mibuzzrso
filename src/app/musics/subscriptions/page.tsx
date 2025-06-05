@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getSubscriptionsMedia } from './actions/subscriptions';
+import { getSubscriptionsMedia } from '../../../actions/subscription/subscriptions';
 import { SubscriptionsList } from './components';
 
 function LoadingSpinner() {

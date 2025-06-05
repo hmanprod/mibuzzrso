@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getLikedMedia } from './actions/likes';
+import { getLikedMedia } from '../../../actions/interactions/likes';
 import { LikedList } from './components';
 
 function LoadingSpinner() {

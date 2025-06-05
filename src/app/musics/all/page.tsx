@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // import { Loader2 } from 'lucide-react';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
-import { getMediaLibrary, getMoreMedia } from '../my-musics/actions/library';
+import { getMediaLibrary, getMoreMedia } from '../../../actions/library/library';
 // import { SearchAndFilters } from './components';
 import { Media } from '@/types/database';
 

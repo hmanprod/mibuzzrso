@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Profile } from '@/types/database'
-import { addPointsForLike } from '@/app/points/actions'
+import { addPointsForLike } from '@/actions/pointss/actions'
 
 export async function getCommentsByMediaId(mediaId: string) {
   const supabase = await createClient()

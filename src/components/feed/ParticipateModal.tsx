@@ -7,7 +7,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 import { toast } from '@/components/ui/use-toast';
 import { Upload, ImagePlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
-import { createPostWithMediaCP } from '@/app/feed/actions/post';
+import { createPostWithMediaCP } from '@/actions/posts/post';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import ConfirmCancelDialog from './ConfirmCancelDialog';
 

@@ -6,7 +6,7 @@ import { Send, MessageSquare } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
-import { addFeedbackComment } from '@/app/feedbacks/actions/comment';
+import { addFeedbackComment } from '@/actions/comment/comment';
 import { formatTimeago, getUserLanguage } from '@/lib/timeago';
 
 interface Comment {

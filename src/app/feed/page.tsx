@@ -6,7 +6,7 @@ import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
 import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import type { ExtendedPost } from '@/types/database';
-import { getPosts } from './actions/post';
+import { getPosts } from '../../actions/posts/post';
 
 
 export default function Home() {

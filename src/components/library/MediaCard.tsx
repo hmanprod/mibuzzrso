@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
 import Image from 'next/image';
-import { getMediaLikes, toggleMediaLike } from '@/app/musics/my-musics/actions/interaction';
+import { getMediaLikes, toggleMediaLike } from '@/actions/interactions/interaction_mm';
 
 interface MediaCardProps {
   media: Media;

@@ -6,7 +6,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 import { useSearch } from '@/components/providers/SearchProvider';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 import { Media } from '@/types/database';
-import { searchSubscriptionMedias } from '@/app/musics/subscriptions/actions/media';
+import { searchSubscriptionMedias } from '@/actions/media/media_sub';
 
 export default function SearchSubscriptionsPage() {
   const searchParams = useSearchParams();

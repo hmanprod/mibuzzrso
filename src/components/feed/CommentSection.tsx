@@ -6,8 +6,8 @@ import { Send, MessageSquare, ThumbsUp } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/components/providers/SessionProvider';
-import { addComment, likeComment, getCommentLikes } from '@/app/feed/actions/interaction';
-import { addPointsForComment } from '@/app/points/actions';
+import { addComment, likeComment, getCommentLikes } from '@/actions/interactions/interaction';
+import { addPointsForComment } from '@/actions/pointss/actions';
 import { formatTime } from '@/lib/utils';
 import { formatTimeago, getUserLanguage } from '@/lib/timeago';
 

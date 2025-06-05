@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallba
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { formatTime } from '@/lib/utils';
-import { getMediaReadsCount, markMediaAsRead } from '@/app/feed/actions/interaction';
+import { getMediaReadsCount, markMediaAsRead } from '@/actions/interactions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
 
 interface VideoPlayerProps {

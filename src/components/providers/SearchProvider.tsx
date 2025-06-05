@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { searchPosts } from '@/app/feed/actions/post';
+import { searchPosts } from '@/actions/posts/post';
 import type { ExtendedPost } from '@/types/database';
 
 interface SearchContextType {

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import FeedPost from '@/components/feed/FeedPost';
 import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import type { ExtendedPost } from '@/types/database';
-import { getLikedPosts } from '../actions/post';
+import { getLikedPosts } from '../../../actions/posts/post';
 
 export default function Liked() {
   const [posts, setPosts] = useState<ExtendedPost[]>([]);

@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { updatePostContent, updateMediaTitle } from '@/app/feed/actions/post';
+import { updatePostContent, updateMediaTitle } from '@/actions/posts/post';
 import { toast } from '@/components/ui/use-toast';
 
 interface EditPostDialogProps {

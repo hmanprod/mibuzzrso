@@ -8,7 +8,7 @@ import { MediaType } from '@/types/database';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { createPostWithMedia } from '@/app/feed/actions/post';
+import { createPostWithMedia } from '@/actions/posts/post';
 
 interface CreatePostDialogProps {
   open: boolean;

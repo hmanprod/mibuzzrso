@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import ProfileEditSkeleton from '@/components/profile/ProfileEditSkeleton';
-import { updatePassword } from './actions';
+import { updatePassword } from '../../actions/account/actions';
 import { toast } from '@/components/ui/use-toast';
 
 export default function EditAccountPage() {

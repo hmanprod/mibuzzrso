@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { searchUsers } from '@/app/feed/actions/users';
+import { searchUsers } from '@/actions/users/users';
 import { Search, X } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 

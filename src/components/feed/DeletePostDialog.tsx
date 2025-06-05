@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useSession } from '@/components/providers/SessionProvider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { deletePost } from '@/app/feed/actions/post';
+import { deletePost } from '@/actions/posts/post';
 import { toast } from '@/components/ui/use-toast';
 
 interface DeletePostDialogProps {

@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Media } from '@/types/database';
 import { revalidatePath } from 'next/cache'
-import { addPointsForMedia, addPointsForChallenge } from '@/app/points/actions';
+import { addPointsForMedia, addPointsForChallenge } from '@/actions/pointss/actions';
 
 export interface Challenge {
   id: string;

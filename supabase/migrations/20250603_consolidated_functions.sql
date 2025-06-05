@@ -122,6 +122,110 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Fonction de recherche avancée de posts
+CREATE OR REPLACE FUNCTION public.search_posts(
+    search_term text,
+    page_num integer DEFAULT 1,
+    items_per_page integer DEFAULT 10,
+    current_user_id uuid DEFAULT NULL::uuid
+)
+RETURNS TABLE (
+    id uuid,
+    created_at timestamptz,
+    content text,
+    user_id uuid,
+    post_type text,
+    challenge_id uuid,
+    media_ids uuid[],
+    media_urls text[],
+    media_types text[],
+    media_durations numeric[],
+    media_titles text[],
+    media_descriptions text[],
+    media_covers text[],
+    media_authors text[],
+    stage_name text,
+    avatar_url text,
+    like_count bigint,
+    comment_count bigint,
+    has_liked boolean,
+    has_commented boolean,
+    match_source text,
+    total_count bigint
+) AS $$
+DECLARE
+    v_offset INTEGER := (page_num - 1) * items_per_page;
+BEGIN
+    RETURN QUERY
+    WITH post_search AS (
+        SELECT DISTINCT ON (p.id)
+            p.id,
+            p.created_at,
+            p.content,
+            p.user_id,
+            p.post_type::text,
+            p.challenge_id,
+            array_agg(m.id ORDER BY pm.position) AS media_ids,
+            array_agg(m.media_url ORDER BY pm.position) AS media_urls,
+            array_agg(m.media_type::text ORDER BY pm.position) AS media_types,
+            array_agg(m.duration ORDER BY pm.position) AS media_durations,
+            array_agg(m.title ORDER BY pm.position) AS media_titles,
+            array_agg(m.description ORDER BY pm.position) AS media_descriptions,
+            array_agg(m.media_cover_url ORDER BY pm.position) AS media_covers,
+            array_agg(m.author ORDER BY pm.position) AS media_authors,
+            pr.stage_name,
+            pr.avatar_url,
+            COUNT(DISTINCT il.id) AS like_count,
+            COUNT(DISTINCT ic.id) AS comment_count,
+            bool_or(il.user_id = current_user_id) AS has_liked,
+            bool_or(ic.user_id = current_user_id) AS has_commented,
+            FIRST_VALUE(
+                CASE
+                    WHEN search_term IS NOT NULL AND p.content ILIKE '%' || search_term || '%' THEN 'content'
+                    WHEN search_term IS NOT NULL AND m.title ILIKE '%' || search_term || '%' THEN 'title'
+                    WHEN search_term IS NOT NULL AND m.description ILIKE '%' || search_term || '%' THEN 'description'
+                    ELSE NULL
+                END
+            ) OVER (PARTITION BY p.id ORDER BY
+                CASE
+                    WHEN search_term IS NOT NULL AND p.content ILIKE '%' || search_term || '%' THEN 1
+                    WHEN search_term IS NOT NULL AND m.title ILIKE '%' || search_term || '%' THEN 2
+                    WHEN search_term IS NOT NULL AND m.description ILIKE '%' || search_term || '%' THEN 3
+                    ELSE 4
+                END
+            ) AS match_source
+        FROM posts p
+        LEFT JOIN posts_medias pm ON p.id = pm.post_id
+        LEFT JOIN medias m ON pm.media_id = m.id
+        LEFT JOIN profiles pr ON p.user_id = pr.id
+        LEFT JOIN interactions il ON p.id = il.post_id AND il.type = 'like'
+        LEFT JOIN interactions ic ON p.id = ic.post_id AND ic.type = 'comment'
+        WHERE
+            (search_term IS NULL OR
+             p.content ILIKE '%' || search_term || '%' OR
+             m.title ILIKE '%' || search_term || '%' OR
+             m.description ILIKE '%' || search_term || '%')
+        GROUP BY
+            p.id,
+            p.created_at,
+            p.content,
+            p.user_id,
+            p.post_type,
+            p.challenge_id,
+            pr.stage_name,
+            pr.avatar_url
+    ),
+    post_count AS (
+        SELECT COUNT(*) as total FROM post_search
+    )
+    SELECT ps.*, pc.total as total_count
+    FROM post_search ps, post_count pc
+    ORDER BY ps.created_at DESC
+    OFFSET v_offset
+    LIMIT items_per_page;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Section 2: Fonctions de gestion des médias
 CREATE OR REPLACE FUNCTION get_media_with_likes(
     p_user_id uuid,
@@ -1512,6 +1616,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Fonction pour rafraîchir les classements hebdomadaires
+CREATE OR REPLACE FUNCTION public.refresh_weekly_rankings()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+    -- Rafraîchir la vue de manière non concurrente pour le premier chargement
+    IF NOT EXISTS (SELECT 1 FROM weekly_rankings_view LIMIT 1) THEN
+        REFRESH MATERIALIZED VIEW weekly_rankings_view;
+    ELSE
+        -- Rafraîchir la vue de manière concurrente (ne bloque pas les lectures)
+        REFRESH MATERIALIZED VIEW CONCURRENTLY weekly_rankings_view;
+    END IF;
+    
+    -- Analyser la vue pour mettre à jour les statistiques
+    ANALYZE weekly_rankings_view;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Section 5: Fonctions de gestion des challenges
 CREATE OR REPLACE FUNCTION get_challenge_votes(
     p_challenge_id uuid,
@@ -1558,6 +1683,130 @@ BEGIN
     ORDER BY cv.created_at DESC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Fonction de déclencheur pour mettre à jour le champ updated_at
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+-- Fonction de déclencheur spécifique pour les challenges
+CREATE OR REPLACE FUNCTION public.update_challenges_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$;
+
+-- Fonction de déclencheur spécifique pour les profils beatmakers
+CREATE OR REPLACE FUNCTION public.update_profiles_beatmakers_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$;
+
+-- Fonction de déclencheur avec timezone UTC
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc', NOW());
+    RETURN NEW;
+END;
+$$;
+
+-- Fonction pour obtenir la version de PostgreSQL
+CREATE OR REPLACE FUNCTION public.version()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+    SELECT version();
+$$;
+
+-- Créer un déclencheur pour les tables principales
+CREATE TRIGGER set_posts_updated_at
+    BEFORE UPDATE ON posts
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_medias_updated_at
+    BEFORE UPDATE ON medias
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_profiles_updated_at
+    BEFORE UPDATE ON profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_interactions_updated_at
+    BEFORE UPDATE ON interactions
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_challenges_updated_at
+    BEFORE UPDATE ON challenges
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_follows_updated_at
+    BEFORE UPDATE ON follows
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_comments_updated_at
+    BEFORE UPDATE ON comments
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_challenge_votes_updated_at
+    BEFORE UPDATE ON challenge_votes
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_points_history_updated_at
+    BEFORE UPDATE ON points_history
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_weekly_rankings_updated_at
+    BEFORE UPDATE ON weekly_rankings
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_daily_media_uploads_updated_at
+    BEFORE UPDATE ON daily_media_uploads
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_daily_comments_updated_at
+    BEFORE UPDATE ON daily_comments
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_unique_likes_updated_at
+    BEFORE UPDATE ON unique_likes
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
+
+CREATE TRIGGER set_posts_medias_updated_at
+    BEFORE UPDATE ON posts_medias
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_updated_at();
 
 
 -- ==============================================================================

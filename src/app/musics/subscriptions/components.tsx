@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 import { Media } from '@/types/database';
-import { getSubscriptionsMedia } from './actions/subscriptions';
+import { getSubscriptionsMedia } from '../../../actions/subscription/subscriptions';
 
 interface SubscriptionsListProps {
   initialMedia: Media[];

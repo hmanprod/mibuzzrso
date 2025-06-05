@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { createFeedbackPost } from '@/app/feedbacks/actions/feedback';
+import { createFeedbackPost } from '@/actions/feedback/feedback';
 
 interface CreateFeedbackDialogProps {
   open: boolean;

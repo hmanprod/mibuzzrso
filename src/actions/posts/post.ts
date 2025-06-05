@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { addPointsForMedia } from '@/app/points/actions'
+import { addPointsForMedia } from '@/actions/pointss/actions'
 
 
 interface CreatePostData {

@@ -6,7 +6,7 @@ import type { Media } from '@/types/database';
 import { cn } from '@/lib/utils';
 import AudioPlayer from '../feed/AudioPlayer';
 import VideoPlayer from '../feed/VideoPlayer';
-import { toggleMediaLike, getMediaLikes, getCommentsByMediaId, addComment, type Comment } from '@/app/musics/actions/interaction';
+import { toggleMediaLike, getMediaLikes, getCommentsByMediaId, addComment, type Comment } from '@/actions/interactions/interaction_musics';
 import MediaCommentSection from './MediaCommentSection';
 
 type MediaWithProfile = Media & {

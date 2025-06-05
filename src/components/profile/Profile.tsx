@@ -7,7 +7,7 @@ import { Camera, Music, Plus, Settings, Video, UserPlus, Check, Facebook, Instag
 import { ExtendedPost, Profile as ProfileType } from '@/types/database';
 import { NotFound } from '../ui/not-found';
 import CreatePostBlock from '../feed/CreatePostBlock';
-import { getProfilePosts } from '@/app/feed/actions/post';
+import { getProfilePosts } from '@/actions/posts/post';
 import { 
   getTalentLabel, 
   getGenreLabel, 
@@ -22,7 +22,7 @@ import { AvatarUploadModal } from './AvatarUploadModal';
 import { CoverPhotoUploadModal } from './CoverPhotoUploadModal';
 import { useSession } from '@/components/providers/SessionProvider';
 import ProfileSkeleton from './ProfileSkeleton';
-import { followUser, isFollowing } from '@/app/profile/actions/follower';
+import { followUser, isFollowing } from '@/actions/follower/follower';
 import { toast } from '@/components/ui/use-toast';
 import { ImpersonateButton } from './ImpersonateButton';
 

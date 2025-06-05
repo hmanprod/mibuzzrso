@@ -8,7 +8,7 @@ import Link from 'next/link';
 import RankBadge from '@/components/profile/RankBadge';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { getWeeklyRankings, type RankingUser } from './actions/ranking';
+import { getWeeklyRankings, type RankingUser } from '../../actions/ranking/ranking';
 
 
 

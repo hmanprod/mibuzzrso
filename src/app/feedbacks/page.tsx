@@ -7,7 +7,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { CreateFeedbackDialog, FeedbackCard } from '@/components/feedback';
-import { getFeedbacks } from './actions/feedback';
+import { getFeedbacks } from '../../actions/feedback/feedback';
 import { Feedback } from '@/types/feedback';
 
 

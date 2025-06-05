@@ -8,7 +8,7 @@ import { Music2, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { createChallenge } from '@/app/feed/actions/challenges';
+import { createChallenge } from '@/actions/challenges/challenges';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { useSession } from '../providers/SessionProvider';
 import JurySelector from './JurySelector';

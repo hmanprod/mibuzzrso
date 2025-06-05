@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getChallenges, Challenge } from "../actions/challenges";
+import { getChallenges, Challenge } from "../../../actions/challenges/challenges";
 import { Users, Clock, ArrowRight, Music } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Skeleton from 'react-loading-skeleton';

@@ -6,7 +6,7 @@ import { useSession } from '@/components/providers/SessionProvider';
 import { useSearch } from '@/components/providers/SearchProvider';
 import LibraryMediaCard from '@/components/library/LibraryMediaCard';
 import { Media } from '@/types/database';
-import { searchLikedMedia } from '@/app/musics/likes/actions/media';
+import { searchLikedMedia } from '@/actions/media/media_likes';
 
 export default function SearchLikedMusicsPage() {
   const searchParams = useSearchParams();

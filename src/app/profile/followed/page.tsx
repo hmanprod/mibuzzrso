@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useSession } from '@/components/providers/SessionProvider';
-import { getFollowedUsers, followUser } from '../actions/follower';
+import { getFollowedUsers, followUser } from '../../../actions/follower/follower';
 import { Avatar } from '@/components/ui/Avatar';
 import { Check, Loader2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
