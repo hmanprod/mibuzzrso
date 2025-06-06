@@ -10,7 +10,7 @@ interface VoteData {
   points: number;
 }
 
-interface JuryVoteData {
+export interface JuryVoteData {
   challengeId: string;
   participationId: string;
   voterId: string;

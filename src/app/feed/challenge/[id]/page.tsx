@@ -3,17 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ParticipateSection } from "@/components/challenge/ParticipateSection";
-import { toast } from "@/components/ui/use-toast";
 import { useSession } from "@/components/providers/SessionProvider";
 import ParticipateModal from "@/components/feed/ParticipateModal";
 import WinnerCard from "@/components/challenge/WinnerCard";
 import ChallengeSkeleton from "@/components/challenge/ChallengeSkeleton";
 import VoteModal from "@/components/challenge/VoteModal";
-import JuryVoteModal from "@/components/challenge/JuryVoteModal";
-import {
-  voteForParticipation,
-  voteAsJury,
-} from "../../../../actions/votes/vote";
+import JuryVoteModal from "@/components/challenge/JuryVoteModal"
 import { useChallenge } from "@/hooks/challenge/useChallenge";
 import ContentSection from "@/components/challenge/ContentSection";
 import ParticipationSection from "@/components/challenge/ParticipationSection";
@@ -43,7 +38,7 @@ export default function ChallengePage() {
     setShowVoteModal,
     setShowJuryVoteModal,
   } = challengeState;
-  const { handleShare, handleFollow, handleLike, handleUpdateParticipations, handleParticipate, loadData } =
+  const { handleShare, handleFollow, handleLike,  handleParticipate, loadData, handleJuryVote, handleVote } =
     challengeActions;
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
@@ -57,10 +52,10 @@ export default function ChallengePage() {
   // const [isUploading, setIsUploading] = useState(false);
   // const [isParticipating, setIsParticipating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user, profile } = useSession();
+  const {  profile } = useSession();
   
 
-
+ 
 
   // console.log("the user is ", user);
 
@@ -149,27 +144,7 @@ export default function ChallengePage() {
               setShowVoteModal(false);
               setSelectedParticipation(null);
             }}
-            onVote={async (points: number) => {
-              if (!user?.id || !selectedParticipation) return;
-
-              const result = await voteForParticipation({
-                challengeId: challenge.id,
-                participationId: selectedParticipation.id,
-                voterId: user.id,
-                points,
-              });
-
-              if (!result.success) {
-                toast({
-                  title: "Erreur",
-                  description: result.error,
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              handleUpdateParticipations(participations);
-            }}
+            onVote={handleVote}
             participation={selectedParticipation}
           />
 
@@ -179,36 +154,7 @@ export default function ChallengePage() {
               setShowJuryVoteModal(false);
               setSelectedParticipation(null);
             }}
-            onVote={async (criteria) => {
-              if (!user?.id || !selectedParticipation) return;
-
-              const result = await voteAsJury({
-                challengeId: challenge.id,
-                participationId: selectedParticipation.id,
-                voterId: user.id,
-                criteria,
-              });
-
-              if (!result.success) {
-                toast({
-                  title: "Erreur",
-                  description: result.error,
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              handleUpdateParticipations(participations);
-
-              toast({
-                title: "Vote jury enregistré",
-                description: "Votre évaluation a bien été prise en compte",
-              });
-
-              // Fermer le modal
-              setShowJuryVoteModal(false);
-              setSelectedParticipation(null);
-            }}
+            onVote={handleJuryVote}
             participation={selectedParticipation}
           />
         </>

@@ -6,7 +6,7 @@ import { getChallenge, getChallengeMedias, isUserJury, participateInChallenge } 
 import { useCloudinaryUpload } from '../useCloudinaryUpload';
 import { useRouter } from 'next/navigation';
 import { getChallengeParticipations } from '@/actions/posts/post';
-import { getChallengeVotes } from '@/actions/votes/vote';
+import { getChallengeVotes, JuryVoteData, voteAsJury, voteForParticipation } from '@/actions/votes/vote';
 
 export function useChallenge(challengeId: string): [ChallengeState, ChallengeActions] {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -126,24 +126,64 @@ export function useChallenge(challengeId: string): [ChallengeState, ChallengeAct
   };
 
   const handleVote = async (points: number) => {
-    console.log("the points", points);
-    
-    // TODO: Implement vote functionality
-    toast({
-      title: "Coming soon",
-      description: "Vote functionality will be available soon",
-    });
-  };
+    if (!user?.id || !selectedParticipation || !challenge) return;
 
-  const handleJuryVote = async (criteria: string) => {
-    console.log("the criteria", criteria);
+      const result = await voteForParticipation({
+        challengeId: challenge.id,
+        participationId: selectedParticipation.id,
+        voterId: user.id,
+        points,
+      });
+
+      if (!result.success) {
+        toast({
+          title: "Erreur",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      handleUpdateParticipations(participations);
     
-    // TODO: Implement jury vote functionality
-    toast({
-      title: "Coming soon",
-      description: "Jury vote functionality will be available soon",
-    });
-  };
+  }
+
+  const handleJuryVote = async (criteria: {
+    technique: number;
+    originalite: number;
+    interpretation: number;
+    overall: number;
+  }) => {
+    if (!user?.id || !selectedParticipation || !challenge) return;
+
+      const result = await voteAsJury({
+        challengeId: challenge.id,
+        participationId: selectedParticipation.id,
+        voterId: user.id,
+        criteria,
+      } as JuryVoteData);
+
+      if (!result.success) {
+        toast({
+          title: "Erreur",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      handleUpdateParticipations(participations);
+
+      toast({
+        title: "Vote jury enregistré",
+        description: "Votre évaluation a bien été prise en compte",
+      });
+
+      // Fermer le modal
+      setShowJuryVoteModal(false);
+      setSelectedParticipation(null);
+
+  }
 
   const loadData = async () => {
     try {

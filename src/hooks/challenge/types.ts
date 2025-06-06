@@ -1,3 +1,5 @@
+
+
 export interface MediaPlayerRef {
   seekToTime: (time: number) => void;
 }
@@ -131,7 +133,12 @@ export interface ChallengeActions {
   handleFollow: () => void;
   handleParticipate: (file: File) => Promise<void>;
   handleVote: (points: number) => Promise<void>;
-  handleJuryVote: (criteria: string) => Promise<void>;
+  handleJuryVote: (criteria: {
+    technique: number;
+    originalite: number;
+    interpretation: number;
+    overall: number;
+  }) => Promise<void>;
   setSelectedParticipation: (participation: Participation | null) => void;
   handleUpdateParticipations: (participations: Participation[]) => void;
   loadData: () => void;
