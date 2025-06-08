@@ -325,7 +325,6 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
             alt="Audio waveform"
             fill
             style={{ objectFit: 'fill' }}
-            unoptimized={true}
           />
         </div>
         
