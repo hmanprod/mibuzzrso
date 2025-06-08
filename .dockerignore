@@ -1,0 +1,47 @@
+# Version control
+.git
+.gitignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js build output
+.next
+out
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation
+README.md
+docs
+
+# Supabase local development
+supabase/volumes
