@@ -10,8 +10,8 @@ import ChallengeSkeleton from "@/components/challenge/ChallengeSkeleton";
 import VoteModal from "@/components/challenge/VoteModal";
 import JuryVoteModal from "@/components/challenge/JuryVoteModal"
 import { useChallenge } from "@/hooks/challenge/useChallenge";
-import ContentSection from "@/components/challenge/ContentSection";
 import ParticipationSection from "@/components/challenge/ParticipationSection";
+import ContentSection from "@/components/challenge/ContentSection";
 
 export default function ChallengePage() {
   const params = useParams();
@@ -33,13 +33,19 @@ export default function ChallengePage() {
     participations,
     showJuryVoteModal,
     showVoteModal,
+    loadingParticipation,
+    loadingVotes,
+    loadingChallengeMedias,
+    loadingComments,
+    comments,
     setCurrentPlaybackTime,
     setSelectedParticipation,
     setShowVoteModal,
     setShowJuryVoteModal,
   } = challengeState;
-  const { handleShare, handleFollow, handleLike,  handleParticipate, loadData, handleJuryVote, handleVote } =
+  const { handleShare, handleFollow, handleLike,  handleParticipate, loadData, handleJuryVote, handleVote, loadParticipation, loadVotes, loadChallengeMedias, loadChallengeComments } =
     challengeActions;
+
   // Utilisé pour suivre la progression de la lecture
   useEffect(() => {
     if (currentPlaybackTime > 0) {
@@ -57,15 +63,78 @@ export default function ChallengePage() {
 
  
 
-  // console.log("the user is ", user);
+  //  console.log("the challenge is ", challenge);
 
   useEffect(() => {
    
-
-    loadData();
-  }, [params.id, profile?.id, loadData]);
-
   
+    const fetchData = async () => {
+      if (!challenge && !loading) {
+        await loadData();
+      }
+    };
+  
+    fetchData();
+  
+  
+  }, [challenge, loading,  loadData]);
+
+  useEffect(() => {
+   
+  
+    const fetchData = async () => {
+      if (!challenge && !loadingComments) {
+        await loadChallengeComments();
+      }
+    };
+  
+    fetchData();
+  
+  
+  }, [challenge, loadingComments,  loadChallengeComments]);
+
+  useEffect(() => {
+   
+  
+    const fetchData = async () => {
+      if (!challenge && !loadingChallengeMedias) {
+        await loadChallengeMedias();
+      }
+    };
+  
+    fetchData();
+  
+    
+  }, [challenge, loadingChallengeMedias,  loadChallengeMedias]);
+
+  useEffect(() => {
+   
+  
+    const fetchData = async () => {
+      if (!challenge && !loadingParticipation) {
+        await loadParticipation();
+      }
+    };
+  
+    fetchData();
+  
+  
+  }, [challenge, loadingParticipation,  loadParticipation]);
+
+  useEffect(() => {
+   
+   
+    const fetchData = async () => {
+      if (!challenge && !loadingVotes) {
+        await loadVotes();
+      }
+    };
+  
+    fetchData();
+  
+  
+  }, [challenge, loadingVotes,  loadVotes]);
+
 
   if (loading) {
     return <ChallengeSkeleton />;
@@ -78,6 +147,8 @@ export default function ChallengePage() {
       </div>
     );
   }
+
+  // console.log("the challenge medias are ", medias);
 
 
   return (
@@ -110,12 +181,15 @@ export default function ChallengePage() {
         isLiked={isLiked}
         likesCount={likesCount}
         medias={medias}
+        currentPlaybackTime={currentPlaybackTime}
         setCurrentPlaybackTime={setCurrentPlaybackTime}
+        comments={comments}
+        // handleAddComment={handleAddComment}
 
       />
 
       {/* Section des participations */}
-      {participations.length > 0 && (
+      {participations.length > 0 && !loadingParticipation && (
        <ParticipationSection
        participations={participations}
        challenge={challenge}
@@ -124,6 +198,8 @@ export default function ChallengePage() {
        setSelectedParticipation={setSelectedParticipation}
        setShowVoteModal={setShowVoteModal}
        setShowJuryVoteModal={setShowJuryVoteModal}
+       loadingParticipation={loadingParticipation}
+       loadingVotes={loadingVotes}
        />
       )}
 

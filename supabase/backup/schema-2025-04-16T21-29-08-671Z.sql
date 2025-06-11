@@ -146,7 +146,7 @@ CREATE TABLE comments (
   content text NOT NULL,
   player_time numeric,
   user_id uuid NOT NULL,
-  media_id uuid NOT NULL,
+  media_id uuid,
   parent_comment_id uuid
 );
 

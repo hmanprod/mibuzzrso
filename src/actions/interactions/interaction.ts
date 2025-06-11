@@ -126,6 +126,57 @@ export async function addComment(mediaId: string, content: string, playerTime?: 
   }
 }
 
+export async function addCommentChallenge(content: string, playerTime?: number, parentCommentId?: string, challengeId?: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Add the comment
+    const { data: commentData, error: commentError } = await supabase
+      .from('comments')
+      .insert({
+        content,
+        player_time: playerTime,
+        user_id: user.id,
+        parent_comment_id: parentCommentId || null,
+        challenge_id: challengeId
+      })
+      .select('id')
+      .single()
+
+    if (commentError || !commentData) {
+      console.error('Error adding comment:', commentError)
+      return { error: 'Failed to add comment' }
+    }
+
+    // Add an interaction of type 'comment'
+    const { error: interactionError } = await supabase
+      .from('interactions')
+      .insert({
+        type: 'comment',
+        user_id: user.id,
+        challenge_id: challengeId
+      })
+
+    if (interactionError) {
+      console.error('Error adding comment interaction:', interactionError)
+      // We don't return an error here as the comment was successfully created
+    }
+
+    return { success: true, data: commentData }
+  } catch (error) {
+    console.error('Error in addComment:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+
 export async function likeComment(commentId: string, postId: string) {
   const supabase = await createClient()
 
@@ -253,6 +304,9 @@ export async function togglePostLike(postId: string) {
       .eq('type', 'like')
       .single()
 
+    console.log("existingLike", existingLike);
+    console.log("likeCheckError for post", likeCheckError);
+
     if (likeCheckError && likeCheckError.code !== 'PGRST116') {
       console.error('Error checking existing like:', likeCheckError)
       return { error: 'Failed to check existing like' }
@@ -323,6 +377,95 @@ export async function togglePostLike(postId: string) {
     }
   } catch (error) {
     console.error('Error in togglePostLike:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+export async function toggleChallengeLike(challengeId: string) {
+  console.log("challengeId", challengeId);
+  const supabase = await createClient()
+
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Check if the user has already liked this challenge
+    const { data: existingLike, error: likeCheckError } = await supabase
+      .from('interactions')
+      .select('*')
+      .eq('challenge_id', challengeId)
+      .eq('user_id', user.id)
+      .eq('type', 'like')
+      .single()
+
+    console.log("existingLike", existingLike);
+    console.log("likeCheckError", likeCheckError);
+
+    if (likeCheckError && likeCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing like:', likeCheckError)
+      return { error: 'Failed to check existing like' }
+    }
+
+    let liked: boolean = false
+
+    if (existingLike) {
+      // If the user has already liked this challenge, remove the like
+      const { error: deleteError } = await supabase
+        .from('interactions')
+        .delete()
+        .eq('id', existingLike.id)
+
+      if (deleteError) {
+        console.error('Error removing like:', deleteError)
+        return { error: 'Failed to unlike challenge' }
+      }
+
+
+      liked = false
+    } else {
+      // Otherwise, add a new like
+      const { error: insertError } = await supabase
+        .from('interactions')
+        .insert({
+          challenge_id: challengeId,
+          user_id: user.id,
+          type: 'like'
+        })
+
+      
+
+      if (insertError) {
+        console.error('Error adding like:', insertError)
+        return { error: 'Failed to like challenge' }
+      }
+
+
+      liked = true
+    }
+
+    // Count total likes for this challenge
+    const { count, error: countError } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('challenge_id', challengeId)
+      .eq('type', 'like')
+
+    if (countError) {
+      console.error('Error counting likes:', countError)
+      return { error: 'Failed to count likes' }
+    }
+
+    return { 
+      success: true, 
+      liked: liked as boolean,
+      likesCount: count || 0
+    }
+  } catch (error) {
+    console.error('Error in toggleChallengeLike:', error)
     return { error: 'An unexpected error occurred' }
   }
 }

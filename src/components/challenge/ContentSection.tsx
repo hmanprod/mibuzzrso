@@ -19,7 +19,9 @@ import {
 import AudioPlayer from "../feed/AudioPlayer";
 import VideoPlayer from "../feed/VideoPlayer";
 import { cn } from "@/lib/utils";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import CommentSectionChallenge from "../feed/CommentSectionChallenge";
+import { TransformedComment } from "@/actions/challenges/challenges";
 
 interface ContentSectionProps {
   challenge: Challenge;
@@ -30,7 +32,10 @@ interface ContentSectionProps {
   isLiked: boolean;
   likesCount: number;
   medias: ChallengeMedia[];
+  currentPlaybackTime: number;
   setCurrentPlaybackTime: (time: number) => void;
+  handleAddComment?: (params: { comment: string }) => Promise<void>;
+  comments: TransformedComment[];
 }
 
 const ContentSection = ({
@@ -42,10 +47,22 @@ const ContentSection = ({
   isLiked,
   likesCount,
   medias,
+  currentPlaybackTime,
   setCurrentPlaybackTime,
+  handleAddComment,
+  comments,
 }: ContentSectionProps) => {
   const audioPlayerRef = useRef<MediaPlayerRef>(null);
   const videoPlayerRef = useRef<MediaPlayerRef>(null);
+  const [isCommenting, setIsCommenting] = useState(false);
+
+  // console.log("medias", comments);
+
+  const handleAddComment2 = async () => {
+    if (!handleAddComment) return;
+    console.log("handleAddComment", handleAddComment);
+  };
+  
   return (
     <article className="bg-orange-50 rounded-[18px] shadow-sm overflow-hidden">
       {/* Challenge header */}
@@ -182,7 +199,7 @@ const ContentSection = ({
 
       {/* Actions */}
       <div className="flex items-center gap-6 px-4 pb-4">
-        <button className="flex items-center gap-2" onClick={handleLike}>
+        <button className="flex items-center gap-2" onClick={() => handleLike()}>
           <Flame
             className={cn(
               "w-6 h-6 transition-colors",
@@ -193,10 +210,13 @@ const ContentSection = ({
           />
           <span className="text-gray-500">{likesCount}</span>
         </button>
-        <button className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors">
-          <MessageCircle className="w-6 h-6" />
-          <span>0</span>
+        <button
+          className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
+          onClick={() => setIsCommenting(true)}
+        >
+          <MessageCircle className="w-6 h-6" />{comments.length}
         </button>
+       
         <button
           className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
           onClick={handleShare}
@@ -204,6 +224,15 @@ const ContentSection = ({
           <Share2 className="w-6 h-6" />
         </button>
       </div>
+    
+          <CommentSectionChallenge
+            challengeId={challenge.id}
+            comments={comments || []}
+            currentPlaybackTime={currentPlaybackTime}
+            onCommentAdded={handleAddComment2}
+            onSeekToTime={setCurrentPlaybackTime}
+            isCommenting={isCommenting}
+          />
     </article>
   );
 };

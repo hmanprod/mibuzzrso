@@ -161,12 +161,12 @@ export default function ChallengesPage() {
                 </div>
                 <span className="flex items-center gap-2">
                   {/* <Avatar src={challenge.user?.avatar_url || undefined} stageName={challenge.user?.stage_name || undefined} size={28} /> */}
-                  <span>Publié par {challenge.user?.id ? (
+                  <span>Publié par {challenge.creator?.id ? (
                     <a
-                      href={`/profile/${challenge.user.id}`}
+                      href={`/profile/${challenge.creator.id}`}
                       className="text-primary hover:underline"
                     >
-                      {challenge.user?.stage_name || 'Unknown'}
+                      {challenge.creator?.profile?.stage_name || 'Unknown'}
                     </a>
                   ) : 'Unknown'}</span>
                 </span>

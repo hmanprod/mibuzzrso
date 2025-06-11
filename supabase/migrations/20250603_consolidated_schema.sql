@@ -197,96 +197,6 @@ CREATE TRIGGER update_profiles_beatmakers_updated_at
     EXECUTE FUNCTION update_profiles_beatmakers_updated_at();
 
 
--- Table des posts
-CREATE TABLE public.posts (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-    updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-    content text NULL,
-    user_id uuid NOT NULL,
-    post_type public.post_type NOT NULL DEFAULT 'post'::post_type,
-    challenge_id uuid NULL,
-    CONSTRAINT posts_pkey PRIMARY KEY (id),
-    CONSTRAINT posts_challenge_id_fkey FOREIGN KEY (challenge_id)
-        REFERENCES challenges (id),
-    CONSTRAINT posts_profiles_fkey FOREIGN KEY (user_id)
-        REFERENCES profiles (id)
-) TABLESPACE pg_default;
-
--- Index pour optimiser les recherches par utilisateur
-CREATE INDEX IF NOT EXISTS idx_posts_user_id
-    ON public.posts USING btree (user_id) TABLESPACE pg_default;
-
--- Trigger pour mettre à jour automatiquement updated_at
-CREATE TRIGGER update_posts_updated_at
-    BEFORE UPDATE ON posts
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Table de liaison entre posts et médias
-CREATE TABLE public.posts_medias (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-    post_id uuid NOT NULL,
-    media_id uuid NOT NULL,
-    position integer NOT NULL,
-    CONSTRAINT posts_medias_pkey PRIMARY KEY (id),
-    CONSTRAINT unique_post_media UNIQUE (post_id, media_id),
-    CONSTRAINT unique_post_media_position UNIQUE (post_id, "position"),
-    CONSTRAINT posts_medias_media_id_fkey FOREIGN KEY (media_id)
-        REFERENCES medias (id) ON DELETE CASCADE,
-    CONSTRAINT posts_medias_post_id_fkey FOREIGN KEY (post_id)
-        REFERENCES posts (id) ON DELETE CASCADE
-) TABLESPACE pg_default;
-
--- Index pour optimiser les recherches
-CREATE INDEX IF NOT EXISTS idx_posts_medias_post_id
-    ON public.posts_medias USING btree (post_id) TABLESPACE pg_default;
-
-CREATE INDEX IF NOT EXISTS idx_posts_medias_media_id
-    ON public.posts_medias USING btree (media_id) TABLESPACE pg_default;
-
--- Table des médias (audio/vidéo)
-CREATE TABLE public.medias (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
-    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-    updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-    media_type public.media_type NOT NULL,
-    media_url text NOT NULL,
-    media_public_id text NOT NULL,
-    duration numeric(10, 2) NULL,
-    title text NULL,
-    description text NULL,
-    user_id uuid NOT NULL,
-    media_cover_url text NOT NULL,
-    author text NULL,
-    CONSTRAINT medias_pkey PRIMARY KEY (id),
-    CONSTRAINT medias_user_id_fkey FOREIGN KEY (user_id)
-        REFERENCES auth.users (id) ON DELETE CASCADE,
-    CONSTRAINT valid_cover_url CHECK (media_cover_url ~ '^https://.*cloudinary\.com/.*$'::text),
-    CONSTRAINT valid_media CHECK (media_url ~ '^https://.*cloudinary\.com/.*$'::text)
-) TABLESPACE pg_default;
-
--- Index pour optimiser les recherches par utilisateur
-CREATE INDEX IF NOT EXISTS idx_medias_user_id
-    ON public.medias USING btree (user_id) TABLESPACE pg_default;
-
--- Trigger pour mettre à jour automatiquement updated_at
-CREATE TRIGGER update_medias_updated_at
-    BEFORE UPDATE ON medias
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Table de gestion des migrations
--- Cette table garde une trace de toutes les migrations qui ont été exécutées
-create table public._migrations (
-  id uuid not null default gen_random_uuid(),
-  name text not null,
-  executed_at timestamp with time zone not null default timezone('utc'::text, now()),
-  constraint _migrations_pkey primary key (id),
-  constraint _migrations_name_key unique (name)
-) TABLESPACE pg_default;
-
 -- Table de gestion des jurys pour les challenges
 -- Table principale des challenges
 CREATE TABLE public.challenges (
@@ -348,6 +258,96 @@ CREATE TRIGGER update_challenges_updated_at
     FOR EACH ROW 
     EXECUTE FUNCTION update_challenges_updated_at();
 
+-- Table des médias (audio/vidéo)
+CREATE TABLE public.medias (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+    media_type public.media_type NOT NULL,
+    media_url text NOT NULL,
+    media_public_id text NOT NULL,
+    duration numeric(10, 2) NULL,
+    title text NULL,
+    description text NULL,
+    user_id uuid NOT NULL,
+    media_cover_url text NOT NULL,
+    author text NULL,
+    CONSTRAINT medias_pkey PRIMARY KEY (id),
+    CONSTRAINT medias_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES auth.users (id) ON DELETE CASCADE,
+    CONSTRAINT valid_cover_url CHECK (media_cover_url ~ '^https://.*cloudinary\.com/.*$'::text),
+    CONSTRAINT valid_media CHECK (media_url ~ '^https://.*cloudinary\.com/.*$'::text)
+) TABLESPACE pg_default;
+
+-- Index pour optimiser les recherches par utilisateur
+CREATE INDEX IF NOT EXISTS idx_medias_user_id
+    ON public.medias USING btree (user_id) TABLESPACE pg_default;
+
+-- Trigger pour mettre à jour automatiquement updated_at
+CREATE TRIGGER update_medias_updated_at
+    BEFORE UPDATE ON medias
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Table des posts
+CREATE TABLE public.posts (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+    content text NULL,
+    user_id uuid NOT NULL,
+    post_type public.post_type NOT NULL DEFAULT 'post'::post_type,
+    challenge_id uuid NULL,
+    CONSTRAINT posts_pkey PRIMARY KEY (id),
+    CONSTRAINT posts_challenge_id_fkey FOREIGN KEY (challenge_id)
+        REFERENCES challenges (id),
+    CONSTRAINT posts_profiles_fkey FOREIGN KEY (user_id)
+        REFERENCES profiles (id)
+) TABLESPACE pg_default;
+
+-- Index pour optimiser les recherches par utilisateur
+CREATE INDEX IF NOT EXISTS idx_posts_user_id
+    ON public.posts USING btree (user_id) TABLESPACE pg_default;
+
+-- Trigger pour mettre à jour automatiquement updated_at
+CREATE TRIGGER update_posts_updated_at
+    BEFORE UPDATE ON posts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Table de liaison entre posts et médias
+CREATE TABLE public.posts_medias (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+    post_id uuid NOT NULL,
+    media_id uuid NOT NULL,
+    position integer NOT NULL,
+    CONSTRAINT posts_medias_pkey PRIMARY KEY (id),
+    CONSTRAINT unique_post_media UNIQUE (post_id, media_id),
+    CONSTRAINT unique_post_media_position UNIQUE (post_id, "position"),
+    CONSTRAINT posts_medias_media_id_fkey FOREIGN KEY (media_id)
+        REFERENCES medias (id) ON DELETE CASCADE,
+    CONSTRAINT posts_medias_post_id_fkey FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE CASCADE
+) TABLESPACE pg_default;
+
+-- Index pour optimiser les recherches
+CREATE INDEX IF NOT EXISTS idx_posts_medias_post_id
+    ON public.posts_medias USING btree (post_id) TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_posts_medias_media_id
+    ON public.posts_medias USING btree (media_id) TABLESPACE pg_default;
+
+-- Table de gestion des migrations
+-- Cette table garde une trace de toutes les migrations qui ont été exécutées
+create table public._migrations (
+  id uuid not null default gen_random_uuid(),
+  name text not null,
+  executed_at timestamp with time zone not null default timezone('utc'::text, now()),
+  constraint _migrations_pkey primary key (id),
+  constraint _migrations_name_key unique (name)
+) TABLESPACE pg_default;
+
 -- Table des commentaires
 CREATE TABLE public.comments (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -359,7 +359,9 @@ CREATE TABLE public.comments (
     media_id uuid NULL,
     parent_comment_id uuid NULL,
     post_id uuid NULL,
+    challenge_id uuid NULL,
     CONSTRAINT comments_pkey PRIMARY KEY (id),
+    CONSTRAINT comments_challenge_id_fkey FOREIGN KEY (challenge_id) REFERENCES public.challenges (id) ON DELETE CASCADE,
     CONSTRAINT comments_media_id_fkey FOREIGN KEY (media_id)
         REFERENCES medias (id) ON DELETE CASCADE,
     CONSTRAINT comments_parent_comment_id_fkey FOREIGN KEY (parent_comment_id)
