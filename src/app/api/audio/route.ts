@@ -30,8 +30,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'URL non autorisée.' }, { status: 403 });
     }
 
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://mibuzz-social.vercel.app',
+      'https://social.mibuzz.mg'
+    ];
+
     const referer = request.headers.get('referer');
-    if (!referer || !referer.startsWith('http://localhost:3000')) {
+    if (!referer || !allowedOrigins.some(origin => referer.startsWith(origin))) {
       return NextResponse.json({ error: 'Requête non autorisée.' }, { status: 403 });
     }
 
