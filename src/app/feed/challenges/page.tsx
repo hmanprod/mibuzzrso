@@ -24,8 +24,7 @@ export default function ChallengesPage() {
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const router = useRouter();
-  const { admin } = useSession()
-
+  const { admin } = useSession() 
 
   
 
@@ -161,12 +160,12 @@ export default function ChallengesPage() {
                 </div>
                 <span className="flex items-center gap-2">
                   {/* <Avatar src={challenge.user?.avatar_url || undefined} stageName={challenge.user?.stage_name || undefined} size={28} /> */}
-                  <span>Publié par {challenge.creator?.id ? (
+                  <span>Publié par {challenge.user?.id ? (
                     <a
-                      href={`/profile/${challenge.creator.id}`}
+                      href={`/profile/${challenge.user.id}`}
                       className="text-primary hover:underline"
                     >
-                      {challenge.creator?.profile?.stage_name || 'Unknown'}
+                      {challenge.user?.stage_name || 'Unknown'}
                     </a>
                   ) : 'Unknown'}</span>
                 </span>

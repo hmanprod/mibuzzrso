@@ -59,15 +59,12 @@ export default function ChallengePage() {
   // const [isParticipating, setIsParticipating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const {  profile } = useSession();
-  
 
- 
-
-  //  console.log("the challenge is ", challenge);
 
   useEffect(() => {
    
-  
+    
+    
     const fetchData = async () => {
       if (!challenge && !loading) {
         await loadData();
@@ -81,7 +78,7 @@ export default function ChallengePage() {
 
   useEffect(() => {
    
-  
+    
     const fetchData = async () => {
       if (!challenge && !loadingComments) {
         await loadChallengeComments();
@@ -94,7 +91,7 @@ export default function ChallengePage() {
   }, [challenge, loadingComments,  loadChallengeComments]);
 
   useEffect(() => {
-   
+
   
     const fetchData = async () => {
       if (!challenge && !loadingChallengeMedias) {
@@ -109,7 +106,8 @@ export default function ChallengePage() {
 
   useEffect(() => {
    
-  
+ 
+    
     const fetchData = async () => {
       if (!challenge && !loadingParticipation) {
         await loadParticipation();
@@ -123,7 +121,8 @@ export default function ChallengePage() {
 
   useEffect(() => {
    
-   
+ 
+
     const fetchData = async () => {
       if (!challenge && !loadingVotes) {
         await loadVotes();

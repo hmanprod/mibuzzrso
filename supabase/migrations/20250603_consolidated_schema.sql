@@ -31,10 +31,11 @@ CREATE TYPE public.media_type AS ENUM (
     'video'
 );
 
-CREATE TYPE public.post_type AS ENUM (
+CREATE OR REPLACE TYPE public.post_type AS ENUM (
     'post',
     'challenge',
-    'feedback'
+    'feedback',
+    'challenge_participation'
 );
 
 -- Fonctions utilitaires

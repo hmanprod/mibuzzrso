@@ -139,6 +139,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
                 }
               }}
               postId={media.post_id || ''}
+              audioDuration={media.duration}
             />
           ) : (
             <VideoPlayer

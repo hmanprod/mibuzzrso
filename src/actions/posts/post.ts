@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { addPointsForMedia } from '@/actions/pointss/actions'
+import { encryptUrl } from '@/utils/encryption.utils';
 
 
 interface CreatePostData {
@@ -61,7 +62,7 @@ export async function fetchPosts({
         p_limit: limit
       });
 
-      // console.log("the post data", postsData.medias);
+      // console.log("the post data", postsData);
 
     
 
@@ -239,6 +240,8 @@ export async function createPostWithMediaNew(data: CreatePostData) {
 
 export async function createPostWithMedia(data: CreatePostData) {
   const supabase = await createClient();
+
+  const encryptedUrl = encryptUrl(data.mediaUrl);
   
   try {
     // 1. Create media record
@@ -246,7 +249,7 @@ export async function createPostWithMedia(data: CreatePostData) {
       .from('medias')
       .insert({
         media_type: data.mediaType,
-        media_url: data.mediaUrl,
+        media_url: encryptedUrl,
         media_public_id: data.mediaPublicId,
         media_cover_url: data.mediaCoverUrl,
         title: data.title,

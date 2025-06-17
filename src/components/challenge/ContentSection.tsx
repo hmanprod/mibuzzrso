@@ -176,6 +176,7 @@ const ContentSection = ({
                       ref={audioPlayerRef}
                       downloadable={challenge.status !== "completed"}
                       coverUrl={media.media.media_cover_url}
+                      audioDuration={media.media.duration}
                     />
                   ) : (
                     <VideoPlayer

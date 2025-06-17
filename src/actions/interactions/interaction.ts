@@ -304,8 +304,8 @@ export async function togglePostLike(postId: string) {
       .eq('type', 'like')
       .single()
 
-    console.log("existingLike", existingLike);
-    console.log("likeCheckError for post", likeCheckError);
+    // console.log("existingLike", existingLike);
+    // console.log("likeCheckError for post", likeCheckError);
 
     if (likeCheckError && likeCheckError.code !== 'PGRST116') {
       console.error('Error checking existing like:', likeCheckError)
@@ -382,7 +382,7 @@ export async function togglePostLike(postId: string) {
 }
 
 export async function toggleChallengeLike(challengeId: string) {
-  console.log("challengeId", challengeId);
+  // console.log("challengeId", challengeId);
   const supabase = await createClient()
 
   try {
@@ -402,8 +402,8 @@ export async function toggleChallengeLike(challengeId: string) {
       .eq('type', 'like')
       .single()
 
-    console.log("existingLike", existingLike);
-    console.log("likeCheckError", likeCheckError);
+    // console.log("existingLike", existingLike);
+    // console.log("likeCheckError", likeCheckError);
 
     if (likeCheckError && likeCheckError.code !== 'PGRST116') {
       console.error('Error checking existing like:', likeCheckError)
@@ -473,6 +473,10 @@ export async function toggleChallengeLike(challengeId: string) {
 export async function markMediaAsRead(mediaId: string, postId: string) {
   const supabase = await createClient()
 
+  console.log("markMediaAsRead", mediaId);
+
+  const postIdToInsert = postId || null;
+
   try {
     // Validate mediaId
     if (!mediaId) {
@@ -493,7 +497,7 @@ export async function markMediaAsRead(mediaId: string, postId: string) {
       .insert({
         user_id: user.id,
         media_id: mediaId,
-        post_id: postId,
+        post_id: postIdToInsert,
         type: 'read'
       })
 

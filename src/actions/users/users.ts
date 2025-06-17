@@ -17,7 +17,7 @@ export async function searchUsers(query: string) {
       ].join(','))
       .limit(10);
 
-    console.log(users);
+    // console.log(users);
 
     if (error) {
       console.error('Error searching users:', error);

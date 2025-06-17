@@ -7,6 +7,7 @@ import {
   addPointsForMedia,
   addPointsForChallenge,
 } from "@/actions/pointss/actions";
+import { encryptUrl } from "@/utils/encryption.utils";
 
 // export interface Challenge {
 //   id: string;
@@ -84,14 +85,10 @@ export interface Challenge {
   user_id: string;
   is_liked?: boolean;
   likes: number;
-  creator: {
-    id: string;
-    profile: {
+  user: {
       id: string;
       stage_name?: string;
-      avatar_url?: string;
-      pseudo_url?: string;
-    };
+      avatar_url?: string; 
   };
 }
 
@@ -478,7 +475,10 @@ export async function createChallenge(data: CreateChallengeData) {
   const supabase = await createClient();
 
   try {
-    console.log("data", data);
+   const mediasToInsert = data.medias.map((media) => ({
+     ...media,
+     media_url: encryptUrl(media.url),
+   }));
 
     // 1. Create the challenge
     const { data: challenge, error: challengeError } = await supabase
@@ -531,7 +531,7 @@ export async function createChallenge(data: CreateChallengeData) {
       const { data: medias, error: mediasError } = await supabase
         .from("medias")
         .insert(
-          data.medias.map((media) => ({
+          mediasToInsert.map((media) => ({
             media_type: media.type as "audio" | "video",
             media_url: media.url,
             media_public_id: media.publicId,
@@ -726,7 +726,7 @@ export async function getChallengeComments(challengeId: string): Promise<Comment
       .eq("challenge_id", challengeId)
       .order("created_at", { ascending: false });
 
-    console.log("commentsData", commentsData);
+    // console.log("commentsData", commentsData);
 
 
     if (error) {
