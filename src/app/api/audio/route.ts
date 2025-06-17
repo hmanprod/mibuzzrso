@@ -29,10 +29,11 @@ export async function GET(request: NextRequest) {
     if (!audioUrl.startsWith('https://res.cloudinary.com/')) {
         return NextResponse.json({ error: 'URL non autorisée.' }, { status: 403 });
     }
+    
 
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://mibuzz-social.vercel.app',
+      'https://mibuzz-social.vercel.app',
       'https://social.mibuzz.mg'
     ];
 
