@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { formatTime } from '@/lib/utils';
 import { getMediaReadsCount, markMediaAsRead } from '@/actions/interactions/interaction';
 import { useSession } from '@/components/providers/SessionProvider';
+import { useMediaControl } from '@/components/providers/MediaControlProvider';
+
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -35,6 +37,7 @@ interface VideoPlayerRef {
 const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   ({ videoUrl, mediaId, postId, comments, onTimeUpdate, downloadable }, ref) => {
   const { user } = useSession();
+  const { register, unregister, play: notifyControllerPlay } = useMediaControl();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -49,6 +52,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
 
   // Track if we've already counted this session
   const hasTrackedThisSession = useRef(false);
+
+  const videoSrc = videoUrl ? `/api/video?url=${encodeURIComponent(videoUrl)}` : '';
+
 
   const handleMarkAsRead = useCallback(async () => {
     if (!user || !mediaId) return;
@@ -65,7 +71,17 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
     } catch (error) {
       console.error('Error marking media as read:', error);
     }
-  }, [user, mediaId, postId]);
+    }, [user, mediaId, postId]);
+
+  const pause = useCallback(() => {
+    videoRef.current?.pause();
+  }, []);
+
+  useEffect(() => {
+    if (!mediaId) return;
+    register(mediaId, pause);
+    return () => unregister(mediaId);
+  }, [mediaId, register, unregister, pause]);
 
   const fetchReadsCount = useCallback(async () => {
     if (!mediaId) return;
@@ -131,13 +147,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
   }, [controlsTimeoutRef]);
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      notifyControllerPlay(mediaId);
+      videoRef.current.play();
+    } else {
+      videoRef.current.pause();
     }
   };
 
@@ -209,11 +224,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
         setCurrentTime(time);
         
         // Start playing if not already playing
-        if (!isPlaying) {
+        if (videoRef.current.paused) {
+          notifyControllerPlay(mediaId);
           videoRef.current.play()
-            .then(() => {
-              setIsPlaying(true);
-            })
             .catch(error => {
               console.error('Error playing video:', error);
             });
@@ -232,10 +245,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
       {/* Vidéo */}
       <video
         ref={videoRef}
-        src={videoUrl}
+        src={videoSrc}
         className="w-full aspect-video"
         onClick={togglePlay}
         onTimeUpdate={handleTimeUpdate}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
       />
 
@@ -360,7 +375,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
               <span className="text-sm text-white">{readsCount} lectures</span>
               {downloadable && (
                 <a
-                  href={videoUrl}
+                  href={videoSrc}
                   download
                   className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors"
                   title="Télécharger la vidéo"
