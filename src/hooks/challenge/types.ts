@@ -1,3 +1,4 @@
+import { TransformedComment } from "@/actions/challenges/challenges";
 
 
 export interface MediaPlayerRef {
@@ -47,14 +48,18 @@ export interface ChallengeMedia {
   };
   comments?: Array<{
     id: string;
-    timestamp: number;
-    content: string;
-    author: {
-      id: string;
-      stage_name: string;
-      avatar_url: string | null;
-      username: string;
-    };
+  content: string;
+  timestamp: number;
+  created_at: string;
+  parent_comment_id?: string | null;
+  replies?: Comment[];
+  author: {
+    id: string;
+    stage_name: string;
+    avatar_url: string | null;
+    username: string;
+    pseudo_url: string;
+  };
   }>;
 }
 
@@ -90,6 +95,10 @@ export interface ChallengeVote {
   total_points: string;
   voters_count: string;
   average_points: string;
+  avg_technique?: string;
+  avg_originalite?: string;
+  avg_interpretation?: string;
+  jury_votes_count?: string;
 }
 
 export interface ChallengeState {
@@ -111,6 +120,12 @@ export interface ChallengeState {
   isFollowLoading: boolean;
   showVoteModal: boolean;
   showJuryVoteModal: boolean;
+  loadingParticipation: boolean;
+  loadingVotes: boolean;
+  loadingChallengeMedias: boolean;
+  isSubmittingComment: boolean;
+  loadingComments: boolean;
+  comments: TransformedComment[];
   setChallenge: (challenge: Challenge) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string) => void;
@@ -125,6 +140,10 @@ export interface ChallengeState {
   setIsFollowLoading: (isFollowLoading: boolean) => void;
   setShowVoteModal: (showVoteModal: boolean) => void;
   setShowJuryVoteModal: (showJuryVoteModal: boolean) => void;
+  setLoadingParticipation: (loadingParticipation: boolean) => void;
+  setLoadingVotes: (loadingVotes: boolean) => void;
+  setIsSubmittingComment: (isSubmitting: boolean) => void;
+  setLoadingChallengeMedias: (loadingChallengeMedias: boolean) => void;
 }
 
 export interface ChallengeActions {
@@ -141,5 +160,26 @@ export interface ChallengeActions {
   }) => Promise<void>;
   setSelectedParticipation: (participation: Participation | null) => void;
   handleUpdateParticipations: (participations: Participation[]) => void;
-  loadData: () => void;
+  loadData: () => Promise<void>;
+  loadParticipation: () => Promise<void>;
+  loadVotes: () => Promise<void>;
+  handleAddComment: (params: {
+    content: string;
+    mediaId: string;
+    parentCommentId?: string;
+    playbackTime?: number;
+  }) => Promise<void>;
+  loadChallengeMedias: () => Promise<void>;
+  loadChallengeComments: () => Promise<void>;
+}
+
+// In useChallenge
+export interface VoteData {
+  total_points: number;
+  voters_count: number;
+  average_points: number;
+  avg_technique?: number | null;
+  avg_originalite?: number | null;
+  avg_interpretation?: number | null;
+  jury_votes_count?: number;
 }

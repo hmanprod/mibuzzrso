@@ -2,6 +2,81 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Profile } from '@/types/database'
+import { revalidatePath } from 'next/cache';
+
+
+interface AddCommentArgs {
+  challengeId?: string;
+  mediaId?: string;
+  content: string;
+  parentCommentId?: string;
+  playbackTime?: number;
+  postId?: string; 
+}
+
+export async function addComment({
+  challengeId,
+  mediaId,
+  content,
+  parentCommentId,
+  playbackTime,
+  postId,
+}: AddCommentArgs) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'User not authenticated', data: null };
+  }
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({
+      challenge_id: challengeId,
+      media_id: mediaId,
+      content,
+      user_id: user.id,
+      parent_comment_id: parentCommentId,
+      player_time: playbackTime,
+      post_id: postId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding comment:', error);
+    return { error: 'Failed to add comment', data: null };
+  }
+  
+  if (challengeId) {
+    revalidatePath(`/feed/challenge/${challengeId}`);
+  }
+
+  return { error: null, data };
+}
+
+
+export async function addPointsForComment(commentId: string) {
+  const supabase = await createClient();
+   const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'User not authenticated' };
+  }
+
+  const { error } = await supabase.rpc('add_points_for_comment', {
+    p_comment_id: commentId,
+    p_user_id: user.id
+  });
+
+  if (error) {
+    console.error('Error adding points for comment:', error);
+    return { error: 'Failed to add points for comment' };
+  }
+
+  return { error: null };
+}
+
 
 export async function getFeedbackComments(feedbackId: string) {
   const supabase = await createClient()

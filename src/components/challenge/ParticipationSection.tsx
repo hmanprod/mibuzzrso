@@ -4,27 +4,34 @@ import { TimeAgo } from "../ui/TimeAgo";
 import AudioPlayer from "../feed/AudioPlayer";
 import VideoPlayer from "../feed/VideoPlayer";
 import { Challenge, Participation } from "@/hooks/challenge/types";
+import ChallengeSkeleton from "./ChallengeSkeleton";
 
 interface ParticipationSectionProps {
     participations: Participation[];
     challenge: Challenge;
     isJury: boolean;
-    votes: Record<string, { average_points: number; voters_count: number }>;
+    votes: Record<string, { average_points: number; voters_count: number; total_points: number }>;
     setSelectedParticipation: (participation: Participation) => void;
     setShowVoteModal: (show: boolean) => void;
     setShowJuryVoteModal: (show: boolean) => void;
+    loadingParticipation: boolean;
+    loadingVotes: boolean;
 }
 
 
 const ParticipationSection = ({
-    participations,
+    participations, 
     challenge,
     isJury,
     votes,
     setSelectedParticipation,
     setShowVoteModal,
     setShowJuryVoteModal,
+    loadingParticipation
 }: ParticipationSectionProps) => {
+  if (loadingParticipation) {
+    return <ChallengeSkeleton />;
+  }
     return (
         <div className="mt-8">
         <h3 className="text-lg font-semibold mb-4">
@@ -159,7 +166,7 @@ const ParticipationSection = ({
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-yellow-400" />
                             <span>
-                              {votes[participation.id].average_points}
+                              {votes[participation.id].total_points} points
                             </span>
                           </div>
                           <div>

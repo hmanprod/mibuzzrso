@@ -215,6 +215,7 @@ export default function FeedPost({ post }: FeedPostProps) {
             onTimeUpdate={(time) => setCurrentPlaybackTime(time)}
             ref={audioPlayerRef}
             coverUrl={mediaItem.media_cover_url}
+            audioDuration={mediaItem.duration}
           />
         ) : (
           <VideoPlayer

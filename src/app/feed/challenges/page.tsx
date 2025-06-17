@@ -24,8 +24,7 @@ export default function ChallengesPage() {
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const router = useRouter();
-  const { admin } = useSession()
-
+  const { admin } = useSession() 
 
   
 
