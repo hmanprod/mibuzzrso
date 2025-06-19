@@ -23,6 +23,7 @@ import { useRef, useState } from "react";
 import CommentSectionChallenge from "../feed/CommentSectionChallenge";
 import { TransformedComment } from "@/actions/challenges/challenges";
 
+
 interface ContentSectionProps {
   challenge: Challenge;
   isFollowLoading: boolean;

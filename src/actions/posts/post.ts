@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { addPointsForMedia } from '@/actions/pointss/actions'
-import { encryptUrl } from '@/utils/encryption.utils';
+import { encryptUrl, decryptUrl } from '@/utils/encryption.utils';
 
 
 interface CreatePostData {
@@ -66,7 +66,6 @@ export async function fetchPosts({
 
     
 
-
     if (error) {
       console.error('Error fetching posts:', error);
       return { error: 'Failed to load posts' };
@@ -76,8 +75,24 @@ export async function fetchPosts({
       return { posts: [], total: 0, page, limit };
     }
 
-    // console.log("the post data", postsData);
-    
+    // Decrypt media URLs before sending to the client
+    const decryptedPostsData = postsData.map((post: any) => {
+      if (post.medias && post.medias.length > 0) {
+        const decryptedMedias = post.medias.map((media: any) => {
+          if (media.media_url && !media.media_url.startsWith('https://res.cloudinary.com/')) {
+            try {
+              return { ...media, media_url: decryptUrl(media.media_url) };
+            } catch (e) {
+              console.error(`Failed to decrypt URL for media ${media.id}:`, e);
+              return media; // Return original on error
+            }
+          }
+          return media;
+        });
+        return { ...post, medias: decryptedMedias };
+      }
+      return post;
+    });
 
     // Get total count for pagination
     let total = 0;
@@ -118,7 +133,7 @@ export async function fetchPosts({
     }
 
     return {
-      posts: postsData,
+      posts: decryptedPostsData,
       total,
       page,
       limit
