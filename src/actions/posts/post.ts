@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { addPointsForMedia } from '@/actions/pointss/actions'
 import { encryptUrl, decryptUrl } from '@/utils/encryption.utils';
+import { PostDataResponse } from './type';
 
 
 interface CreatePostData {
@@ -62,7 +63,7 @@ export async function fetchPosts({
         p_limit: limit
       });
 
-      // console.log("the post data", postsData);
+      console.log("the post data", postsData);
 
     
 
@@ -76,14 +77,15 @@ export async function fetchPosts({
     }
 
     // Decrypt media URLs before sending to the client
-    const decryptedPostsData = postsData.map((post: any) => {
+    const decryptedPostsData = postsData.map((post: PostDataResponse) => {
+
       if (post.medias && post.medias.length > 0) {
-        const decryptedMedias = post.medias.map((media: any) => {
+        const decryptedMedias = post.medias.map((media) => {
           if (media.media_url && !media.media_url.startsWith('https://res.cloudinary.com/')) {
             try {
               return { ...media, media_url: decryptUrl(media.media_url) };
             } catch (e) {
-              console.error(`Failed to decrypt URL for media ${media.id}:`, e);
+              console.error(`Failed to decrypt URL for media $  {media.id}:`, e);
               return media; // Return original on error
             }
           }
