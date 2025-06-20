@@ -21,7 +21,7 @@ interface Profile {
   export interface PostDataResponse {
     id: string;
     content: string;
-    post_type: 'post' | 'challenge_participation';
+    post_type: 'post' | 'feedback' | 'challenge_participation';
     created_at: string;
     updated_at: string;
     user_id: string;
