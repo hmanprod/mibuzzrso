@@ -42,6 +42,9 @@ export default function ChallengesPage() {
       .finally(() => setLoading(false));
   }, [status]);
 
+  
+  
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
 
