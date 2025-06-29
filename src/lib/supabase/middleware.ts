@@ -46,7 +46,8 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/test-magic') &&
     !request.nextUrl.pathname.startsWith('/supabase-test') &&
     !request.nextUrl.pathname.startsWith('/export') &&
-    !request.nextUrl.pathname.startsWith('/insert')
+    !request.nextUrl.pathname.startsWith('/insert') &&
+    !request.nextUrl.pathname.startsWith('/loaderio-6da1c7f01c811b6637abc70a73501c04.txt')
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
