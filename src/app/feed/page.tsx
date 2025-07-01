@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { debounce } from 'lodash';
 import FeedPost from '@/components/feed/FeedPost';
 import FeedPostSkeleton from '@/components/feed/FeedPostSkeleton';
 import CreatePostDialog from '@/components/feed/CreatePostDialog';
@@ -8,37 +9,35 @@ import CreatePostBlock from '@/components/feed/CreatePostBlock';
 import type { ExtendedPost } from '@/types/database';
 import { getPosts } from '../../actions/posts/post';
 
-
 export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [posts, setPosts] = useState<ExtendedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1); // Utiliser useRef pour page
 
   const loadPosts = useCallback(async (isInitial: boolean = true) => {
-    // console.log('🔄 Loading posts...', isInitial ? 'Initial load' : 'Loading more');
+    // console.log('🔄 Loading posts...', isInitial ? 'Initial load' : `Loading page ${pageRef.current}`);
     try {
       if (isInitial) {
         setLoading(true);
         setError(null);
-        setPage(1);
+        pageRef.current = 1; // Réinitialiser la page pour le chargement initial
       } else {
         setLoadingMore(true);
       }
 
-      const result = await getPosts(isInitial ? 1 : page);
-      console.log("the post data", result);
-      
+      const result = await getPosts(pageRef.current);
+      // console.log('📡 API result:', result);
+
       if (result.error) {
         throw new Error(result.error);
       }
 
       const newPosts = result.posts || [];
-      // console.log('✨ Posts loaded:', newPosts.length);
-      // console.log('✨ Posts loaded:', newPosts);
+      // console.log('✨ Posts loaded:', newPosts.length, newPosts);
 
       if (isInitial) {
         setPosts(newPosts);
@@ -50,52 +49,53 @@ export default function Home() {
         });
       }
 
-      setHasMore(newPosts.length === 5);
+      // Déterminer s'il y a plus de posts à charger
+      setHasMore(newPosts.length === 5); // Ajuster selon la logique de l'API
       if (!isInitial && newPosts.length === 5) {
-        setPage(prev => prev + 1);
+        pageRef.current += 1; // Incrémenter la page
+        console.log('📈 Page incremented to:', pageRef.current);
       }
     } catch (err) {
       console.error('❌ Error loading posts:', err);
       setError('Failed to load posts. Please try again later.');
+      setHasMore(false); // Arrêter le chargement en cas d'erreur
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [page]);
+  }, []);
 
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
 
+  const handleScroll = useMemo(
+    () => debounce(() => {
+      if (loading || loadingMore || !hasMore) return;
 
-  // Function to handle infinite scroll
-  const handleScroll = useCallback(() => {
-    if (loading || loadingMore || !hasMore) return;
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.documentElement.scrollHeight - 800;
 
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const threshold = document.documentElement.scrollHeight - 800;
+      if (scrollPosition > threshold) {
+        console.log('🚀 Triggering load more, page:', pageRef.current);
+        loadPosts(false);
+      }
+    }, 200),
+    [loading, loadingMore, hasMore, loadPosts]
+  );
 
-    if (scrollPosition > threshold) {
-      loadPosts(false);
-    }
-  }, [loading, loadingMore, hasMore, loadPosts]);
-
-  // Add scroll event listener
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
   const handleCreatePost = async () => {
-      await loadPosts();
-      setShowCreatePost(false);
+    await loadPosts(); // Recharger les posts après création
+    setShowCreatePost(false);
   };
 
-
-  
-  
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FAFAFA]" aria-busy={loading || loadingMore}>
       <div className="max-w-[1300px] mx-auto">
         <div className="flex">
           <div className="flex flex-1">
@@ -115,14 +115,13 @@ export default function Home() {
               ) : (
                 <>
                   {posts.map((post) => (
-                    <FeedPost
-                      key={post.id}
-                      post={post}
-                    />
+                    <FeedPost key={post.id} post={post} />
                   ))}
-                  
+
                   {loadingMore && (
-                    <FeedPostSkeleton />
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <FeedPostSkeleton key={i} />
+                    ))
                   )}
 
                   {!hasMore && posts.length > 0 && (
@@ -142,6 +141,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  
   );
 }
