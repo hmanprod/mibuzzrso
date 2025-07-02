@@ -48,6 +48,8 @@ export async function addPointsForLike(mediaId: string) {
 
 export async function addPointsForMedia(mediaId: string) {
   const supabase = await createClient();
+
+  console.log("the media id is ", mediaId);
   
   try {
     // Récupérer l'ID de l'utilisateur qui a posté le media

@@ -111,6 +111,23 @@ interface AudioPlayerRef {
   seekToTime: (time: number) => void;
 }
 
+// Helper to validate image file extensions in a URL
+const hasValidImageExtension = (url: string): boolean => {
+  if (!url) return false;
+  // Common image file extensions
+  const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.bmp'];
+  try {
+    // Use URL object to safely parse URL and get pathname
+    const pathname = new URL(url).pathname.toLowerCase();
+    return validExtensions.some(ext => pathname.endsWith(ext));
+  } catch (e) {
+    // Fallback for relative paths or invalid URLs
+    console.error("Failed to validate image extension:", e);
+    const path = url.split('?')[0].toLowerCase();
+    return validExtensions.some(ext => path.endsWith(ext));
+  }
+};
+
 // --- Main Component ---
 const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
   ({ audioUrl, audioDuration, mediaId, postId, coverUrl, comments, onTimeUpdate, downloadable }, ref) => {
@@ -437,7 +454,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
 
         <div className="flex gap-4">
           <div className="relative w-24 h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
-            {coverUrl && !coverUrl.includes('cloudinary.com/video/upload/') && (
+                        {coverUrl && !coverUrl.includes('cloudinary.com/video/upload/') && hasValidImageExtension(coverUrl) && (
               <Image src={coverUrl} alt="Cover" fill className="object-cover" />
             )}
           </div>

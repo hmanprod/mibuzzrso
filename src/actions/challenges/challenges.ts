@@ -780,3 +780,43 @@ export async function getChallengeComments(challengeId: string): Promise<Comment
     return { error: "An unexpected error occurred" };
   }
 }
+
+export async function updateChallengeParticipationCount(challengeId: string) {
+  const supabase = await createClient();
+
+  try {
+    // Get the current count first
+    const { data: challenge, error: fetchError } = await supabase
+      .from("challenges")
+      .select("participants_count")
+      .eq("id", challengeId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching challenge count:", fetchError);
+      return { error: "Could not fetch challenge to update count." };
+    }
+
+    const current_count = challenge.participants_count || 0;
+    const new_count = current_count + 1;
+
+    // Update with the new incremented count
+    const { data, error } = await supabase
+      .from("challenges")
+      .update({ participants_count: new_count })
+      .eq("id", challengeId)
+      .select("participants_count")
+      .single();
+
+    if (error) {
+      console.error("Error updating challenge participation count:", error);
+      return { error: "Failed to update challenge participation count" };
+    }
+
+    return { count: data.participants_count };
+  } catch (error) {
+    console.error("Error in updateChallengeParticipationCount:", error);
+    return { error: "An unexpected error occurred" };
+  }
+}
+

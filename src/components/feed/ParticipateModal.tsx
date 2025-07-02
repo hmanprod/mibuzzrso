@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import { createPostWithMediaCP } from '@/actions/posts/post';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import ConfirmCancelDialog from './ConfirmCancelDialog';
+import { updateChallengeParticipationCount } from '@/actions/challenges/challenges';
 
 interface ParticipateModalProps {
   open: boolean;
@@ -173,6 +174,17 @@ export default function ParticipateModal({
         },
         challengeId
       );
+
+      const result = await updateChallengeParticipationCount(challengeId);
+      if (result.error) {
+        toast({
+          title: "Erreur",
+          description: result.error,
+          variant: "destructive"
+        });
+        return;
+      }
+      console.log("Challenge participation count updated to:", result.count);
 
       // Ne montrer le toast de succès que si on n'a pas annulé entre temps
       if (abortControllerRef.current) {
