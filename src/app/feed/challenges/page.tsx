@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getChallenges, Challenge } from "../../../actions/challenges/challenges";
 import { Users, Clock, ArrowRight, Music } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,30 +20,52 @@ function daysLeft(end_at: string) {
 export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<'active' | 'completed' | 'all'>('all');
   const [showCreateChallenge, setShowCreateChallenge] = useState(false);
   const router = useRouter();
   const { admin } = useSession() 
 
-  
-
-  useEffect(() => {
+  const fetchChallenges = useCallback(async (pageToLoad: number) => {
     setLoading(true);
-    getChallenges(1, 5, status)
-      .then((res) => {
-        if (res && res.challenges) {
-          setChallenges(res.challenges);
-        } else {
-          setError(res?.error || 'Unknown error');
-        }
-      })
-      .catch(() => setError('Failed to load challenges'))
-      .finally(() => setLoading(false));
+    const res = await getChallenges(pageToLoad, 5, status);
+    if (res && res.challenges) {
+      setChallenges(prev => pageToLoad === 1 ? res.challenges : [...prev, ...res.challenges]);
+      // Vérifie s'il reste des challenges à charger
+      setHasMore(res.challenges.length === 5);
+    } else {
+      setError(res?.error || 'Unknown error');
+      setHasMore(false);
+    }
+    setLoading(false);
   }, [status]);
 
-  
-  
+  // (Re)chargement initial quand le filtre change
+  useEffect(() => {
+    setPage(1);
+    setChallenges([]);
+    fetchChallenges(1);
+  }, [status, fetchChallenges]);
+
+  // Observer pour le scroll infini
+  useEffect(() => {
+    if (!hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchChallenges(page + 1);
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, page, fetchChallenges]);
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -177,6 +199,10 @@ export default function ChallengesPage() {
           </div>
         ))}
       </div>
+
+      {/* Loader sentinel */}
+      <div ref={loaderRef} className="h-8" />
+      {loading && page > 1 && <p className="text-center text-gray-500 py-4">Chargement...</p>}
 
       {/* Modal de création de challenge */}
       <CreateChallengeDialog

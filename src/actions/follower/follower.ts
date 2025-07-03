@@ -18,6 +18,8 @@ export async function followUser(followerId: string, followingId: string) {
       .eq('following_id', followingId)
       .maybeSingle();
 
+    // console.log("existingFollow", existingFollow);
+
     if (checkError) {
       console.error('Error checking follow status:', checkError)
       return { error: 'Failed to check follow status' }

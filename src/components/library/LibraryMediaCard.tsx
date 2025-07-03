@@ -68,19 +68,37 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
     fetchData();
   }, [media.id]);
 
-  const handleLike = async () => {
+  const handleLike = () => {
+    if (isLikeProcessing) return; // limite les double-clics très rapides
+    const newIsLiked = !isLiked;
+    // Mise à jour optimiste immédiate
+    setIsLiked(newIsLiked);
+    setLikesCount(prev => prev + (newIsLiked ? 1 : -1));
     setIsLikeProcessing(true);
-    try {
-      const result = await toggleMediaLike(media.id);
-      if (result.error) {
-        console.error('Error toggling like:', result.error);
-        return;
-      }
-      setIsLiked(!!result.liked);
-      setLikesCount(Number(result.likesCount) || 0);
-    } finally {
-      setIsLikeProcessing(false);
-    }
+
+    toggleMediaLike(media.id)
+      .then(({ error, liked, likesCount: serverLikes }) => {
+        if (error) {
+          // rollback si le serveur échoue
+          setIsLiked(!newIsLiked);
+          setLikesCount(prev => prev + (newIsLiked ? -1 : 1));
+          console.error('Error toggling like:', error);
+        } else {
+          // aligne avec la vérité serveur (au cas où le compteur diffère)
+          setIsLiked(!!liked);
+          if (serverLikes !== undefined) {
+            setLikesCount(Number(serverLikes) || 0);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error toggling like:', error);
+        setIsLiked(!newIsLiked);
+        setLikesCount(prev => prev + (newIsLiked ? -1 : 1));
+      })
+      .finally(() => {
+        setTimeout(() => setIsLikeProcessing(false), 400);
+      });
   };
 
   // const handlePlayClick = () => {
@@ -166,9 +184,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
           {/* Actions */}
           <div className="flex items-center gap-4 mt-2 ml-4 mb-3">
             <button
-              className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
-              onClick={handleLike}
-              disabled={isLikeProcessing}
+              className="flex items-center gap-2" onClick={handleLike}
             >
               <Flame
                 className={cn(

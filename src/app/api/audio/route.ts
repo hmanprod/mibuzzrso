@@ -3,70 +3,80 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Block direct navigation to the API endpoint.
+    // Empêcher l'accès direct via un navigateur
     const secFetchDest = request.headers.get('sec-fetch-dest');
     if (secFetchDest === 'document') {
       return NextResponse.json({ error: 'Accès direct non autorisé.' }, { status: 403 });
     }
 
     let audioUrl = request.nextUrl.searchParams.get('url');
-    console.log("audioUrl", audioUrl);
+    console.log("[API/AUDIO] audioUrl reçue :", audioUrl);
 
     if (!audioUrl) {
       return NextResponse.json({ error: 'URL du fichier audio manquante.' }, { status: 400 });
     }
-    
-    // identifier si l'url est deja encode
-    const encrypted = !audioUrl.startsWith('https://res.cloudinary.com/');
 
+    // Vérifier si l'URL est cryptée
+    const encrypted = !audioUrl.startsWith('https://res.cloudinary.com/');
     if (encrypted) {
-      console.log("L'audio est encrypte");
-      
+      console.log("[API/AUDIO] URL cryptée détectée, déchiffrement en cours...");
       audioUrl = decryptUrl(audioUrl);
     }
 
-    // Valider que l'URL provient d'une source de confiance (Cloudinary)
-    if (!audioUrl.startsWith('https://res.cloudinary.com/')) {
-        return NextResponse.json({ error: 'URL non autorisée.' }, { status: 403 });
+    // Validation : source autorisée
+    const cloudinaryBase = 'https://res.cloudinary.com/';
+    if (!audioUrl.startsWith(cloudinaryBase)) {
+      return NextResponse.json({ error: 'URL non autorisée.' }, { status: 403 });
     }
-    
 
+    // Vérifier que la requête vient d’un domaine autorisé
     const allowedOrigins = [
       'http://localhost:3000',
       'https://mibuzz-social.vercel.app',
       'https://social.mibuzz.mg'
     ];
-
     const referer = request.headers.get('referer');
     if (!referer || !allowedOrigins.some(origin => referer.startsWith(origin))) {
       return NextResponse.json({ error: 'Requête non autorisée.' }, { status: 403 });
     }
 
-    // Fetch the audio from the provided Cloudinary URL
-    // console.log(`[API/AUDIO] Tentative de récupération de l'URL : ${audioUrl}`);
-
-    const audioResponse = await fetch(audioUrl);
-
-    if (!audioResponse.ok) {
-      console.error(`[API/AUDIO] Échec de la récupération depuis Cloudinary. Statut : ${audioResponse.status}, Message : ${audioResponse.statusText}`);
-      const responseBody = await audioResponse.text();
-      console.error(`[API/AUDIO] Corps de la réponse d'erreur de Cloudinary : ${responseBody}`);
-      return NextResponse.json({ error: `Impossible de récupérer l'audio : ${audioResponse.statusText}` }, { status: audioResponse.status });
+    // ---- Construction de l'URL optimisée Cloudinary ----
+    const uploadIndex = audioUrl.indexOf('/upload/');
+    if (uploadIndex === -1) {
+      return NextResponse.json({ error: 'URL Cloudinary invalide.' }, { status: 400 });
     }
 
-    // Get the body as a ReadableStream
+    const prefix = audioUrl.substring(0, uploadIndex + 8); // jusqu’à "/upload/"
+    const suffix = audioUrl.substring(uploadIndex + 8);    // après "/upload/"
+
+    // Forcer l’extension .mp3
+    const parts = suffix.split('/');
+    const file = parts[parts.length - 1];
+    const fileParts = file.split('.');
+    fileParts[fileParts.length - 1] = 'mp3';
+    parts[parts.length - 1] = fileParts.join('.');
+    const newSuffix = parts.join('/');
+
+    // Finaliser l’URL avec transformation (f_mp3, 64k, attachement)
+    const modifiedAudioUrl = `${prefix}f_mp3,br_64k,fl_attachment/${newSuffix}`;
+    console.log("[API/AUDIO] URL Cloudinary transformée :", modifiedAudioUrl);
+
+    // Récupérer le fichier audio transformé
+    const audioResponse = await fetch(modifiedAudioUrl);
+    if (!audioResponse.ok) {
+      const body = await audioResponse.text();
+      console.error(`[API/AUDIO] Erreur Cloudinary ${audioResponse.status} : ${body}`);
+      return NextResponse.json({ error: `Erreur Cloudinary : ${audioResponse.statusText}` }, { status: audioResponse.status });
+    }
+
+    // Stream audio en réponse
     const audioStream = audioResponse.body;
 
-    // Set headers to suggest inline playback and prevent easy download
     const headers = new Headers();
-    headers.set('Content-Type', 'application/octet-stream');
+    headers.set('Content-Type', 'text');
     headers.set('Content-Disposition', 'inline');
     headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-   
-
-
-    // Return a new response with the stream and appropriate headers
     return new NextResponse(audioStream, {
       status: 200,
       headers: headers,
@@ -74,7 +84,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    console.error('[API/AUDIO] Erreur inattendue dans la route API :', error);
+    console.error('[API/AUDIO] Erreur serveur :', error);
     return NextResponse.json({ error: 'Erreur interne du serveur', details: errorMessage }, { status: 500 });
   }
 }

@@ -35,7 +35,7 @@ interface FeedPostProps {
   post: ExtendedPost;
 }
 
-export default function FeedPost({ post }: FeedPostProps) {
+export default function   FeedPost({ post }: FeedPostProps) {
   const { user } = useSession();
   const [feedPostState, feedPostActions] = useFeedPost(post);
   const {
