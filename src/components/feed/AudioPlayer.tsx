@@ -202,39 +202,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
       drawPlaceholderWaveform(waveformCanvasRef.current);
     }
   }, []);
-    const preloadAudio = useCallback(async () => {
-      if (isLoading || !audioUrl || audioBufferRef.current) return;
 
-      setIsLoading(true);
-      try {
-        if (!audioContextRef.current) {
-          const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-          audioContextRef.current = new AudioContextClass();
-          gainNodeRef.current = audioContextRef.current.createGain();
-        }
-        
-        const response = await fetch(`/api/audio?url=${encodeURIComponent(audioUrl)}`);
-        if (!response.ok) throw new Error(`Failed to fetch audio data: ${response.statusText}`);
-        const arrayBuffer = await response.arrayBuffer();
-        const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-
-        audioBufferRef.current = decodedBuffer;
-        setDuration(decodedBuffer.duration);
-
-        if (waveformCanvasRef.current) {
-          drawWaveform(waveformCanvasRef.current, decodedBuffer, 0);
-        }
-      } catch (error) {
-        console.error("Error preloading audio:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }, [audioUrl, isLoading]);
-
-    // Précharger l'audio dès le montage du composant
-    useEffect(() => {
-      preloadAudio();
-    }, [preloadAudio]);
 
     // --- Core Audio Functions (Web Audio API) ---
     const play = useCallback((resumeTime: number) => {
@@ -490,8 +458,8 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     return (
       <div className="rounded-[18px] p-4">
         {/* No <audio> tag needed! */}
-        <div className="flex items-center justify-between gap-4 mb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-y-2 mb-4">
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
             <button
               onClick={togglePlayPause}
               className="w-10 h-10 flex items-center justify-center bg-primary rounded-full hover:bg-primary/90 transition-colors"
@@ -528,14 +496,14 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
           )}
         </div>
 
-        <div className="flex gap-4">
-          <div className="relative w-24 h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
+        <div className="flex flex-row items-center gap-3">
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
                         {coverUrl && !coverUrl.includes('cloudinary.com/video/upload/') && hasValidImageExtension(coverUrl) && (
               <Image src={coverUrl} alt="Cover" fill className="object-cover" />
             )}
           </div>
 
-          <div className="relative flex-1 h-24 bg-gray-100 rounded-lg overflow-hidden color-black">
+          <div className="relative flex-1 h-16 sm:h-24 bg-gray-100 rounded-lg overflow-hidden color-black">
             <canvas 
               ref={waveformCanvasRef}
               onClick={handleSeek}

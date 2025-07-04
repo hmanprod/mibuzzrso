@@ -68,10 +68,10 @@ export default function ChallengesPage() {
   }, [hasMore, loading, page, fetchChallenges]);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto">
 
-      <h1 className="text-2xl font-bold text-gray-800 mb-4 px-4 sm:px-0 max-w-sm text-[32px] leading-[40px]">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
-      <div className="flex justify-between items-center gap-2">
+      <h1 className="text-2xl sm:text-[32px] font-bold text-gray-800 mb-4 max-w-sm break-words">Restez connecté pour suivre et participer aux challenges <span role="img" aria-label="megaphone">📢</span></h1>
+      <div className="flex flex-wrap justify-between items-center gap-y-4 gap-x-2 mb-4">
         {admin && (
           <button
             onClick={() => setShowCreateChallenge(true)}
@@ -81,7 +81,7 @@ export default function ChallengesPage() {
           </button>
         )}
         {/* Tabs */}
-        <div className="flex gap-0 mb-4 bg-gray-100 rounded-2xl p-1 w-fit">
+        <div className="flex flex-wrap justify-start gap-1 bg-gray-100 rounded-2xl p-1">
         {['all', 'active', 'completed'].map(tab => (
             <button
             key={tab}
@@ -159,13 +159,13 @@ export default function ChallengesPage() {
               {!challenge.visual_url && <Music size={48} strokeWidth={1.5} className="text-red-300" />}
             </div>
             {/* Content section */}
-            <div className="px-8 py-6 flex flex-col gap-2">
+            <div className="px-4 sm:px-8 py-6 flex flex-col gap-2">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                    <span className="font-bold text-md">
+                    <span className="font-bold text-md break-words">
                     {challenge.title}
                     </span>
-                    <p className="mt-2 text-sm text-gray-500">{challenge.description_short}</p>
+                    <p className="mt-2 text-sm text-gray-500 break-words">{challenge.description_short}</p>
                 </div>
                 <button className="rounded-lg bg-gray-50 border border-gray-200 p-2 hover:bg-gray-100 transition" onClick={() => router.push(`/feed/challenge/${challenge.id}`)}>
                   <ArrowRight size={20} />
@@ -174,7 +174,7 @@ export default function ChallengesPage() {
               {/* <div className="text-gray-700 mb-2">
                 {challenge.description_short}
               </div> */}
-              <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-sm text-gray-500 mt-4">
                 <div className="flex gap-6">
                   <span className="flex items-center gap-1">
                     <Clock size={16} /> {daysLeft(challenge.end_at)}

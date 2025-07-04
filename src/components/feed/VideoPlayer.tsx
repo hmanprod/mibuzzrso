@@ -318,8 +318,8 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
           </div>
 
           {/* Contrôles principaux */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-y-2">
+            <div className="flex items-center gap-x-2 sm:gap-x-4 flex-wrap">
               <button
                 onClick={togglePlay}
                 className="text-white hover:text-gray-200 transition-colors"
@@ -360,31 +360,33 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(
               </div>
             </div>
 
-            <button
-              onClick={toggleFullscreen}
-              className="text-white hover:text-gray-200 transition-colors"
-            >
-              {isFullscreen ? (
-                <Minimize className="w-6 h-6" />
-              ) : (
-                <Maximize className="w-6 h-6" />
-              )}
-            </button>
-            <div className="flex items-center gap-2">
-              <Eye className="w-6 h-6 text-white" />
-              <span className="text-sm text-white">{readsCount} lectures</span>
-              {downloadable && (
-                <a
-                  href={videoSrc}
-                  download
-                  className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors"
-                  title="Télécharger la vidéo"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-                  </svg>
-                </a>
-              )}
+            <div className="flex items-center gap-x-2 sm:gap-x-4 flex-wrap">
+              <button
+                onClick={toggleFullscreen}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-6 h-6" />
+                ) : (
+                  <Maximize className="w-6 h-6" />
+                )}
+              </button>
+              <div className="flex items-center gap-2">
+                <Eye className="w-6 h-6 text-white" />
+                <span className="text-sm text-white">{readsCount} lectures</span>
+                {downloadable && (
+                  <a
+                    href={videoSrc}
+                    download
+                    className="ml-2 p-2 rounded-full hover:bg-gray-200 transition-colors"
+                    title="Télécharger la vidéo"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                    </svg>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

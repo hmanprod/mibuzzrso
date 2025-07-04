@@ -84,7 +84,7 @@ export default function   FeedPost({ post }: FeedPostProps) {
   }
 
   return (
-    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4">
+    <article className="bg-white rounded-[18px] shadow-sm overflow-hidden mb-4 w-full">
       {/* Post header */}
       <div className="flex justify-between w-full items-center p-4">
         <div className="flex items-center w-full space-x-3 text-sm">
@@ -105,11 +105,12 @@ export default function   FeedPost({ post }: FeedPostProps) {
               </Link>
             )}
           </div>
-          <div className="flex flex-1 items-center justify-between space-x-2">
-            <div className="flex flex-1 items-center justify-between space-x-2">
+          <div className="flex flex-1 flex-col items-start gap-y-2 sm:flex-row sm:items-center sm:justify-between">
+           
+            <div className="flex-shrink-0">
               {post.profile.is_admin === true ? (
                 <div className="flex flex-col items-start">
-                  <h3 className="font-semibold text-[#2D2D2D]">
+                  <h3 className="font-semibold text-[#2D2D2D] break-all">
                     {post.profile.stage_name || "Unknown Artist"}
                   </h3>
                   <TimeAgo date={post.created_at} defaultLanguage="fr" />
@@ -117,39 +118,41 @@ export default function   FeedPost({ post }: FeedPostProps) {
               ) : (
                 <Link href={`/profile/${post.profile.pseudo_url}`}>
                   <div className="flex flex-col items-start">
-                    <h3 className="font-semibold text-[#2D2D2D]">
+                    <h3 className="font-semibold text-[#2D2D2D] break-all">
                       {post.profile.stage_name || "Unknown Artist"}
                     </h3>
                     <TimeAgo date={post.created_at} defaultLanguage="fr" />
                   </div>
                 </Link>
               )}
-              {!isAuthor && (
-                <button
-                  className={`flex items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
-                    post.is_followed
-                      ? "bg-gray-100 text-gray-500 cursor-default"
-                      : "bg-gray-800 text-white hover:bg-[#E63F3F]"
-                  }`}
-                  onClick={() =>
-                    !isFollowLoading && !post.is_followed && handleFollow()
-                  }
-                  disabled={isFollowLoading || post.is_followed}
-                >
-                  {post.is_followed ? (
-                    <>
-                      <Check className="w-3 h-3" />
-                      <span>Suivi</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-3 h-3" />
-                      <span>Suivre</span>
-                    </>
-                  )}
-                </button>
-              )}
             </div>
+            
+          
+            {!isAuthor && (
+              <button
+                className={`flex w-full justify-center sm:w-auto items-center gap-1 text-xs font-medium rounded-full px-3 py-1 transition-colors ${
+                  post.is_followed
+                    ? "bg-gray-100 text-gray-500 cursor-default"
+                    : "bg-gray-800 text-white hover:bg-[#E63F3F]"
+                }`}
+                onClick={() =>
+                  !isFollowLoading && !post.is_followed && handleFollow()
+                }
+                disabled={isFollowLoading || post.is_followed}
+              >
+                {post.is_followed ? (
+                  <>
+                    <Check className="w-3 h-3" />
+                    <span>Suivi</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3 h-3" />
+                    <span>Suivre</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
         {isAuthor && (
@@ -188,7 +191,7 @@ export default function   FeedPost({ post }: FeedPostProps) {
       {/* Title and description */}
       {mediaItem && (
         <div className="px-4">
-          <h2 className="text-base font-semibold text-[#2D2D2D]">
+          <h2 className="text-base font-semibold text-[#2D2D2D] break-all">
             {mediaItem?.title || "Untitled"}
           </h2>
         </div>
@@ -197,7 +200,7 @@ export default function   FeedPost({ post }: FeedPostProps) {
       {/* Title and description */}
       {post.content && (
         <div className="px-4 pb-4">
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm break-all">
             {renderContentWithLinks(post.content)}
           </p>
         </div>

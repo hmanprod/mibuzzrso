@@ -1,6 +1,7 @@
 import { Link, Star } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { TimeAgo } from "../ui/TimeAgo";
+import ReadMoreText from '../ui/ReadMoreText';
 import AudioPlayer from "../feed/AudioPlayer";
 import VideoPlayer from "../feed/VideoPlayer";
 import { Challenge, Participation } from "@/hooks/challenge/types";
@@ -17,7 +18,6 @@ interface ParticipationSectionProps {
     loadingParticipation: boolean;
     loadingVotes: boolean;
 }
-
 
 const ParticipationSection = ({
     participations, 
@@ -60,7 +60,7 @@ const ParticipationSection = ({
                     />
                   </Link>
                   <div>
-                    <h4 className="font-semibold text-sm">
+                    <h4 className="font-semibold text-gray-800 break-all">
                       {participation.profile.stage_name ||
                         participation.profile.username}
                     </h4>
@@ -71,9 +71,7 @@ const ParticipationSection = ({
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4">
-                  {participation.content}
-                </p>
+                <ReadMoreText text={participation.content} className="mb-4" />
 
                 {participation.medias?.map((mediaItem) => (
                   <div key={mediaItem.id} className="mt-4">

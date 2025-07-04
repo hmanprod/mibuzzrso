@@ -117,8 +117,8 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
 
       {/* Right side - Title, author, media player and actions */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1 ml-4">
+        <div className="flex items-center justify-between px-2 sm:px-4">
+          <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-base text-[#333333] truncate">{media.profile?.stage_name} {media.profile?.stage_name ? ' - ' : ''} {media.title || 'Untitled'}</h3>
             <p className="text-xs text-[#666666] truncate">publié par <span className='font-bold'>{media.profile?.stage_name || 'Utilisateur inconnu'}</span></p>
           </div>
@@ -182,7 +182,7 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
         </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-2 ml-4 mb-3">
+          <div className="flex items-center gap-4 mt-2 mb-3 px-2 sm:px-4">
             <button
               className="flex items-center gap-2" onClick={handleLike}
             >
