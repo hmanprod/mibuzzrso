@@ -37,6 +37,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Si l'utilisateur est connecté et essaie d'accéder à login/register, on le redirige vers le feed
+  if (user && (request.nextUrl.pathname.startsWith('/auth/login') || request.nextUrl.pathname.startsWith('/auth/register'))) {
+    return NextResponse.redirect(new URL('/feed', request.url))
+  }
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&

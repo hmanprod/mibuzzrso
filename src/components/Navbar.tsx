@@ -109,7 +109,7 @@ export default function Navbar({ className }: NavbarProps) {
               <div className="md:hidden">
                 <button
                   onClick={toggleDropdown}
-                  className="rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                  className="flex items-center justify-center rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                   aria-label="Toggle profile menu"
                 >
                   <Avatar
@@ -118,13 +118,14 @@ export default function Navbar({ className }: NavbarProps) {
                     size={32}
                     className="object-cover"
                   />
+                  
                 </button>
               </div>
 
               {/* Desktop: Points + Avatar */}
               <div className="hidden md:flex items-center gap-2 bg-primary/20 rounded-full p-1">
                 <div 
-                  className="flex items-end gap-0.5 bg-primary/80 rounded-full text-white p-1 pr-3 cursor-pointer hover:bg-primary transition-colors"
+                  className="flex items-center gap-0.5 bg-primary/80 rounded-full text-white p-1 pr-3 cursor-pointer hover:bg-primary transition-colors"
                   onClick={() => setShowPointsDialog(true)}
                 >
                     <PointsBadge points={profile?.points || 0} />
@@ -134,7 +135,7 @@ export default function Navbar({ className }: NavbarProps) {
                 </div>
                 <button
                   onClick={toggleDropdown}
-                  className="rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                  className="flex justify-center items-center rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
                   aria-label="Toggle profile menu"
                 >
                   <Avatar
@@ -143,6 +144,7 @@ export default function Navbar({ className }: NavbarProps) {
                     size={32}
                     className="object-cover"
                   />
+                  
                 </button>
               </div>
 

@@ -57,7 +57,7 @@ export default function LoginPage() {
       }
     } catch (e) {
       console.error(e);
-      setError('Une erreur est survenue lors de la connexion');
+      // setError('Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);
     }
