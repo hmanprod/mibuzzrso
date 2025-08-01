@@ -342,7 +342,7 @@ export default function Profile({ userProfile, userStats, isLoading }: ProfilePr
               <div className="flex gap-6 mt-4">
                 <div className="text-center">
                   <div className="text-xl font-bold">{userProfile.points || 0}</div>
-                  <div className="text-sm text-gray-600">Points</div>
+                  <div className="text-sm text-gray-600">Elo</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold">{userStats?.followersCount || 0}</div>

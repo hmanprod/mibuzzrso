@@ -142,25 +142,25 @@ export function useFeedPost(
 
     try {
       // Faire l'appel API en arrière-plan
-      const result = await togglePostLike(post.id);
+     await togglePostLike(post.id);
 
-      // En cas d'erreur, annuler l'optimistic update
-      if (result.error) {
-        setIsLiked(!newIsLiked);
-        handleSetLikesCount(!newIsLiked);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour le statut du like.",
-          variant: "destructive",
-        });
-      } else if (newIsLiked) {
-        // Si le like a réussi et que c'est un nouveau like, encourager l'utilisateur à commenter
-        toast({
-          title: "Vous aimez ce contenu !",
-          description: "Partagez votre avis en laissant un commentaire.",
-          variant: "default",
-        });
-      }
+      // // En cas d'erreur, annuler l'optimistic update
+      // if (result.error) {
+      //   setIsLiked(!newIsLiked);
+      //   handleSetLikesCount(!newIsLiked);
+      //   toast({
+      //     title: "Erreur",
+      //     description: "Impossible de mettre à jour le statut du like.",
+      //     variant: "destructive",
+      //   });
+      // } else if (newIsLiked) {
+      //   // Si le like a réussi et que c'est un nouveau like, encourager l'utilisateur à commenter
+      //   toast({
+      //     title: "Vous aimez ce contenu !",
+      //     description: "Partagez votre avis en laissant un commentaire.",
+      //     variant: "default",
+      //   });
+      // }
     } catch (error) {
       // En cas d'erreur, annuler l'optimistic update
       setIsLiked(!newIsLiked);

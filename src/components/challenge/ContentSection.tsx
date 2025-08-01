@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import CommentSectionChallenge from "../feed/CommentSectionChallenge";
 import { TransformedComment } from "@/actions/challenges/challenges";
+import ReadMoreText from "../ui/ReadMoreText";
 
 
 interface ContentSectionProps {
@@ -114,10 +115,10 @@ const ContentSection = ({
 
       {/* Title and description */}
       <div className="px-4 pb-4">
-        <h2 className="text-md font-semibold text-[#2D2D2D]">
+        <h2 className="text-md font-semibold text-[#2D2D2D] break-words">
           {challenge.title}
         </h2>
-        <p className="mt-1 text-sm text-gray-600">{challenge.description}</p>
+        {challenge.description && <ReadMoreText text={challenge.description} className="mt-1" />}
       </div>
 
       {/* Challenge info */}

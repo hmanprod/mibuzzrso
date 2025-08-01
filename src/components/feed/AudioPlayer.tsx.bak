@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import Link from 'next/link';
+import { decryptUrl } from '@/utils/encryption.utils';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { Avatar } from '../ui/Avatar';
@@ -12,60 +13,26 @@ import { getMediaReadsCount, markMediaAsRead } from '@/actions/interactions/inte
 import { useSession } from '@/components/providers/SessionProvider';
 import { useMediaControl } from '../providers/MediaControlProvider';
 
-// --- Helper functions for canvas rendering ---
-// Ensure the canvas' internal pixel buffer matches its displayed size for crisp rendering
-const resizeCanvas = (canvas: HTMLCanvasElement) => {
-  const dpr = window.devicePixelRatio || 1;
-  const displayWidth = canvas.clientWidth;
-  const displayHeight = canvas.clientHeight;
-  const needResize = canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr;
-  if (needResize) {
-    canvas.width = displayWidth * dpr;
-    canvas.height = displayHeight * dpr;
-  }
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.resetTransform?.(); // supported in most modern browsers
-    ctx.scale(dpr, dpr);
-  }
-};
-
 // --- Helper functions to draw the waveform on a canvas ---
 const drawPlaceholderWaveform = (canvas: HTMLCanvasElement) => {
-  resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-
   const width = canvas.width;
   const height = canvas.height;
+  const centerY = height / 2;
   ctx.clearRect(0, 0, width, height);
-
-  const barWidth = 2; // pixels
-  const gap = 1; // gap between bars
-  const bars = Math.floor(width / (barWidth + gap));
-
-  ctx.fillStyle = '#d1d5db'; // tailwind gray-300
-
-  let prev = Math.random();
-  for (let i = 0; i < bars; i++) {
-    // Smooth random by averaging with previous value for more natural shape
-    const rnd = (Math.random() + prev) / 2;
-    prev = rnd;
-    const amplitude = 0.15 + rnd * 0.85; // keep some minimum height
-    const barHeight = amplitude * (height / 2);
-    const x = i * (barWidth + gap);
-    const y = (height - barHeight * 2) / 2; // center vertically
-
-    ctx.fillRect(x, y, barWidth, barHeight * 2);
-  }
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#e5e7eb'; // Light grey for placeholder
+  ctx.beginPath();
+  ctx.moveTo(0, centerY);
+  ctx.lineTo(width, centerY);
+  ctx.stroke();
 };
-
 const drawWaveform = (
   canvas: HTMLCanvasElement,
   buffer: AudioBuffer,
   progress: number
 ) => {
-  resizeCanvas(canvas);
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -73,13 +40,6 @@ const drawWaveform = (
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
   const data = buffer.getChannelData(0);
-  // Normalise the waveform so that the loudest sample spans the full canvas height
-  let globalPeak = 0;
-  for (let i = 0; i < data.length; i++) {
-    const val = Math.abs(data[i]);
-    if (val > globalPeak) globalPeak = val;
-  }
-  const normalisationFactor = globalPeak > 0 ? 1 / globalPeak : 1;
   const step = Math.ceil(data.length / width);
   const amp = height / 2;
 
@@ -92,7 +52,7 @@ const drawWaveform = (
   for (let i = 0; i < width; i++) {
     let min = 1.0, max = -1.0;
     for (let j = 0; j < step; j++) {
-      const datum = data[i * step + j] * normalisationFactor;
+      const datum = data[i * step + j];
       if (datum < min) min = datum;
       if (datum > max) max = datum;
     }
@@ -112,7 +72,7 @@ const drawWaveform = (
     for (let i = 0; i < width; i++) {
       let min = 1.0, max = -1.0;
       for (let j = 0; j < step; j++) {
-        const datum = data[i * step + j] * normalisationFactor;
+        const datum = data[i * step + j];
         if (datum < min) min = datum;
         if (datum > max) max = datum;
       }
@@ -196,13 +156,39 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     const animationFrameRef = useRef<number | null>(null);
 
     // Précharger l'audio pour le waveform
-  // Dessiner un placeholder dès le montage pour éviter un canvas vide
-  useEffect(() => {
-    if (waveformCanvasRef.current) {
-      drawPlaceholderWaveform(waveformCanvasRef.current);
-    }
-  }, []);
+    const preloadAudio = useCallback(async () => {
 
+    // Précharger l'audio dès le montage du composant
+    useEffect(() => {
+      preloadAudio();
+    }, [preloadAudio]);
+      if (isLoading || !audioUrl || audioBufferRef.current) return;
+
+      setIsLoading(true);
+      try {
+        if (!audioContextRef.current) {
+          const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          audioContextRef.current = new AudioContextClass();
+          gainNodeRef.current = audioContextRef.current.createGain();
+        }
+        
+        const response = await fetch(`/api/audio?url=${encodeURIComponent(audioUrl)}`);
+        if (!response.ok) throw new Error(`Failed to fetch audio data: ${response.statusText}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const decodedBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+
+        audioBufferRef.current = decodedBuffer;
+        setDuration(decodedBuffer.duration);
+
+        if (waveformCanvasRef.current) {
+          drawWaveform(waveformCanvasRef.current, decodedBuffer, 0);
+        }
+      } catch (error) {
+        console.error("Error preloading audio:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, [audioUrl, isLoading]);
 
     // --- Core Audio Functions (Web Audio API) ---
     const play = useCallback((resumeTime: number) => {
@@ -458,8 +444,8 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     return (
       <div className="rounded-[18px] p-4">
         {/* No <audio> tag needed! */}
-        <div className="flex items-center justify-between flex-wrap gap-y-2 mb-4">
-          <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={togglePlayPause}
               className="w-10 h-10 flex items-center justify-center bg-primary rounded-full hover:bg-primary/90 transition-colors"
@@ -496,14 +482,14 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
           )}
         </div>
 
-        <div className="flex flex-row items-center gap-3">
-          <div className="relative w-16 h-16 sm:w-24 sm:h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
+        <div className="flex gap-4">
+          <div className="relative w-24 h-24 flex-shrink-0 bg-black/90 rounded-lg overflow-hidden">
                         {coverUrl && !coverUrl.includes('cloudinary.com/video/upload/') && hasValidImageExtension(coverUrl) && (
               <Image src={coverUrl} alt="Cover" fill className="object-cover" />
             )}
           </div>
 
-          <div className="relative flex-1 h-16 sm:h-24 bg-gray-100 rounded-lg overflow-hidden color-black">
+          <div className="relative flex-1 h-24 bg-gray-100 rounded-lg overflow-hidden color-black">
             <canvas 
               ref={waveformCanvasRef}
               onClick={handleSeek}

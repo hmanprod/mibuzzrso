@@ -31,7 +31,8 @@ export default function LoginPage() {
     try {
       const result = await signInWithGoogle();
       if (result.error) {
-        setError(result.error);
+        const msg = result.error === 'Invalid login credentials' ? 'Email ou mot de passe incorrect' : result.error;
+        setError(msg);
       } else if (result.url) {
         window.location.href = result.url;
       }
@@ -51,11 +52,12 @@ export default function LoginPage() {
     try {
       const result = await login(formData);
       if (result?.error) {
-        setError(result.error);
+        const msg = result.error === 'Invalid login credentials' ? 'Email ou mot de passe incorrect' : result.error;
+        setError(msg);
       }
     } catch (e) {
       console.error(e);
-      setError('Une erreur est survenue lors de la connexion');
+      // setError('Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);
     }

@@ -68,19 +68,37 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
     fetchData();
   }, [media.id]);
 
-  const handleLike = async () => {
+  const handleLike = () => {
+    if (isLikeProcessing) return; // limite les double-clics très rapides
+    const newIsLiked = !isLiked;
+    // Mise à jour optimiste immédiate
+    setIsLiked(newIsLiked);
+    setLikesCount(prev => prev + (newIsLiked ? 1 : -1));
     setIsLikeProcessing(true);
-    try {
-      const result = await toggleMediaLike(media.id);
-      if (result.error) {
-        console.error('Error toggling like:', result.error);
-        return;
-      }
-      setIsLiked(!!result.liked);
-      setLikesCount(Number(result.likesCount) || 0);
-    } finally {
-      setIsLikeProcessing(false);
-    }
+
+    toggleMediaLike(media.id)
+      .then(({ error, liked, likesCount: serverLikes }) => {
+        if (error) {
+          // rollback si le serveur échoue
+          setIsLiked(!newIsLiked);
+          setLikesCount(prev => prev + (newIsLiked ? -1 : 1));
+          console.error('Error toggling like:', error);
+        } else {
+          // aligne avec la vérité serveur (au cas où le compteur diffère)
+          setIsLiked(!!liked);
+          if (serverLikes !== undefined) {
+            setLikesCount(Number(serverLikes) || 0);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error toggling like:', error);
+        setIsLiked(!newIsLiked);
+        setLikesCount(prev => prev + (newIsLiked ? -1 : 1));
+      })
+      .finally(() => {
+        setTimeout(() => setIsLikeProcessing(false), 400);
+      });
   };
 
   // const handlePlayClick = () => {
@@ -99,8 +117,8 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
 
       {/* Right side - Title, author, media player and actions */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1 ml-4">
+        <div className="flex items-center justify-between px-2 sm:px-4">
+          <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-base text-[#333333] truncate">{media.profile?.stage_name} {media.profile?.stage_name ? ' - ' : ''} {media.title || 'Untitled'}</h3>
             <p className="text-xs text-[#666666] truncate">publié par <span className='font-bold'>{media.profile?.stage_name || 'Utilisateur inconnu'}</span></p>
           </div>
@@ -164,11 +182,9 @@ export default function LibraryMediaCard({ media }: LibraryMediaCardProps) {
         </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mt-2 ml-4 mb-3">
+          <div className="flex items-center gap-4 mt-2 mb-3 px-2 sm:px-4">
             <button
-              className={`flex items-center gap-2 ${isLikeProcessing ? 'opacity-50 cursor-wait' : ''}`}
-              onClick={handleLike}
-              disabled={isLikeProcessing}
+              className="flex items-center gap-2" onClick={handleLike}
             >
               <Flame
                 className={cn(

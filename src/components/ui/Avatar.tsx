@@ -10,30 +10,33 @@ interface AvatarProps {
 }
 
 export function Avatar({ src, stageName, fallback, size = 40, className }: AvatarProps) {
-  if (src) {
-    return (
-      <Image
-        src={src}
-        alt={`${stageName || 'User'}`}
-        width={size}
-        height={size}
-        className={cn('rounded-full object-cover', className)}
-      />
-    );
-  }
-
-  // If no image, show fallback or first letter of stage name on black background
   const initial = fallback || (stageName ? stageName.charAt(0).toUpperCase() : 'U');
 
   return (
     <div
       className={cn(
-        'flex items-center justify-center rounded-full bg-black text-white',
+        'relative inline-block overflow-hidden rounded-full',
         className
       )}
       style={{ width: size, height: size }}
     >
-      <span style={{ fontSize: `${size * 0.5}px` }}>{initial}</span>
+      {src ? (
+        <Image
+          src={src}
+          alt={`${stageName || 'User'}`}
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
+          priority={false}
+        />
+      ) : (
+        <div
+          className="flex items-center justify-center bg-black text-white rounded-full"
+          style={{ width: '100%', height: '100%' }}
+        >
+          <span style={{ fontSize: `${size * 0.5}px` }}>{initial}</span>
+        </div>
+      )}
     </div>
   );
 }

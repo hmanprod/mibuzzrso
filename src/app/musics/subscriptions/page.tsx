@@ -48,8 +48,8 @@ export default async function SubscriptionsPage() {
       
         <div className="flex">
           
-          <div className="flex flex-1">
-            <main className="flex-1 w-full mx-auto py-4 px-4 sm:px-0 max-w-7xl">
+          <div className="flex flex-1 min-w-0">
+            <main className="flex-1 w-full min-w-0 mx-auto py-4 px-4 sm:px-0 max-w-7xl">
               <div className="container mx-auto py-8 px-4 space-y-8">
                 <section>
                   <div className="flex items-center justify-between mb-6">

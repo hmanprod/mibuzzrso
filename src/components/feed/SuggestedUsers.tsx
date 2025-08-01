@@ -53,7 +53,7 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
       return;
     }
 
-    // Optimistic update - immediately show as followed
+    // Mettre l'état en loading avant l'appel API
     setFollowingStates(prev => ({
       ...prev,
       [userIdToFollow]: { loading: false, followed: true }
@@ -69,6 +69,7 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
     try {
       // Call the API in the background
       const result = await followUser(user.id, userIdToFollow);
+      console.log("result", result);
 
       if (result.error) {
         // If there's an error, revert the optimistic update
@@ -111,8 +112,9 @@ export default function SuggestedUsers({ users = [] }: SuggestedUsersProps) {
       </div>
       <div className="space-y-4">
         {suggestedUsers.map(user => {
-          const isFollowing = user.is_followed || false;
-          const isLoading = followingStates[user.user_id]?.loading || false;
+          const state = followingStates[user.user_id];
+          const isFollowing = state?.followed ?? user.is_followed ?? false;
+          const isLoading = state?.loading ?? false;
 
           return (
             <div key={user.user_id} className="flex items-center justify-between">

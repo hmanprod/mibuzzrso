@@ -3,52 +3,15 @@
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import { useCallback, useEffect, useState } from 'react';
-import { getTopInteractingUsers } from '../../actions/profile/profile';
-import RightSidebar from '@/components/RightSidebar';
+import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 
-interface TopUser {
-  user_id: string;
-  avatar_url: string | null;
-  stage_name: string;
-  interaction_score: number;
-  is_followed: boolean;
-  pseudo_url: string;
-}
-
-export default function MusicsLayout({
+export default function FeedbacksLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const loadTopUsers = useCallback(async () => {
-    try {
-      const { data, error } = await getTopInteractingUsers();
-      if (!error && data) {
-        const formattedUsers = data.map((user: TopUser) => ({
-          user_id: user.user_id,
-          avatar_url: user.avatar_url,
-          stage_name: user.stage_name,
-          interaction_score: user.interaction_score,
-          is_followed: user.is_followed,
-          pseudo_url: user.pseudo_url
-        }));
-        setTopUsers(formattedUsers.slice(0, 3));
-      } else if (error) {
-        console.error('Error in getTopInteractingUsers response:', error);
-      }
-    } catch (err) {
-      console.error('Error loading top users:', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTopUsers();
-  }, [loadTopUsers]);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -109,11 +72,6 @@ export default function MusicsLayout({
                 </button>
                 {children}
               </main>
-
-              <RightSidebar
-                className="w-[350px] flex-shrink-0 hidden lg:block"
-                suggestedUsers={topUsers}
-              />
             </div>
           </div>
         </div>
