@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Music, Video, Trash2, Upload, Loader2, AlertTriangle, ImagePlus } from 'lucide-react';
+import { Music, Trash2, Upload, Loader2, AlertTriangle, ImagePlus } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useCloudinaryUpload } from '@/hooks/useCloudinaryUpload';
 import { MediaType } from '@/types/database';
