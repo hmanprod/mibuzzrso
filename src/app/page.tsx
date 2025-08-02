@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -17,10 +18,15 @@ export default function Home() {
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50">
-      <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md w-full">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-700 font-medium mb-2">Loading...</p>
-        <p className="text-sm text-gray-500">Please wait while we prepare your experience</p>
+      <div className="text-center p-8  max-w-md w-full">
+        <Image
+          src="/images/logo_black.svg"
+          alt="MiBuzz Logo"
+          width={200}
+          height={80}
+          className="animate-pulse mx-auto mb-4"
+        />
+        <p className="text-sm text-gray-500">Ndao hizara mozika</p>
       </div>
     </div>
   );
