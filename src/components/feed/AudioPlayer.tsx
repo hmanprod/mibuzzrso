@@ -69,57 +69,50 @@ const drawWaveform = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Utiliser les dimensions réelles du canvas
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
   const data = buffer.getChannelData(0);
-  // Normalise the waveform so that the loudest sample spans the full canvas height
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const barWidth = 2;
+  const gap = 1;
+  const bars = Math.floor(width / (barWidth + gap));
+  const step = Math.ceil(data.length / bars);
+
+  // Find the global peak for normalization to make the waveform look consistent
   let globalPeak = 0;
   for (let i = 0; i < data.length; i++) {
     const val = Math.abs(data[i]);
     if (val > globalPeak) globalPeak = val;
   }
   const normalisationFactor = globalPeak > 0 ? 1 / globalPeak : 1;
-  const step = Math.ceil(data.length / width);
-  const amp = height / 2;
 
-  ctx.clearRect(0, 0, width, height);
-  
-  // Draw the background waveform (unplayed part)
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#6b7280'; // dark grey
-  ctx.beginPath();
-  for (let i = 0; i < width; i++) {
-    let min = 1.0, max = -1.0;
-    for (let j = 0; j < step; j++) {
-      const datum = data[i * step + j] * normalisationFactor;
-      if (datum < min) min = datum;
-      if (datum > max) max = datum;
+  const drawBars = (color: string) => {
+    ctx.fillStyle = color;
+    for (let i = 0; i < bars; i++) {
+      let max = 0;
+      const startIndex = i * step;
+      for (let j = 0; j < step; j++) {
+        const datum = Math.abs(data[startIndex + j] || 0) * normalisationFactor;
+        if (datum > max) max = datum;
+      }
+      const peakReductionFactor = 0.8; // Reduce peak to 80% of height for better visibility
+      const barHeight = Math.max(1, max * height * peakReductionFactor);
+      const x = i * (barWidth + gap);
+      const y = height - barHeight; // anchor at the bottom
+      ctx.fillRect(x, y, barWidth, barHeight);
     }
-    ctx.moveTo(i, amp * (1 + min));
-    ctx.lineTo(i, amp * (1 + max));
-  }
-  ctx.stroke();
+  };
+
+  // Draw the background waveform (unplayed part)
+  drawBars('#d1d5db'); // tailwind gray-300
 
   // Draw the progress waveform (played part)
   if (progress > 0) {
     ctx.save();
     ctx.rect(0, 0, width * progress, height);
     ctx.clip();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#000000'; // black
-    ctx.beginPath();
-    for (let i = 0; i < width; i++) {
-      let min = 1.0, max = -1.0;
-      for (let j = 0; j < step; j++) {
-        const datum = data[i * step + j] * normalisationFactor;
-        if (datum < min) min = datum;
-        if (datum > max) max = datum;
-      }
-      ctx.moveTo(i, amp * (1 + min));
-      ctx.lineTo(i, amp * (1 + max));
-    }
-    ctx.stroke();
+    drawBars('#4b5563'); // tailwind gray-600
     ctx.restore();
   }
 };
