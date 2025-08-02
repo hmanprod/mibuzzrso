@@ -6,98 +6,43 @@ interface LoadingAnimationProps {
 
 export const LoadingAnimation = ({ className }: LoadingAnimationProps) => {
   return (
-    <div className={cn('relative w-full h-full', className)}>
-      <div className="laudine-animation">
-        <div className="head" />
-        <div className="body">
-          <div className="note-1" />
-          <div className="note-2" />
-        </div>
+    <div
+      className={cn(
+        'flex items-center justify-center w-full h-full',
+        className,
+      )}
+    >
+      <div className="spinning-dots">
+        <div className="dot" />
+        <div className="dot" />
+        <div className="dot" />
       </div>
       <style jsx>{`
-        .laudine-animation {
-          width: 100%;
-          height: 100%;
+        .spinning-dots {
           display: flex;
-          flex-direction: column;
-          align-items: center;
-          animation: bounce 0.6s infinite alternate;
+          gap: 4px;
         }
-
-        .head {
-          width: 12px;
-          height: 12px;
-          background: white;
-          border-radius: 50%;
-          margin-bottom: 2px;
-        }
-
-        .body {
-          width: 10px;
-          height: 14px;
-          background: white;
-          border-radius: 6px;
-          position: relative;
-        }
-
-        .note-1, .note-2 {
-          position: absolute;
-          background: white;
-          border-radius: 2px;
-        }
-
-        .note-1 {
-          width: 8px;
-          height: 2px;
-          right: -8px;
-          top: 2px;
-          animation: float1 2s infinite;
-        }
-
-        .note-2 {
+        .dot {
           width: 6px;
-          height: 2px;
-          left: -6px;
-          bottom: 4px;
-          animation: float2 2s infinite 0.5s;
+          height: 6px;
+          background-color: white;
+          border-radius: 50%;
+          animation: spin 1.4s infinite ease-in-out both;
         }
-
-        @keyframes bounce {
-          from {
-            transform: translateY(0);
-          }
-          to {
-            transform: translateY(-2px);
-          }
+        .dot:nth-child(1) {
+          animation-delay: -0.32s;
         }
-
-        @keyframes float1 {
-          0% {
-            opacity: 0;
-            transform: translate(0, 0);
-          }
-          50% {
-            opacity: 1;
-            transform: translate(5px, -5px);
-          }
+        .dot:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+        @keyframes spin {
+          0%,
+          80%,
           100% {
-            opacity: 0;
-            transform: translate(10px, -10px);
+            transform: scale(0);
           }
-        }
-
-        @keyframes float2 {
-          0% {
-            opacity: 0;
-            transform: translate(0, 0);
-          }
-          50% {
-            opacity: 1;
-            transform: translate(-5px, -5px);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-10px, -10px);
+          40% {
+            transform: scale(1);
           }
         }
       `}</style>
