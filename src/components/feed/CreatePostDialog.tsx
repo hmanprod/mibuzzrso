@@ -121,7 +121,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
         }
         
         if (!mediaUpload.duration) {
-          throw new Error('Could not get media duration');
+          throw new Error('Impossible de récupérer la durée du média.');
         }
       }
 
@@ -268,7 +268,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                 <Music className="w-5 h-5" />
                 <span>Audio</span>
               </button>
-              <div className="flex flex-col">
+              {/* <div className="flex flex-col">
                 <button
                   type="button"
                   onClick={() => setActiveTab('video')}
@@ -284,7 +284,7 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                     Note : Les vidéos n&apos;apparaîtront pas dans la bibliothèque musicale
                   </p>
                 )}
-              </div>
+              </div> */}
             </div>
 
             {/* Media Upload and Preview */}
@@ -325,33 +325,18 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                 </div>
               ) : (
                 <div className="p-4 bg-gray-50 rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2 flex-1">
-                      <input
-                        type="text"
-                        value={author}
-                        onChange={(e) => setAuthor(e.target.value)}
-                        placeholder="Nom de l'artiste"
-                        className="w-[150px] px-3 py-2 border rounded-md"
-                      />
-                      <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder={`Titre ${activeTab === 'audio' ? 'audio' : 'vidéo'}`}
-                        className="w-full px-3 py-2 border rounded-md"
-                      />
+                  <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
-                        size="icon"
                         className="flex-shrink-0 border-dashed"
                         onClick={() => coverInputRef.current?.click()}
                       >
-                        <ImagePlus className="w-4 h-4" />
+                        <ImagePlus className="w-4 h-4 " /> 
+                        {!selectedCover && <span className='text-sm'>Ajouter une image de couverture</span>}
                       </Button>
-                    </div>
-                    <input
+
+                      <input
                       ref={coverInputRef}
                       type="file"
                       accept="image/*"
@@ -369,6 +354,26 @@ export default function CreatePostDialog({ open, onClose, onSubmit, postType = '
                         Cover sélectionné : {selectedCover.name}
                       </p>
                     )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-2 flex-1">
+                      <input
+                        type="text"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                        placeholder="Nom de l'artiste"
+                        className="w-[150px] px-3 py-2 border rounded-md"
+                      />
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder={`Titre ${activeTab === 'audio' ? 'audio' : 'vidéo'}`}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                      
+                    </div>
+                    
                   </div>
                   <p className="text-sm text-gray-500">
                     {selectedFile.name}
