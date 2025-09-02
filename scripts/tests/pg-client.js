@@ -4,7 +4,7 @@ const { Client } = require('pg');
 console.log(' Tentative de connexion à la base de données...');
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.POSTGRES_URI,
   ssl: {
     rejectUnauthorized: false
   },
