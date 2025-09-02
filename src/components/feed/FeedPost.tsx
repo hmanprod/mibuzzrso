@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {  useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Flame,
   MessageCircle,
@@ -10,6 +10,8 @@ import {
   Trash2,
   UserPlus,
   Check,
+  Download,
+  Loader2,
 } from "lucide-react";
 import type { ExtendedPost } from "@/types/database";
 import AudioPlayer from "./AudioPlayer";
@@ -37,6 +39,7 @@ interface FeedPostProps {
 
 export default function   FeedPost({ post }: FeedPostProps) {
   const { user } = useSession();
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [feedPostState, feedPostActions] = useFeedPost(post);
   const {
     isLiked,
@@ -233,29 +236,82 @@ export default function   FeedPost({ post }: FeedPostProps) {
         ))}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 px-4 pb-4">
-        {/* Like button */}
+      <div className="flex items-center justify-between gap-3 px-4 pb-4">
+        <div className="flex items-center gap-3">
+          {/* Like button */}
+          <button
+            className="flex items-center gap-2"
+            onClick={handleLike}
+            disabled={isLikeProcessing}
+          >
+            <Flame
+              className={cn(
+                "w-6 h-6 transition-colors",
+                isLiked
+                  ? "fill-orange-500 stroke-orange-500"
+                  : "stroke-gray-500 hover:stroke-gray-700"
+              )}
+            />
+            <span className="text-gray-500">{likesCount}</span>
+          </button>
+          <button
+            className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors"
+            onClick={() => setShowComments(!showComments)}
+          >
+            <MessageCircle className="w-6 h-6" />
+            <span>{commentsCount}</span>
+          </button>
+        </div>
         <button
-          className="flex items-center gap-2"
-          onClick={handleLike}
-          disabled={isLikeProcessing}
+          className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
+          title="Télécharger"
+          disabled={isDownloadLoading}
+          onClick={async () => {
+            if (mediaItem && !isDownloadLoading) {
+              setIsDownloadLoading(true);
+              try {
+                const response = await fetch(`/api/download/${mediaItem.id}?postId=${post.id}`);
+
+                if (!response.ok) {
+                  throw new Error('Download failed');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                // Get filename from response headers
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = mediaItem.title || 'download';
+
+                if (contentDisposition) {
+                  const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                  if (filenameMatch) {
+                    filename = filenameMatch[1];
+                  }
+                }
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+              } catch (error) {
+                console.error('Erreur lors du téléchargement:', error);
+                // Fallback to opening in new tab
+                window.open(mediaItem.media_url, '_blank');
+              } finally {
+                setIsDownloadLoading(false);
+              }
+            }
+          }}
         >
-          <Flame
-            className={cn(
-              "w-6 h-6 transition-colors",
-              isLiked
-                ? "fill-orange-500 stroke-orange-500"
-                : "stroke-gray-500 hover:stroke-gray-700"
-            )}
-          />
-          <span className="text-gray-500">{likesCount}</span>
-        </button>
-        <button
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors"
-          onClick={() => setShowComments(!showComments)}
-        >
-          <MessageCircle className="w-6 h-6" />
-          <span>{commentsCount}</span>
+          {isDownloadLoading ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <Download className="w-6 h-6" />
+          )}
         </button>
         {/* <button 
           className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"

@@ -1,5 +1,5 @@
 export type MediaType = 'audio' | 'video';
-export type InteractionType = 'like' | 'share' | 'save' | 'comment_like' | 'read';
+export type InteractionType = 'like' | 'share' | 'save' | 'comment_like' | 'read' | 'download' | 'comment';
 export type ChallengeType = 'remix' | 'live_mix';
 export type ChallengeStatus = 'draft' | 'active' | 'completed';
 
