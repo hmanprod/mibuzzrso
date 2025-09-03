@@ -31,7 +31,7 @@ CREATE TYPE public.media_type AS ENUM (
     'video'
 );
 
-CREATE OR REPLACE TYPE public.post_type AS ENUM (
+CREATE TYPE public.post_type AS ENUM (
     'post',
     'challenge',
     'feedback',
@@ -549,7 +549,8 @@ CREATE TYPE public.interaction_type AS ENUM (
     'save',
     'comment_like',
     'read',
-    'comment'
+    'comment',
+    'download'
 );
 
 -- Table des interactions utilisateurs (likes, partages, etc.)

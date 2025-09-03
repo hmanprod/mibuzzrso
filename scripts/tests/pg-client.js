@@ -15,6 +15,7 @@ const client = new Client({
 client.connect()
   .then(() => {
     console.log(' Connexion à la base de données établie avec succès');
+    process.exit(1);
   })
   .catch((err) => {
     console.error(' Erreur de connexion à la base de données:', err);
