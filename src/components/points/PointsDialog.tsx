@@ -74,10 +74,10 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
                   <span>Partage réseau social</span>
                   <span className="font-semibold text-primary">+5 pts</span>
                 </div> */}
-                <div className="flex justify-between items-center p-2">
+                {/* <div className="flex justify-between items-center p-2">
                   <span>Inviter un utilisateur actif</span>
-                  <span className="font-semibold text-primary">+10 pts</span>
-                </div>
+                  <span className="font-semibold text-primary">+4 pts</span>
+                </div> */}
               </div>
             </div>
           </div>

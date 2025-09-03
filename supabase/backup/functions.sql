@@ -23,7 +23,7 @@ AS $function$
     -- Ajouter les points
     PERFORM add_user_points(
         v_user_id,
-        5,
+        13,
         'Participation au challenge ' || p_challenge_id::TEXT
     );
 
@@ -51,8 +51,8 @@ AS $function$
             RETURN FALSE;
         END IF;
 
-        -- Vérifier si le commentaire fait plus de 10 caractères
-        IF LENGTH(TRIM(v_comment_text)) <= 10 THEN
+        -- Vérifier si le commentaire fait plus de 8 caractères
+        IF LENGTH(TRIM(v_comment_text)) <= 8 THEN
             RETURN FALSE;
         END IF;
 
@@ -77,7 +77,7 @@ AS $function$
         -- Ajouter les points au propriétaire du média via add_user_points
         PERFORM add_user_points(
             v_media_owner_id,
-            5,
+            3,
             'Commentaire reçu (ID: ' || p_comment_id::TEXT || ')'
         );
 
@@ -203,7 +203,7 @@ AS $function$
             -- Si l'insertion réussit, ajouter les points
             PERFORM add_user_points(
                 v_media_owner_id,
-                3,
+                2,
                 'Like unique reçu sur le média ' || p_media_id::TEXT
             );
 
