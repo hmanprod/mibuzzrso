@@ -19,30 +19,30 @@ export const LEVELS: UserLevel[] = [
   { 
     name: 'Argent', 
     minPoints: 50, 
-    maxPoints: 399,
+    maxPoints: 599,
     badge: '🥈', 
     color: 'text-gray-400',
     rewards: 'Accès aux challenges + sample pack offert'
   },
   { 
     name: 'Or', 
-    minPoints: 400, 
-    maxPoints: 799,
+    minPoints: 600, 
+    maxPoints: 1699,
     badge: '🥇', 
     color: 'text-yellow-400',
     rewards: 'Accès aux challenges privés + Plugin offert'
   },
   { 
     name: 'Maitre', 
-    minPoints: 800, 
-    maxPoints: 1799,
+    minPoints: 1700, 
+    maxPoints: 3799,
     badge: '🏆', 
     color: 'text-yellow-400',
     rewards: 'Télechargement illimit + Accès prioritaire aux événements mibuzz + goodies exclusifs'
   },
   { 
     name: 'Légende', 
-    minPoints: 1800, 
+    minPoints: 4800, 
     badge: '👑', 
     color: 'text-yellow-500',
     rewards: 'Collab spéciale + Interview + boost visibilité + gros lot symbolique + goodies exclusifs'
