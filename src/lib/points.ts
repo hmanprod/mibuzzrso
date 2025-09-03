@@ -22,7 +22,7 @@ export const LEVELS: UserLevel[] = [
     maxPoints: 399,
     badge: '🥈', 
     color: 'text-gray-400',
-    rewards: 'Accès à un sample pack ou défi privé'
+    rewards: 'Accès au défi privé + sample pack offert'
   },
   { 
     name: 'Or', 
@@ -30,7 +30,7 @@ export const LEVELS: UserLevel[] = [
     maxPoints: 799,
     badge: '🥇', 
     color: 'text-yellow-400',
-    rewards: 'Plugin, pack physique ou boost visibilité'
+    rewards: 'Plugin + boost visibilité offert'
   },
   { 
     name: 'Maitre', 
@@ -38,14 +38,14 @@ export const LEVELS: UserLevel[] = [
     maxPoints: 1799,
     badge: '🏆', 
     color: 'text-yellow-400',
-    rewards: 'Accès prioritaire aux événements + mentorat'
+    rewards: 'Accès prioritaire aux événements mibuzz + goodies exclusifs'
   },
   { 
     name: 'Légende', 
     minPoints: 1800, 
     badge: '👑', 
     color: 'text-yellow-500',
-    rewards: 'Interview, collab spéciale ou gros lot symbolique'
+    rewards: 'Interview, collab spéciale + gros lot symbolique'
   }
 ];
 

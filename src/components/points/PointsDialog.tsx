@@ -52,7 +52,7 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
                 </div>
                 <div className="flex justify-between items-center p-2">
                   <span>Participer à un challenge</span>
-                  <span className="font-semibold text-primary">+25 pts</span>
+                  <span className="font-semibold text-primary">+13 pts</span>
                 </div>
                 <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                   <span>Gagner un challenge</span>
@@ -60,11 +60,11 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
                 </div>
                 <div className="flex justify-between items-center p-2">
                   <span>Recevoir un like</span>
-                  <span className="font-semibold text-primary">+3 pts</span>
+                  <span className="font-semibold text-primary">+2 pts</span>
                 </div>
                 <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
                   <span>Recevoir un commentaire</span>
-                  <span className="font-semibold text-primary">+5 pts</span>
+                  <span className="font-semibold text-primary">+3 pts</span>
                 </div>
                 <div className="flex justify-between items-center p-2">
                   <span>Commenter une création</span>
@@ -76,7 +76,7 @@ export default function PointsDialog({ open, onClose, points }: PointsDialogProp
                 </div> */}
                 <div className="flex justify-between items-center p-2">
                   <span>Inviter un utilisateur actif</span>
-                  <span className="font-semibold text-primary">+20 pts</span>
+                  <span className="font-semibold text-primary">+10 pts</span>
                 </div>
               </div>
             </div>
