@@ -1,10 +1,14 @@
-import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import FeedPost from '@/components/feed/FeedPost';
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import FeedPost from '@/components/feed/FeedPost'
+import AnonymousNavbar from '@/components/navigation/AnonymousNavbar';
 
 interface PostPageProps {
   params: {
     id: string;
+  };
+  searchParams: {
+    ref?: string;
   };
 }
 
@@ -43,25 +47,53 @@ async function getPost(id: string) {
   return post;
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const post = await getPost(params.id);
+export default async function PostPage({ params, searchParams }: PostPageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  
+  const post = await getPost(resolvedParams.id);
 
   if (!post) {
     notFound();
   }
 
+  // Get user for referral processing and navbar display
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Process referral code if present
+  if (resolvedSearchParams.ref) {
+    console.log('🔗 Processing referral code:', resolvedSearchParams.ref);
+    console.log('👤 Visitor user ID:', user?.id);
+    
+    // Process the referral visit (this will award points to the sharer)
+    const { processReferralVisit } = await import('@/actions/sharing/referral');
+    const result = await processReferralVisit(resolvedSearchParams.ref, user?.id);
+    
+    console.log('📊 Referral result:', result);
+    
+    if (result.success) {
+      console.log('✅ Referral processed:', result.message);
+    } else {
+      console.log('❌ Referral failed:', result.message);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar conditionnel */}
+      {!user && (
+        <div className="sticky top-0 z-50">
+          <AnonymousNavbar />
+        </div>
+      )}
+      
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {post.title || 'Publication'}
           </h1>
-          <p className="text-gray-600">
-            Partagé par @{post.profiles?.username}
-          </p>
         </div>
-        
         <div className="bg-white rounded-lg shadow-sm">
           <FeedPost 
             post={post}
@@ -74,7 +106,8 @@ export default async function PostPage({ params }: PostPageProps) {
 }
 
 export async function generateMetadata({ params }: PostPageProps) {
-  const post = await getPost(params.id);
+  const resolvedParams = await params;
+  const post = await getPost(resolvedParams.id);
   
   if (!post) {
     return {

@@ -120,6 +120,17 @@ export function useFeedPost(
   };
 
   const handleLike = async () => {
+    // Vérifier si l'utilisateur est connecté
+    if (!user) {
+      // Afficher le prompt de connexion
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour liker cette publication",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Empêcher les clics multiples rapides
     if (isLikeProcessing) return;
 

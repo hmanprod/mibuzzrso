@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Share, Link, MessageCircle, Facebook, Twitter, Check, X, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Share, Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 interface ShareButtonProps {
   post: {
@@ -19,89 +20,59 @@ interface ShareButtonProps {
 export default function ShareButton({ post, mediaItem, className }: ShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/post/${post.id}`;
-  const shareText = `Découvrez "${post.title || 'cette création'}" sur MiBuzz 🎵`;
+  const [shareUrl, setShareUrl] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleCopyLink = async () => {
     try {
-      // Record the share action
-      const { recordShare } = await import('@/actions/interactions/interaction');
-      await recordShare(post.id, mediaItem?.id, 'copy_link');
+      setIsGenerating(true);
       
-      await navigator.clipboard.writeText(shareUrl);
+      // Get current user
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('User not authenticated');
+        setIsGenerating(false);
+        return;
+      }
+
+      // Generate referral code
+      const { generateReferralCode } = await import('@/actions/sharing/referral');
+      const referralCode = await generateReferralCode(user.id, post.id);
+      
+      // Create URL with referral code
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const urlWithReferral = `${baseUrl}/post/${post.id}?ref=${referralCode}`;
+      
+      await navigator.clipboard.writeText(urlWithReferral);
+      setShareUrl(urlWithReferral);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      setIsGenerating(false);
     } catch (error) {
       console.error('Erreur lors de la copie:', error);
-      // Fallback pour les navigateurs qui ne supportent pas clipboard
+      setIsGenerating(false);
+      
+      // Fallback without referral code
+      const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/post/${post.id}`;
       const textArea = document.createElement('textarea');
-      textArea.value = shareUrl;
+      textArea.value = fallbackUrl;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+      setShareUrl(fallbackUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const handleWhatsAppShare = async () => {
-    try {
-      // Record the share action
-      const { recordShare } = await import('@/actions/interactions/interaction');
-      await recordShare(post.id, mediaItem?.id, 'whatsapp');
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du partage:', error);
-    }
-    
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        // Record the share action
-        const { recordShare } = await import('@/actions/interactions/interaction');
-        await recordShare(post.id, mediaItem?.id, 'native');
-        
-        await navigator.share({
-          title: post.title || 'MiBuzz',
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        console.error('Erreur lors du partage natif:', error);
-      }
-    }
-  };
-
-  const handleFacebookShare = async () => {
-    try {
-      // Record the share action
-      const { recordShare } = await import('@/actions/interactions/interaction');
-      await recordShare(post.id, mediaItem?.id, 'facebook');
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du partage:', error);
-    }
-    
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-    window.open(facebookUrl, '_blank', 'width=600,height=400');
-  };
-
-  const handleTwitterShare = async () => {
-    try {
-      // Record the share action
-      const { recordShare } = await import('@/actions/interactions/interaction');
-      await recordShare(post.id, mediaItem?.id, 'twitter');
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du partage:', error);
-    }
-    
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(twitterUrl, '_blank', 'width=600,height=400');
-  };
+  // Initialize share URL on component mount
+  useEffect(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    setShareUrl(`${baseUrl}/post/${post.id}`);
+  }, [post.id]);
 
   return (
     <div className="relative">
@@ -126,96 +97,57 @@ export default function ShareButton({ post, mediaItem, className }: ShareButtonP
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu de partage */}
-          <div className="absolute bottom-full right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 z-20 min-w-[280px]">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-              <span className="font-semibold text-sm text-gray-800">Partager</span>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={16} />
-              </button>
+          {/* Menu de partage simplifié */}
+          <div className="absolute bottom-full right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-20 min-w-[320px]">
+            {/* Instruction */}
+            <div className="mb-4 text-center">
+              <p className="text-sm text-gray-600 mb-1">
+                Copiez ce lien et partagez-le sur vos réseaux sociaux
+              </p>
+              <p className="text-xs text-gray-500">
+                Facebook, Instagram, Twitter, WhatsApp, etc.
+              </p>
             </div>
 
-            {/* URL Display */}
-            <div className="mb-3 p-2 bg-gray-50 rounded-lg">
-              <div className="text-xs text-gray-500 mb-1">Lien à partager :</div>
-              <div className="text-xs text-gray-700 font-mono break-all">{shareUrl}</div>
-            </div>
-
-            {/* Options de partage */}
-            <div className="space-y-2">
-              {/* Copier le lien */}
+            {/* URL Display avec bouton de copie intégré */}
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500 mb-1">Lien du post :</div>
+                <div className="text-sm text-gray-700 font-mono truncate">{shareUrl}</div>
+              </div>
+              
+              {/* Bouton de copie */}
               <button
                 onClick={handleCopyLink}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                disabled={isGenerating}
+                className={cn(
+                  "flex-shrink-0 p-2 rounded-lg transition-all duration-200",
+                  isGenerating 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : copied 
+                      ? "bg-green-100 text-green-600" 
+                      : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                )}
+                title={isGenerating ? "Génération du code..." : copied ? "Lien copié !" : "Copier le lien"}
               >
-                <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
-                  copied ? "bg-green-100" : "bg-gray-100"
-                )}>
-                  {copied ? (
-                    <Check size={16} className="text-green-600" />
-                  ) : (
-                    <Copy size={16} className="text-gray-600" />
-                  )}
-                </div>
-                <span className={cn(
-                  "text-sm font-medium transition-colors",
-                  copied ? "text-green-700" : "text-gray-700"
-                )}>
-                  {copied ? 'Lien copié !' : 'Copier le lien'}
-                </span>
+                {isGenerating ? (
+                  <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full" />
+                ) : copied ? (
+                  <Check size={18} className="animate-pulse" />
+                ) : (
+                  <Copy size={18} />
+                )}
               </button>
-
-              {/* WhatsApp */}
-              <button
-                onClick={handleWhatsAppShare}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <MessageCircle size={16} className="text-green-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-700">WhatsApp</span>
-              </button>
-
-              {/* Facebook */}
-              <button
-                onClick={handleFacebookShare}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-xs">f</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">Facebook</span>
-              </button>
-
-              {/* Twitter */}
-              <button
-                onClick={handleTwitterShare}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center">
-                  <span className="text-sky-600 font-bold text-xs">𝕏</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">Twitter</span>
-              </button>
-
-              {/* Partage natif (mobile) */}
-              {typeof navigator !== 'undefined' && 'share' in navigator && (
-                <button
-                  onClick={handleNativeShare}
-                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Share size={16} className="text-purple-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Partager...</span>
-                </button>
-              )}
             </div>
+
+            {/* Message de confirmation */}
+            {copied && (
+              <div className="mt-2 text-center">
+                <span className="text-sm text-green-600 font-medium">
+                  ✓ Lien copié ! Vous pouvez maintenant le coller où vous voulez
+                </span>
+              </div>
+            )}
           </div>
         </>
       )}

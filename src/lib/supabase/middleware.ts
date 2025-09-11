@@ -52,6 +52,7 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/supabase-test') &&
     !request.nextUrl.pathname.startsWith('/export') &&
     !request.nextUrl.pathname.startsWith('/insert') &&
+    !request.nextUrl.pathname.startsWith('/post') &&
     !request.nextUrl.pathname.startsWith('/loaderio-b66900de35e8bcd02c84dcbdd4e0d246.txt')
   ) {
     // no user, potentially respond by redirecting the user to the login page

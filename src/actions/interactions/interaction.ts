@@ -468,11 +468,11 @@ async function addPointsForShare(userId: string) {
   const supabase = await createClient()
   
   try {
-    // Add 5 points for sharing
-    const { error } = await supabase.rpc('add_points', {
+    // Add 5 points for sharing using the correct function name
+    const { error } = await supabase.rpc('add_user_points', {
       p_user_id: userId,
       p_points: 5,
-      p_reason: 'share_post'
+      p_reason: 'Partage de post'
     })
 
     if (error) {
