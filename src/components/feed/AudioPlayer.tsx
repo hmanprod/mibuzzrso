@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import Link from 'next/link';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Download, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Avatar } from '../ui/Avatar';
 import { LoadingAnimation } from '../ui/LoadingAnimation';
@@ -177,6 +177,7 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
     const [currentTime, setCurrentTime] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [readsCount, setReadsCount] = useState(0);
+    const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
@@ -423,6 +424,49 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
       setIsMuted(newMuteState);
     };
 
+    const handleDownload = async () => {
+      if (!mediaId || !postId || isDownloadLoading) return;
+      
+      setIsDownloadLoading(true);
+      try {
+        // First record the download interaction and check limits
+        const { recordDownload } = await import('@/actions/interactions/interaction');
+        const result = await recordDownload(mediaId, postId);
+        
+        if (result.error) {
+          // Show user-friendly error message for limit reached
+          if (result.error === 'Daily download limit reached') {
+            console.log('Limite quotidienne atteinte:', `${result.used}/${result.limit}`);
+            alert(`Limite quotidienne atteinte (${result.used}/${result.limit}). Gagnez plus de points pour augmenter votre limite !`);
+            return;
+          } else {
+            console.error('Erreur lors de l\'enregistrement du téléchargement:', result.error);
+            alert('Erreur lors de l\'enregistrement du téléchargement');
+            return;
+          }
+        } else {
+          console.log(result.message);
+          if (result.limit && result.used) {
+            console.log(`Téléchargements utilisés: ${result.used}/${result.limit}`);
+          }
+        }
+
+        // Then proceed with actual download
+        const link = document.createElement('a');
+        link.href = audioUrl;
+        link.download = `download.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Erreur lors du téléchargement:', error);
+        // Fallback to opening in new tab
+        window.open(audioUrl, '_blank');
+      } finally {
+        setIsDownloadLoading(false);
+      }
+    };
+
     const seekToTime = useCallback((time: number) => {
       if (!audioBufferRef.current || duration === 0) return;
       
@@ -482,10 +526,19 @@ const AudioPlayer = forwardRef<AudioPlayerRef, AudioPlayerProps>(
           </div>
 
           {downloadable && (
-            <a href={audioUrl} download className="flex items-center gap-2 rounded-full hover:bg-gray-200 transition-colors text-sm" title="Télécharger l'audio">
+            <button
+              onClick={handleDownload}
+              disabled={isDownloadLoading}
+              className="flex items-center gap-2 rounded-full hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+              title="Télécharger l'audio"
+            >
+              {isDownloadLoading ? (
+                <Loader2 className="h-5 w-5 text-gray-700 animate-spin" />
+              ) : (
+                <Download className="h-5 w-5 text-gray-700" />
+              )}
               Télécharger
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
-            </a>
+            </button>
           )}
         </div>
 

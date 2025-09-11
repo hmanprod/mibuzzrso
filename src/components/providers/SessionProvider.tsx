@@ -84,12 +84,16 @@ export function SessionProvider({
     
     try {
       setIsLoading(true);
-      const { error } = await supabase
+      const { error, data: updatedProfile } = await supabase
         .from('profiles')
         .update(profileData)
         .eq('id', user.id);
 
-      if (error) throw error;
+      console.log("the updated profile is ", updatedProfile);
+      if(error){
+        console.error('Error updating profile:', error);
+        throw error;
+      }
 
       const { data } = await supabase
         .from('profiles')

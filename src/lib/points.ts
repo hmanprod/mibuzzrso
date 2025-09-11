@@ -84,3 +84,17 @@ export function getRankInfo(points: number) {
     color: level.color
   };
 }
+
+/**
+ * Vérifie si l'utilisateur a accès aux challenges (palier Argent minimum)
+ */
+export function hasAccessToChallenges(points: number): boolean {
+  return points >= 50; // Palier Argent minimum
+}
+
+/**
+ * Retourne le palier Argent pour l'affichage des restrictions
+ */
+export function getSilverLevel(): UserLevel {
+  return LEVELS.find(level => level.name === 'Argent') || LEVELS[1];
+}

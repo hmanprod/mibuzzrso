@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Flame,
+  Heart,
   MessageCircle,
+  Download,
+  Flame,
   MoreHorizontal,
   Pencil,
   Trash2,
   UserPlus,
   Check,
-  Download,
   Loader2,
 } from "lucide-react";
+import ShareButton from "./ShareButton";
 import type { ExtendedPost } from "@/types/database";
 import AudioPlayer from "./AudioPlayer";
 import VideoPlayer from "./VideoPlayer";
@@ -35,9 +37,10 @@ import { renderContentWithLinks } from "./RenderContentsWithLinks";
 
 interface FeedPostProps {
   post: ExtendedPost;
+  showFullContent?: boolean;
 }
 
-export default function   FeedPost({ post }: FeedPostProps) {
+export default function   FeedPost({ post, showFullContent = false }: FeedPostProps) {
   const { user } = useSession();
   const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [feedPostState, feedPostActions] = useFeedPost(post);
@@ -262,50 +265,78 @@ export default function   FeedPost({ post }: FeedPostProps) {
             <span>{commentsCount}</span>
           </button>
         </div>
-        <button
-          className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
-          title="Télécharger"
-          disabled={isDownloadLoading}
-          onClick={async () => {
-            if (mediaItem && !isDownloadLoading) {
-              setIsDownloadLoading(true);
-              try {
-                const response = await fetch(`/api/download/${mediaItem.id}?postId=${post.id}`);
-
-                if (!response.ok) {
-                  throw new Error('Download failed');
-                }
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-
-                // Get filename from response headers
-                const contentDisposition = response.headers.get('content-disposition');
-                let filename = mediaItem.title || 'download';
-
-                if (contentDisposition) {
-                  const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                  if (filenameMatch) {
-                    filename = filenameMatch[1];
+        <div className="flex items-center gap-3">
+          <ShareButton 
+            post={post} 
+            mediaItem={mediaItem}
+          />
+          <button
+            className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
+            title="Télécharger audio"
+            disabled={isDownloadLoading}
+            onClick={async () => {
+              if (mediaItem && !isDownloadLoading) {
+                setIsDownloadLoading(true);
+                try {
+                  // First record the download interaction and check limits
+                  const { recordDownload } = await import('@/actions/interactions/interaction');
+                  const result = await recordDownload(mediaItem.id, post.id);
+                  
+                  if (result.error) {
+                    // Show user-friendly error message for limit reached
+                    if (result.error === 'Daily download limit reached') {
+                      console.log('Limite quotidienne atteinte:', `${result.used}/${result.limit}`);
+                      alert(`Limite quotidienne atteinte (${result.used}/${result.limit}). Gagnez plus de points pour augmenter votre limite !`);
+                      return;
+                    } else {
+                      console.error('Erreur lors de l\'enregistrement du téléchargement:', result.error);
+                      alert('Erreur lors de l\'enregistrement du téléchargement');
+                      return;
+                    }
+                  } else {
+                    console.log(result.message);
+                    if (result.limit && result.used) {
+                      console.log(`Téléchargements utilisés: ${result.used}/${result.limit}`);
+                    }
                   }
-                }
 
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-              } catch (error) {
-                console.error('Erreur lors du téléchargement:', error);
-                // Fallback to opening in new tab
-                window.open(mediaItem.media_url, '_blank');
-              } finally {
-                setIsDownloadLoading(false);
+                  // Then proceed with actual download using the API to get proper file
+                  const response = await fetch(`/api/download/${mediaItem.id}?postId=${post.id}`);
+
+                  if (!response.ok) {
+                    throw new Error('Download failed');
+                  }
+
+                  const blob = await response.blob();
+                  const url = window.URL.createObjectURL(blob);
+
+                  // Get filename from response headers
+                  const contentDisposition = response.headers.get('content-disposition');
+                  let filename = mediaItem.title || 'download';
+
+                  if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) {
+                      filename = filenameMatch[1];
+                    }
+                  }
+
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = filename;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  window.URL.revokeObjectURL(url);
+                } catch (error) {
+                  console.error('Erreur lors du téléchargement:', error);
+                  // Fallback to opening in new tab
+                  window.open(mediaItem.media_url, '_blank');
+                } finally {
+                  setIsDownloadLoading(false);
+                }
               }
-            }
-          }}
+            }}
         >
           {isDownloadLoading ? (
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -313,12 +344,7 @@ export default function   FeedPost({ post }: FeedPostProps) {
             <Download className="w-6 h-6" />
           )}
         </button>
-        {/* <button 
-          className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
-          onClick={handleShare}
-        >
-          <Share2 className="w-6 h-6" />
-        </button> */}
+        </div>
       </div>
 
       {/* Comments section */}

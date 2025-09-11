@@ -79,17 +79,7 @@ export async function GET(
       }
     }
 
-    // Fetch the media file
-    const response = await fetch(mediaUrl);
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: 'Failed to fetch media file' },
-        { status: 500 }
-      );
-    }
-
-    // Check if download interaction already exists
+    // Check if download interaction already exists BEFORE fetching the file
     const { data: existingInteraction } = await supabase
       .from('interactions')
       .select('id')
@@ -111,10 +101,24 @@ export async function GET(
 
       if (interactionError) {
         console.error('Error inserting download interaction:', interactionError);
-        // Continue with download even if interaction fails
+        return NextResponse.json(
+          { error: 'Failed to record download' },
+          { status: 500 }
+        );
       }
+      console.log('Download interaction recorded successfully');
     } else {
       console.log('Download interaction already exists, skipping insertion');
+    }
+
+    // Fetch the media file
+    const response = await fetch(mediaUrl);
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: 'Failed to fetch media file' },
+        { status: 500 }
+      );
     }
 
     const contentType = response.headers.get('content-type') || 'application/octet-stream';

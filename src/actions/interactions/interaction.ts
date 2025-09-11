@@ -381,6 +381,291 @@ export async function togglePostLike(postId: string) {
   }
 }
 
+/**
+ * Record a share interaction for a post
+ */
+export async function recordShare(postId: string, mediaId?: string, shareType: string = 'link') {
+  const supabase = await createClient()
+
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Insert share interaction
+    const { error: insertError } = await supabase
+      .from('interactions')
+      .insert({
+        post_id: postId,
+        media_id: mediaId,
+        user_id: user.id,
+        type: 'share'
+      })
+
+    if (insertError) {
+      console.error('Error recording share:', insertError)
+      return { error: 'Failed to record share' }
+    }
+
+    // Add points for sharing
+    await addPointsForShare(user.id)
+
+    // Get updated share count
+    const { count, error: countError } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId)
+      .eq('type', 'share')
+
+    if (countError) {
+      console.error('Error counting shares:', countError)
+      return { error: 'Failed to count shares' }
+    }
+
+    return { 
+      success: true, 
+      message: 'Share recorded successfully',
+      shareCount: count || 0,
+      shareType
+    }
+  } catch (error) {
+    console.error('Error in recordShare:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get share count for a post
+ */
+export async function getShareCount(postId: string): Promise<number> {
+  const supabase = await createClient()
+
+  try {
+    const { count, error } = await supabase
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId)
+      .eq('type', 'share')
+
+    if (error) {
+      console.error('Error counting shares:', error)
+      return 0
+    }
+
+    return count || 0
+  } catch (error) {
+    console.error('Error in getShareCount:', error)
+    return 0
+  }
+}
+
+/**
+ * Add points for sharing a post
+ */
+async function addPointsForShare(userId: string) {
+  const supabase = await createClient()
+  
+  try {
+    // Add 5 points for sharing
+    const { error } = await supabase.rpc('add_points', {
+      p_user_id: userId,
+      p_points: 5,
+      p_reason: 'share_post'
+    })
+
+    if (error) {
+      console.error('Error adding points for share:', error)
+    } else {
+      console.log('Added 5 points for sharing post')
+    }
+  } catch (error) {
+    console.error('Error in addPointsForShare:', error)
+  }
+}
+
+// Helper function to get user's download limit based on points
+async function getUserDownloadLimit(supabase: any, userId: string): Promise<number> {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('points')
+    .eq('id', userId)
+    .single()
+
+  if (error || !profile) {
+    return 1 // Default limit
+  }
+
+  const points = profile.points || 0
+  
+  // Logic: 1 download by default, 3 if 4+ points, 6 if 10+ points
+  if (points >= 10) return 6
+  if (points >= 4) return 3
+  return 1
+}
+
+// Helper function to increment today's download count using PostgreSQL function
+async function incrementTodayDownloadCount(supabase: any, userId: string): Promise<{ success: boolean, newCount: number }> {
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+  
+  console.log('Incrementing daily download count for user:', userId, 'date:', today)
+  
+  // First try to get existing record
+  const { data: existing, error: fetchError } = await supabase
+    .from('daily_downloads')
+    .select('download_count')
+    .eq('user_id', userId)
+    .eq('download_date', today)
+    .single()
+
+  console.log('Existing record check:', { existing, fetchError })
+
+  if (existing && !fetchError) {
+    // Update existing record
+    console.log('Found existing record, updating from', existing.download_count, 'to', existing.download_count + 1)
+    const { data, error } = await supabase
+      .from('daily_downloads')
+      .update({ download_count: existing.download_count + 1 })
+      .eq('user_id', userId)
+      .eq('download_date', today)
+      .select('download_count')
+      .single()
+    
+    if (error) {
+      console.error('Error updating daily download count:', error)
+      return { success: false, newCount: 0 }
+    }
+    
+    console.log('Successfully updated daily download count:', data)
+    return { success: true, newCount: data.download_count }
+  } else {
+    // Insert new record (either no record found or error fetching)
+    console.log('No existing record found, creating new one with count 1')
+    const { data, error } = await supabase
+      .from('daily_downloads')
+      .insert({
+        user_id: userId,
+        download_date: today,
+        download_count: 1
+      })
+      .select('download_count')
+      .single()
+    
+    if (error) {
+      console.error('Error inserting daily download count:', error)
+      console.error('Insert error details:', JSON.stringify(error, null, 2))
+      return { success: false, newCount: 0 }
+    }
+    
+    console.log('Successfully inserted daily download record:', data)
+    return { success: true, newCount: data.download_count }
+  }
+}
+
+// Helper function to get today's download count (read-only)
+async function getTodayDownloadCount(supabase: any, userId: string): Promise<number> {
+  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+  
+  const { data: dailyRecord, error } = await supabase
+    .from('daily_downloads')
+    .select('download_count')
+    .eq('user_id', userId)
+    .eq('download_date', today)
+    .single()
+
+  console.log("dailyRecord", dailyRecord);
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching daily downloads:', error)
+    return 0
+  }
+
+  return dailyRecord ? dailyRecord.download_count : 0
+}
+
+export async function recordDownload(mediaId: string, postId: string) {
+  const supabase = await createClient()
+
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return { error: 'Authentication required' }
+    }
+
+    // Check if the user has already downloaded this specific media
+    const { data: existingDownload, error: downloadCheckError } = await supabase
+      .from('interactions')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('media_id', mediaId)
+      .eq('user_id', user.id)
+      .eq('type', 'download')
+      .single()
+
+    if (downloadCheckError && downloadCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing download:', downloadCheckError)
+      return { error: 'Failed to check existing download' }
+    }
+
+    // If already downloaded this specific media, allow re-download without counting
+    if (existingDownload) {
+      return { success: true, message: 'Media already downloaded (no limit applied)' }
+    }
+
+    // Get user's download limit and today's count
+    const [downloadLimit, todayCount] = await Promise.all([
+      getUserDownloadLimit(supabase, user.id),
+      getTodayDownloadCount(supabase, user.id)
+    ])
+
+    // Check if user has reached daily limit
+    if (todayCount >= downloadLimit) {
+      return { 
+        error: 'Daily download limit reached', 
+        limit: downloadLimit, 
+        used: todayCount 
+      }
+    }
+
+    // Record the download interaction
+    const { error: insertError } = await supabase
+      .from('interactions')
+      .insert({
+        post_id: postId,
+        media_id: mediaId,
+        user_id: user.id,
+        type: 'download'
+      })
+
+    if (insertError) {
+      console.error('Error recording download:', insertError)
+      return { error: 'Failed to record download' }
+    }
+
+    // Increment daily download count using UPSERT
+    const incrementResult = await incrementTodayDownloadCount(supabase, user.id)
+    
+    if (!incrementResult.success) {
+      console.error('Failed to increment daily download count')
+      // Don't fail the download for this, just log the error
+    }
+
+    return { 
+      success: true, 
+      message: 'Download recorded successfully',
+      limit: downloadLimit,
+      used: incrementResult.success ? incrementResult.newCount : todayCount + 1
+    }
+
+  } catch (error) {
+    console.error('Error in recordDownload:', error)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
 export async function toggleChallengeLike(challengeId: string) {
   // console.log("challengeId", challengeId);
   const supabase = await createClient()
