@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import FeedPost from '@/components/feed/FeedPost'
-import AnonymousNavbar from '@/components/navigation/AnonymousNavbar';
+import AnonymousNavbar from '@/components/navigation/AnonymousNavbar'
+import Navbar from '@/components/Navbar'
 
 interface PostPageProps {
   params: {
@@ -47,6 +48,35 @@ async function getPost(id: string) {
   return post;
 }
 
+async function getUserPosts(userId: string, excludePostId: string) {
+  const supabase = await createClient();
+  
+  // Get current user for interactions
+  const { data: { user } } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
+
+  // Get all posts from this user
+  const { data: postsData, error } = await supabase
+    .rpc('get_posts', {
+      p_current_user_id: currentUserId || null,
+      p_profile_id: userId,
+      p_post_type: 'feed',
+      p_liked_only: false,
+      p_media_type: null,
+      p_search_term: null,
+      p_page: 1,
+      p_limit: 20 // Limit to 20 other posts
+    });
+
+  if (error) {
+    console.error('Error fetching user posts:', error);
+    return [];
+  }
+
+  // Filter out the current post
+  return postsData?.filter((p: any) => p.id !== excludePostId) || [];
+}
+
 export default async function PostPage({ params, searchParams }: PostPageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
@@ -60,6 +90,9 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   // Get user for referral processing and navbar display
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Get other posts from the same user
+  const otherPosts = await getUserPosts(post.user_id, post.id);
 
   // Process referral code if present
   if (resolvedSearchParams.ref) {
@@ -82,7 +115,9 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar conditionnel */}
-      {!user && (
+      {user ? (
+        <Navbar />
+      ) : (
         <div className="sticky top-0 z-50">
           <AnonymousNavbar />
         </div>
@@ -94,12 +129,37 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
             {post.title || 'Publication'}
           </h1>
         </div>
-        <div className="bg-white rounded-lg shadow-sm">
+        
+        {/* Post principal */}
+        <div className="bg-white rounded-lg shadow-sm mb-8">
           <FeedPost 
             post={post}
             showFullContent={true}
           />
         </div>
+
+        {/* Autres posts de l'utilisateur */}
+        {otherPosts.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Autres publications de {post.stage_name || post.profiles?.stage_name}
+              </h2>
+              <div className="flex-1 h-px bg-gray-200"></div>
+            </div>
+            
+            <div className="space-y-4">
+              {otherPosts.map((otherPost: any) => (
+                <div key={otherPost.id} className="bg-white rounded-lg shadow-sm">
+                  <FeedPost 
+                    post={otherPost}
+                    showFullContent={false}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
