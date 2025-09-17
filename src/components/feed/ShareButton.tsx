@@ -21,57 +21,76 @@ export default function ShareButton({ post, mediaItem, className }: ShareButtonP
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isUrlReady, setIsUrlReady] = useState(false);
+
+  const copyToClipboard = async (text: string) => {
+    // Try modern clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        console.warn('Clipboard API failed, using fallback:', error);
+      }
+    }
+    
+    // Fallback method
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const result = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return result;
+    } catch (error) {
+      console.error('Fallback copy failed:', error);
+      return false;
+    }
+  };
 
   const handleCopyLink = async () => {
-    try {
-      setIsGenerating(true);
-      
-      // Get current user
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error('User not authenticated');
-        setIsGenerating(false);
-        return;
-      }
-
-      // Generate referral code
-      const { generateReferralCode } = await import('@/actions/sharing/referral');
-      const referralCode = await generateReferralCode(user.id, post.id);
-      
-      // Create URL with referral code
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      const urlWithReferral = `${baseUrl}/post/${post.id}?ref=${referralCode}`;
-      
-      await navigator.clipboard.writeText(urlWithReferral);
-      setShareUrl(urlWithReferral);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      setIsGenerating(false);
-    } catch (error) {
-      console.error('Erreur lors de la copie:', error);
-      setIsGenerating(false);
-      
-      // Fallback without referral code
-      const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/post/${post.id}`;
-      const textArea = document.createElement('textarea');
-      textArea.value = fallbackUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setShareUrl(fallbackUrl);
+    // Use pre-generated URL for instant copy
+    const success = await copyToClipboard(shareUrl);
+    
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  // Initialize share URL on component mount
+  // Pre-generate referral code on component mount for instant copy
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    setShareUrl(`${baseUrl}/post/${post.id}`);
+    const generateInitialUrl = async () => {
+      try {
+        setIsUrlReady(false);
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { generateReferralCode } = await import('@/actions/sharing/referral');
+          const referralCode = await generateReferralCode(user.id, post.id);
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const urlWithReferral = `${baseUrl}/post/${post.id}?ref=${referralCode}`;
+          setShareUrl(urlWithReferral);
+        } else {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          setShareUrl(`${baseUrl}/post/${post.id}`);
+        }
+        setIsUrlReady(true);
+      } catch (error) {
+        console.error('Error pre-generating referral code:', error);
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        setShareUrl(`${baseUrl}/post/${post.id}`);
+        setIsUrlReady(true);
+      }
+    };
+    
+    generateInitialUrl();
   }, [post.id]);
 
   return (
@@ -113,26 +132,31 @@ export default function ShareButton({ post, mediaItem, className }: ShareButtonP
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border">
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-gray-500 mb-1">Lien du post :</div>
-                <div className="text-sm text-gray-700 font-mono truncate">{shareUrl}</div>
+                {!isUrlReady ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <div className="text-sm text-gray-500">Génération du lien...</div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-700 font-mono truncate">{shareUrl}</div>
+                )}
               </div>
               
               {/* Bouton de copie */}
               <button
                 onClick={handleCopyLink}
-                disabled={isGenerating}
+                disabled={!isUrlReady}
                 className={cn(
                   "flex-shrink-0 p-2 rounded-lg transition-all duration-200",
-                  isGenerating 
+                  !isUrlReady
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : copied 
                       ? "bg-green-100 text-green-600" 
                       : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 )}
-                title={isGenerating ? "Génération du code..." : copied ? "Lien copié !" : "Copier le lien"}
+                title={!isUrlReady ? "Génération en cours..." : copied ? "Lien copié !" : "Copier le lien"}
               >
-                {isGenerating ? (
-                  <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full" />
-                ) : copied ? (
+                {copied ? (
                   <Check size={18} className="animate-pulse" />
                 ) : (
                   <Copy size={18} />
