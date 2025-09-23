@@ -3,14 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import FeedPost from '@/components/feed/FeedPost'
 import AnonymousNavbar from '@/components/navigation/AnonymousNavbar'
 import Navbar from '@/components/Navbar'
+import type { ExtendedPost } from '@/types/database'
 
 interface PostPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     ref?: string;
-  };
+  }>;
 }
 
 async function getPost(id: string) {
@@ -39,7 +40,7 @@ async function getPost(id: string) {
   }
 
   // Find the specific post by ID
-  const post = postsData?.find((p: any) => p.id === id);
+  const post = postsData?.find((p: ExtendedPost) => p.id === id);
   
   if (!post) {
     return null;
@@ -74,7 +75,7 @@ async function getUserPosts(userId: string, excludePostId: string) {
   }
 
   // Filter out the current post
-  return postsData?.filter((p: any) => p.id !== excludePostId) || [];
+  return postsData?.filter((p: ExtendedPost) => p.id !== excludePostId) || [];
 }
 
 export default async function PostPage({ params, searchParams }: PostPageProps) {
@@ -149,7 +150,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
             </div>
             
             <div className="space-y-4">
-              {otherPosts.map((otherPost: any) => (
+              {otherPosts.map((otherPost: ExtendedPost) => (
                 <div key={otherPost.id} className="bg-white rounded-lg shadow-sm">
                   <FeedPost 
                     post={otherPost}

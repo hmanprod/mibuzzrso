@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
-  Heart,
   MessageCircle,
   Download,
   Flame,
@@ -40,7 +39,7 @@ interface FeedPostProps {
   showFullContent?: boolean;
 }
 
-export default function   FeedPost({ post, showFullContent = false }: FeedPostProps) {
+export default function FeedPost({ post }: FeedPostProps) {
   const { user } = useSession();
   const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [feedPostState, feedPostActions] = useFeedPost(post);
@@ -266,9 +265,8 @@ export default function   FeedPost({ post, showFullContent = false }: FeedPostPr
           </button>
         </div>
         <div className="flex items-center gap-3">
-          <ShareButton 
-            post={post} 
-            mediaItem={mediaItem}
+          <ShareButton
+            post={post}
           />
           <button
             className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"

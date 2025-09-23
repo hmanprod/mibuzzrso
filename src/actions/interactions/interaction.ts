@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import type { Profile } from '@/types/database'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { addPointsForLike } from '@/actions/pointss/actions'
 
 export async function getCommentsByMediaId(mediaId: string) {
@@ -486,7 +487,7 @@ async function addPointsForShare(userId: string) {
 }
 
 // Helper function to get user's download limit based on points
-async function getUserDownloadLimit(supabase: any, userId: string): Promise<number> {
+async function getUserDownloadLimit(supabase: SupabaseClient, userId: string): Promise<number> {
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('points')
@@ -506,7 +507,7 @@ async function getUserDownloadLimit(supabase: any, userId: string): Promise<numb
 }
 
 // Helper function to increment today's download count using PostgreSQL function
-async function incrementTodayDownloadCount(supabase: any, userId: string): Promise<{ success: boolean, newCount: number }> {
+async function incrementTodayDownloadCount(supabase: SupabaseClient, userId: string): Promise<{ success: boolean, newCount: number }> {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
   
   console.log('Incrementing daily download count for user:', userId, 'date:', today)
@@ -564,7 +565,7 @@ async function incrementTodayDownloadCount(supabase: any, userId: string): Promi
 }
 
 // Helper function to get today's download count (read-only)
-async function getTodayDownloadCount(supabase: any, userId: string): Promise<number> {
+async function getTodayDownloadCount(supabase: SupabaseClient, userId: string): Promise<number> {
   const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
   
   const { data: dailyRecord, error } = await supabase

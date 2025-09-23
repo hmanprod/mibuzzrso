@@ -11,13 +11,10 @@ interface ShareButtonProps {
     title?: string;
     description?: string;
   };
-  mediaItem?: {
-    id: string;
-  };
   className?: string;
 }
 
-export default function ShareButton({ post, mediaItem, className }: ShareButtonProps) {
+export default function ShareButton({ post, className }: ShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState('');

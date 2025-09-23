@@ -34,7 +34,7 @@ export default function AnonymousNavbar() {
             </Button>
             <Button size="sm" asChild>
               <Link href="/auth/register">
-                S'inscrire
+                S{`'`}inscrire
               </Link>
             </Button>
           </nav>

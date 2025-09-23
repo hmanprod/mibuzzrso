@@ -9,7 +9,6 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import { useSession } from "@/components/providers/SessionProvider";
 import CreateChallengeDialog from "@/components/feed/CreateChallengeDialog";
 import ChallengeAccessRestriction from "@/components/challenges/ChallengeAccessRestriction";
-import { hasAccessToChallenges } from "@/lib/points";
 
 
 function daysLeft(end_at: string) {
@@ -71,7 +70,6 @@ export default function ChallengesPage() {
 
   // Vérifier l'accès aux challenges basé sur les points
   const userPoints = profile?.points || 0;
-  const hasAccess = hasAccessToChallenges(userPoints);
 
   // Contenu principal des challenges
   const challengesContent = (
