@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Share, Check, Copy } from 'lucide-react';
+import { Share2, Check, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 
@@ -101,7 +101,7 @@ export default function ShareButton({ post, className }: ShareButtonProps) {
         )}
         title="Partager"
       >
-        <Share className="w-6 h-6" />
+        <Share2 className="w-6 h-6" />
       </button>
 
       {/* Menu dropdown */}

@@ -263,11 +263,12 @@ export default function FeedPost({ post }: FeedPostProps) {
             <MessageCircle className="w-6 h-6" />
             <span>{commentsCount}</span>
           </button>
-        </div>
-        <div className="flex items-center gap-3">
           <ShareButton
             post={post}
           />
+        </div>
+        <div className="flex items-center gap-3">
+          
           <button
             className="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors"
             title="Télécharger audio"
